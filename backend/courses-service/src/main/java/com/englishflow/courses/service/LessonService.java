@@ -178,4 +178,21 @@ public class LessonService implements ILessonService {
         lesson.setIsPublished(dto.getIsPublished() != null ? dto.getIsPublished() : false);
         return lesson;
     }
+    
+    // FIX 3: Bulk publish/unpublish all lessons in a course
+    @Transactional
+    public List<LessonDTO> publishAllLessonsByCourse(Long courseId) {
+        List<Lesson> lessons = lessonRepository.findByCourseId(courseId);
+        lessons.forEach(lesson -> lesson.setIsPublished(true));
+        List<Lesson> updated = lessonRepository.saveAll(lessons);
+        return updated.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public List<LessonDTO> unpublishAllLessonsByCourse(Long courseId) {
+        List<Lesson> lessons = lessonRepository.findByCourseId(courseId);
+        lessons.forEach(lesson -> lesson.setIsPublished(false));
+        List<Lesson> updated = lessonRepository.saveAll(lessons);
+        return updated.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
 }

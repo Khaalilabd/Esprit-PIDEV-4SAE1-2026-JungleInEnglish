@@ -1,0 +1,1355 @@
+{
+  "backend_controllers": {
+    "ChapterController": {
+      "base_path": "/chapters",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/chapters",
+          "function": "createChapter",
+          "description": "Create a new chapter for a course"
+        },
+        {
+          "method": "GET",
+          "path": "/chapters/{id}",
+          "function": "getChapterById",
+          "description": "Get chapter details by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/chapters",
+          "function": "getAllChapters",
+          "description": "Get all chapters"
+        },
+        {
+          "method": "GET",
+          "path": "/chapters/course/{courseId}",
+          "function": "getChaptersByCourse",
+          "description": "Get all chapters for a specific course"
+        },
+        {
+          "method": "GET",
+          "path": "/chapters/course/{courseId}/published",
+          "function": "getPublishedChaptersByCourse",
+          "description": "Get only published chapters for a course"
+        },
+        {
+          "method": "PUT",
+          "path": "/chapters/{id}",
+          "function": "updateChapter",
+          "description": "Update chapter details"
+        },
+        {
+          "method": "DELETE",
+          "path": "/chapters/{id}",
+          "function": "deleteChapter",
+          "description": "Delete a chapter"
+        },
+        {
+          "method": "GET",
+          "path": "/chapters/{id}/exists",
+          "function": "chapterExists",
+          "description": "Check if chapter exists"
+        },
+        {
+          "method": "GET",
+          "path": "/chapters/{chapterId}/belongs-to-course/{courseId}",
+          "function": "chapterBelongsToCourse",
+          "description": "Verify if chapter belongs to a specific course"
+        }
+      ]
+    },
+    "CourseCategoryController": {
+      "base_path": "/categories",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/categories",
+          "function": "createCategory",
+          "description": "Create a new course category"
+        },
+        {
+          "method": "PUT",
+          "path": "/categories/{id}",
+          "function": "updateCategory",
+          "description": "Update category details"
+        },
+        {
+          "method": "GET",
+          "path": "/categories/{id}",
+          "function": "getById",
+          "description": "Get category by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/categories",
+          "function": "getAllCategories",
+          "description": "Get all categories"
+        },
+        {
+          "method": "GET",
+          "path": "/categories/active",
+          "function": "getActiveCategories",
+          "description": "Get only active categories"
+        },
+        {
+          "method": "DELETE",
+          "path": "/categories/{id}",
+          "function": "deleteCategory",
+          "description": "Delete a category"
+        },
+        {
+          "method": "PUT",
+          "path": "/categories/{id}/toggle-active",
+          "function": "toggleActive",
+          "description": "Toggle category active status"
+        },
+        {
+          "method": "PUT",
+          "path": "/categories/{id}/order",
+          "function": "updateDisplayOrder",
+          "description": "Update category display order"
+        }
+      ]
+    },
+    "CourseController": {
+      "base_path": "/courses",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/courses",
+          "function": "createCourse",
+          "description": "Create a new course"
+        },
+        {
+          "method": "GET",
+          "path": "/courses/{id}",
+          "function": "getCourseById",
+          "description": "Get course details by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/courses",
+          "function": "getAllCourses",
+          "description": "Get all courses"
+        },
+        {
+          "method": "GET",
+          "path": "/courses/published",
+          "function": "getPublishedCourses",
+          "description": "Get only published courses"
+        },
+        {
+          "method": "GET",
+          "path": "/courses/status/{status}",
+          "function": "getCoursesByStatus",
+          "description": "Get courses by status (DRAFT, PUBLISHED, ARCHIVED)"
+        },
+        {
+          "method": "GET",
+          "path": "/courses/level/{level}",
+          "function": "getCoursesByLevel",
+          "description": "Get courses by CEFR level"
+        },
+        {
+          "method": "PUT",
+          "path": "/courses/{id}",
+          "function": "updateCourse",
+          "description": "Update course details"
+        },
+        {
+          "method": "DELETE",
+          "path": "/courses/{id}",
+          "function": "deleteCourse",
+          "description": "Delete a course"
+        },
+        {
+          "method": "GET",
+          "path": "/courses/tutor/{tutorId}",
+          "function": "getCoursesByTutor",
+          "description": "Get all courses created by a tutor"
+        },
+        {
+          "method": "GET",
+          "path": "/courses/{id}/exists",
+          "function": "courseExists",
+          "description": "Check if course exists"
+        },
+        {
+          "method": "POST",
+          "path": "/courses/{id}/upload-thumbnail",
+          "function": "uploadThumbnail",
+          "description": "Upload course thumbnail image (max 5MB)"
+        },
+        {
+          "method": "POST",
+          "path": "/courses/{id}/upload-material",
+          "function": "uploadCourseMaterial",
+          "description": "Upload course material file (max 50MB)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/courses/{id}/thumbnail",
+          "function": "deleteThumbnail",
+          "description": "Delete course thumbnail"
+        }
+      ]
+    },
+    "CourseEnrollmentController": {
+      "base_path": "/enrollments",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/enrollments/enroll",
+          "function": "enrollStudent",
+          "description": "Enroll a student in a course"
+        },
+        {
+          "method": "DELETE",
+          "path": "/enrollments/unenroll",
+          "function": "unenrollStudent",
+          "description": "Unenroll a student from a course"
+        },
+        {
+          "method": "GET",
+          "path": "/enrollments/student/{studentId}",
+          "function": "getStudentEnrollments",
+          "description": "Get all enrollments for a student"
+        },
+        {
+          "method": "GET",
+          "path": "/enrollments/course/{courseId}",
+          "function": "getCourseEnrollments",
+          "description": "Get all enrollments for a course"
+        },
+        {
+          "method": "GET",
+          "path": "/enrollments/check",
+          "function": "isStudentEnrolled",
+          "description": "Check if student is enrolled in a course"
+        },
+        {
+          "method": "PUT",
+          "path": "/enrollments/progress",
+          "function": "updateProgress",
+          "description": "Update enrollment progress (deprecated - calculated dynamically)"
+        },
+        {
+          "method": "GET",
+          "path": "/enrollments/details",
+          "function": "getEnrollment",
+          "description": "Get enrollment details for student and course"
+        },
+        {
+          "method": "GET",
+          "path": "/enrollments/course/{courseId}/count",
+          "function": "getCourseEnrollmentCount",
+          "description": "Get total enrollment count for a course"
+        },
+        {
+          "method": "PUT",
+          "path": "/enrollments/calculate-progress",
+          "function": "calculateAndUpdateProgress",
+          "description": "Calculate and return enrollment progress"
+        }
+      ]
+    },
+    "FileUploadController": {
+      "base_path": "/files",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/files/upload",
+          "function": "uploadFile",
+          "description": "Upload a file and get URL"
+        },
+        {
+          "method": "GET",
+          "path": "/files/{filename}",
+          "function": "getFile",
+          "description": "Get/stream a file with range support for videos"
+        },
+        {
+          "method": "DELETE",
+          "path": "/files/{filename}",
+          "function": "deleteFile",
+          "description": "Delete an uploaded file"
+        },
+        {
+          "method": "OPTIONS",
+          "path": "/files/{filename}",
+          "function": "handleOptions",
+          "description": "Handle CORS preflight requests"
+        }
+      ]
+    },
+    "LessonController": {
+      "base_path": "/lessons",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/lessons",
+          "function": "createLesson",
+          "description": "Create a new lesson in a chapter"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/{id}",
+          "function": "getLessonById",
+          "description": "Get lesson details by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons",
+          "function": "getAllLessons",
+          "description": "Get all lessons"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/chapter/{chapterId}",
+          "function": "getLessonsByChapter",
+          "description": "Get all lessons in a chapter"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/chapter/{chapterId}/published",
+          "function": "getPublishedLessonsByChapter",
+          "description": "Get only published lessons in a chapter"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/course/{courseId}",
+          "function": "getLessonsByCourse",
+          "description": "Get all lessons in a course"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/type/{lessonType}",
+          "function": "getLessonsByType",
+          "description": "Get lessons by type (VIDEO, DOCUMENT, TEXT, QUIZ, LIVE_SESSION)"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/course/{courseId}/preview",
+          "function": "getPreviewLessonsByCourse",
+          "description": "Get preview lessons for a course"
+        },
+        {
+          "method": "PUT",
+          "path": "/lessons/{id}",
+          "function": "updateLesson",
+          "description": "Update lesson details"
+        },
+        {
+          "method": "DELETE",
+          "path": "/lessons/{id}",
+          "function": "deleteLesson",
+          "description": "Delete a lesson"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/{id}/exists",
+          "function": "lessonExists",
+          "description": "Check if lesson exists"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/{lessonId}/belongs-to-chapter/{chapterId}",
+          "function": "lessonBelongsToChapter",
+          "description": "Verify if lesson belongs to a chapter"
+        },
+        {
+          "method": "GET",
+          "path": "/lessons/{lessonId}/belongs-to-course/{courseId}",
+          "function": "lessonBelongsToCourse",
+          "description": "Verify if lesson belongs to a course"
+        },
+        {
+          "method": "POST",
+          "path": "/lessons/{id}/upload-video",
+          "function": "uploadVideo",
+          "description": "Upload video file for lesson (max 500MB)"
+        },
+        {
+          "method": "POST",
+          "path": "/lessons/{id}/upload-document",
+          "function": "uploadDocument",
+          "description": "Upload document file for lesson (max 50MB)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/lessons/{id}/content-file",
+          "function": "deleteContentFile",
+          "description": "Delete lesson content file"
+        }
+      ]
+    },
+    "LessonMediaController": {
+      "base_path": "/lesson-media",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/lesson-media",
+          "function": "createMedia",
+          "description": "Create a new media item for a lesson"
+        },
+        {
+          "method": "PUT",
+          "path": "/lesson-media/{id}",
+          "function": "updateMedia",
+          "description": "Update media item details"
+        },
+        {
+          "method": "DELETE",
+          "path": "/lesson-media/{id}",
+          "function": "deleteMedia",
+          "description": "Delete a media item"
+        },
+        {
+          "method": "GET",
+          "path": "/lesson-media/{id}",
+          "function": "getMediaById",
+          "description": "Get media item by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/lesson-media/lesson/{lessonId}",
+          "function": "getMediaByLesson",
+          "description": "Get all media items for a lesson"
+        },
+        {
+          "method": "PUT",
+          "path": "/lesson-media/lesson/{lessonId}/reorder",
+          "function": "reorderMedia",
+          "description": "Reorder media items in a lesson"
+        }
+      ]
+    },
+    "LessonProgressController": {
+      "base_path": "/lesson-progress",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/lesson-progress/student/{studentId}/lesson/{lessonId}",
+          "function": "getProgressByStudentAndLesson",
+          "description": "Get progress for a specific lesson and student"
+        },
+        {
+          "method": "GET",
+          "path": "/lesson-progress/student/{studentId}/course/{courseId}",
+          "function": "getProgressByStudentAndCourse",
+          "description": "Get all lesson progress for a student in a course"
+        },
+        {
+          "method": "GET",
+          "path": "/lesson-progress/student/{studentId}/course/{courseId}/summary",
+          "function": "getCourseProgressSummary",
+          "description": "Get course progress summary with statistics"
+        },
+        {
+          "method": "POST",
+          "path": "/lesson-progress",
+          "function": "createProgress",
+          "description": "Create or update lesson progress"
+        }
+      ]
+    },
+    "PackController": {
+      "base_path": "/packs",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/packs",
+          "function": "createPack",
+          "description": "Create a new course pack"
+        },
+        {
+          "method": "PUT",
+          "path": "/packs/{id}",
+          "function": "updatePack",
+          "description": "Update pack details"
+        },
+        {
+          "method": "GET",
+          "path": "/packs/{id}",
+          "function": "getById",
+          "description": "Get pack by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/packs",
+          "function": "getAllPacks",
+          "description": "Get all packs"
+        },
+        {
+          "method": "GET",
+          "path": "/packs/tutor/{tutorId}",
+          "function": "getByTutorId",
+          "description": "Get packs by tutor"
+        },
+        {
+          "method": "GET",
+          "path": "/packs/status/{status}",
+          "function": "getByStatus",
+          "description": "Get packs by status"
+        },
+        {
+          "method": "GET",
+          "path": "/packs/search",
+          "function": "searchPacks",
+          "description": "Search packs by category and level"
+        },
+        {
+          "method": "GET",
+          "path": "/packs/available",
+          "function": "getAvailablePacks",
+          "description": "Get available packs with optional filters"
+        },
+        {
+          "method": "GET",
+          "path": "/packs/academic/{academicId}",
+          "function": "getByCreatedBy",
+          "description": "Get packs created by academic"
+        },
+        {
+          "method": "DELETE",
+          "path": "/packs/{id}",
+          "function": "deletePack",
+          "description": "Delete a pack"
+        }
+      ]
+    },
+    "PackEnrollmentController": {
+      "base_path": "/pack-enrollments",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/pack-enrollments",
+          "function": "enrollStudent",
+          "description": "Enroll student in a pack (auto-enrolls in all pack courses)"
+        },
+        {
+          "method": "GET",
+          "path": "/pack-enrollments/{id}",
+          "function": "getById",
+          "description": "Get enrollment by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/pack-enrollments/student/{studentId}",
+          "function": "getByStudentId",
+          "description": "Get all enrollments for a student"
+        },
+        {
+          "method": "GET",
+          "path": "/pack-enrollments/student/{studentId}/active",
+          "function": "getActiveEnrollmentsByStudent",
+          "description": "Get active enrollments for a student"
+        },
+        {
+          "method": "GET",
+          "path": "/pack-enrollments/pack/{packId}",
+          "function": "getByPackId",
+          "description": "Get all enrollments for a pack"
+        },
+        {
+          "method": "GET",
+          "path": "/pack-enrollments/tutor/{tutorId}",
+          "function": "getByTutorId",
+          "description": "Get enrollments for tutor's packs"
+        },
+        {
+          "method": "PUT",
+          "path": "/pack-enrollments/{id}/progress",
+          "function": "updateProgress",
+          "description": "Update pack enrollment progress"
+        },
+        {
+          "method": "PUT",
+          "path": "/pack-enrollments/{id}/complete",
+          "function": "completeEnrollment",
+          "description": "Mark pack enrollment as complete"
+        },
+        {
+          "method": "DELETE",
+          "path": "/pack-enrollments/{id}",
+          "function": "cancelEnrollment",
+          "description": "Cancel pack enrollment"
+        },
+        {
+          "method": "GET",
+          "path": "/pack-enrollments/check",
+          "function": "isStudentEnrolled",
+          "description": "Check if student is enrolled in pack"
+        },
+        {
+          "method": "POST",
+          "path": "/pack-enrollments/recalculate-progress",
+          "function": "recalculateProgress",
+          "description": "Recalculate pack progress"
+        }
+      ]
+    },
+    "ProgressSummaryController": {
+      "base_path": "/progress",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/progress/summary",
+          "function": "getProgressSummary",
+          "description": "Get comprehensive progress summary for student and course"
+        },
+        {
+          "method": "POST",
+          "path": "/progress/demo",
+          "function": "createDemoProgress",
+          "description": "Create demo progress data for testing"
+        }
+      ]
+    },
+    "TutorAvailabilityController": {
+      "base_path": "/tutor-availability",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/tutor-availability",
+          "function": "createOrUpdateAvailability",
+          "description": "Create or update tutor availability"
+        },
+        {
+          "method": "GET",
+          "path": "/tutor-availability/{id}",
+          "function": "getById",
+          "description": "Get availability by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/tutor-availability/tutor/{tutorId}",
+          "function": "getByTutorId",
+          "description": "Get availability by tutor ID"
+        },
+        {
+          "method": "GET",
+          "path": "/tutor-availability",
+          "function": "getAllAvailabilities",
+          "description": "Get all tutor availabilities"
+        },
+        {
+          "method": "GET",
+          "path": "/tutor-availability/status/{status}",
+          "function": "getByStatus",
+          "description": "Get availabilities by status"
+        },
+        {
+          "method": "GET",
+          "path": "/tutor-availability/search",
+          "function": "getAvailableTutors",
+          "description": "Search available tutors by category and level"
+        },
+        {
+          "method": "GET",
+          "path": "/tutor-availability/with-capacity",
+          "function": "getTutorsWithCapacity",
+          "description": "Get tutors with available capacity"
+        },
+        {
+          "method": "DELETE",
+          "path": "/tutor-availability/{id}",
+          "function": "deleteAvailability",
+          "description": "Delete tutor availability"
+        }
+      ]
+    },
+    "UserInfoController": {
+      "base_path": "/users",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/users/{id}",
+          "function": "getUserById",
+          "description": "Get user details by ID"
+        },
+        {
+          "method": "GET",
+          "path": "/users/tutors",
+          "function": "getAllTutors",
+          "description": "Get all tutors"
+        },
+        {
+          "method": "GET",
+          "path": "/users/students",
+          "function": "getAllStudents",
+          "description": "Get all students"
+        },
+        {
+          "method": "GET",
+          "path": "/users/{id}/validate",
+          "function": "validateUser",
+          "description": "Validate if user exists"
+        },
+        {
+          "method": "GET",
+          "path": "/users/{id}/is-tutor",
+          "function": "isTutor",
+          "description": "Check if user is a tutor"
+        },
+        {
+          "method": "GET",
+          "path": "/users/{id}/is-student",
+          "function": "isStudent",
+          "description": "Check if user is a student"
+        }
+      ]
+    }
+  }
+}
+,
+  "backend_services": {
+    "ChapterService": {
+      "methods": [
+        {
+          "name": "getAllChapters",
+          "parameters": [],
+          "return_type": "List<ChapterDTO>",
+          "description": "Get all chapters"
+        },
+        {
+          "name": "getChapterById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "ChapterDTO",
+          "description": "Get chapter by ID"
+        },
+        {
+          "name": "getChaptersByCourse",
+          "parameters": [{"name": "courseId", "type": "Long"}],
+          "return_type": "List<ChapterDTO>",
+          "description": "Get chapters by course ID ordered by index"
+        },
+        {
+          "name": "getPublishedChaptersByCourse",
+          "parameters": [{"name": "courseId", "type": "Long"}],
+          "return_type": "List<ChapterDTO>",
+          "description": "Get only published chapters for a course"
+        },
+        {
+          "name": "createChapter",
+          "parameters": [{"name": "chapterDTO", "type": "ChapterDTO"}],
+          "return_type": "ChapterDTO",
+          "description": "Create a new chapter"
+        },
+        {
+          "name": "updateChapter",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "chapterDTO", "type": "ChapterDTO"}],
+          "return_type": "ChapterDTO",
+          "description": "Update chapter details"
+        },
+        {
+          "name": "deleteChapter",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete a chapter"
+        },
+        {
+          "name": "existsById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if chapter exists"
+        },
+        {
+          "name": "belongsToCourse",
+          "parameters": [{"name": "chapterId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if chapter belongs to course"
+        },
+        {
+          "name": "calculateChapterProgress",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "chapterId", "type": "Long"}],
+          "return_type": "double",
+          "description": "Calculate chapter progress percentage based on completed lessons"
+        },
+        {
+          "name": "getCompletedLessonsInChapter",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "chapterId", "type": "Long"}],
+          "return_type": "int",
+          "description": "Get count of completed lessons in chapter"
+        }
+      ]
+    },
+    "CourseCategoryService": {
+      "methods": [
+        {
+          "name": "createCategory",
+          "parameters": [{"name": "categoryDTO", "type": "CourseCategoryDTO"}],
+          "return_type": "CourseCategoryDTO",
+          "description": "Create a new course category"
+        },
+        {
+          "name": "updateCategory",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "categoryDTO", "type": "CourseCategoryDTO"}],
+          "return_type": "CourseCategoryDTO",
+          "description": "Update category details"
+        },
+        {
+          "name": "getById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "CourseCategoryDTO",
+          "description": "Get category by ID"
+        },
+        {
+          "name": "getAllCategories",
+          "parameters": [],
+          "return_type": "List<CourseCategoryDTO>",
+          "description": "Get all categories ordered by display order"
+        },
+        {
+          "name": "getActiveCategories",
+          "parameters": [],
+          "return_type": "List<CourseCategoryDTO>",
+          "description": "Get only active categories"
+        },
+        {
+          "name": "deleteCategory",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete a category"
+        },
+        {
+          "name": "toggleActive",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Toggle category active status"
+        },
+        {
+          "name": "updateDisplayOrder",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "newOrder", "type": "Integer"}],
+          "return_type": "void",
+          "description": "Update category display order"
+        }
+      ]
+    },
+    "CourseEnrollmentService": {
+      "methods": [
+        {
+          "name": "enrollStudent",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "CourseEnrollmentDTO",
+          "description": "Enroll student in course with validation"
+        },
+        {
+          "name": "unenrollStudent",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Unenroll student from course"
+        },
+        {
+          "name": "getStudentEnrollments",
+          "parameters": [{"name": "studentId", "type": "Long"}],
+          "return_type": "List<CourseEnrollmentDTO>",
+          "description": "Get all active enrollments for student"
+        },
+        {
+          "name": "getCourseEnrollments",
+          "parameters": [{"name": "courseId", "type": "Long"}],
+          "return_type": "List<CourseEnrollmentDTO>",
+          "description": "Get all enrollments for a course"
+        },
+        {
+          "name": "isStudentEnrolled",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if student is enrolled in course"
+        },
+        {
+          "name": "updateProgress",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}, {"name": "progress", "type": "Double"}, {"name": "completedLessons", "type": "Integer"}],
+          "return_type": "CourseEnrollmentDTO",
+          "description": "Update enrollment progress (deprecated - calculated dynamically)"
+        },
+        {
+          "name": "getEnrollment",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "CourseEnrollmentDTO",
+          "description": "Get enrollment details"
+        },
+        {
+          "name": "getCourseEnrollmentCount",
+          "parameters": [{"name": "courseId", "type": "Long"}],
+          "return_type": "Long",
+          "description": "Get total enrollment count for course"
+        },
+        {
+          "name": "calculateCourseProgress",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "double",
+          "description": "Calculate course progress percentage dynamically"
+        },
+        {
+          "name": "getCompletedLessonsCount",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "int",
+          "description": "Get count of completed lessons in course"
+        },
+        {
+          "name": "checkAndMarkCourseCompletion",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}, {"name": "enrollment", "type": "CourseEnrollment"}],
+          "return_type": "void",
+          "description": "Check if course is completed and mark it"
+        },
+        {
+          "name": "isCourseCompleted",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if course is completed"
+        }
+      ]
+    },
+    "CourseService": {
+      "methods": [
+        {
+          "name": "getAllCourses",
+          "parameters": [],
+          "return_type": "List<CourseDTO>",
+          "description": "Get all courses"
+        },
+        {
+          "name": "getCourseById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "CourseDTO",
+          "description": "Get course by ID"
+        },
+        {
+          "name": "getPublishedCourses",
+          "parameters": [],
+          "return_type": "List<CourseDTO>",
+          "description": "Get only published courses"
+        },
+        {
+          "name": "getCoursesByLevel",
+          "parameters": [{"name": "level", "type": "String"}],
+          "return_type": "List<CourseDTO>",
+          "description": "Get courses by CEFR level"
+        },
+        {
+          "name": "getCoursesByStatus",
+          "parameters": [{"name": "status", "type": "CourseStatus"}],
+          "return_type": "List<CourseDTO>",
+          "description": "Get courses by status"
+        },
+        {
+          "name": "createCourse",
+          "parameters": [{"name": "courseDTO", "type": "CourseDTO"}],
+          "return_type": "CourseDTO",
+          "description": "Create a new course with tutor validation"
+        },
+        {
+          "name": "updateCourse",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "courseDTO", "type": "CourseDTO"}],
+          "return_type": "CourseDTO",
+          "description": "Update course details"
+        },
+        {
+          "name": "deleteCourse",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete a course"
+        },
+        {
+          "name": "existsById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if course exists"
+        },
+        {
+          "name": "getCoursesByTutor",
+          "parameters": [{"name": "tutorId", "type": "Long"}],
+          "return_type": "List<CourseDTO>",
+          "description": "Get all courses by tutor"
+        }
+      ]
+    },
+    "LessonService": {
+      "methods": [
+        {
+          "name": "getAllLessons",
+          "parameters": [],
+          "return_type": "List<LessonDTO>",
+          "description": "Get all lessons"
+        },
+        {
+          "name": "getLessonById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "LessonDTO",
+          "description": "Get lesson by ID"
+        },
+        {
+          "name": "getLessonsByChapter",
+          "parameters": [{"name": "chapterId", "type": "Long"}],
+          "return_type": "List<LessonDTO>",
+          "description": "Get lessons by chapter ordered by index"
+        },
+        {
+          "name": "getPublishedLessonsByChapter",
+          "parameters": [{"name": "chapterId", "type": "Long"}],
+          "return_type": "List<LessonDTO>",
+          "description": "Get only published lessons in chapter"
+        },
+        {
+          "name": "getLessonsByCourse",
+          "parameters": [{"name": "courseId", "type": "Long"}],
+          "return_type": "List<LessonDTO>",
+          "description": "Get all lessons in a course"
+        },
+        {
+          "name": "getLessonsByType",
+          "parameters": [{"name": "type", "type": "LessonType"}],
+          "return_type": "List<LessonDTO>",
+          "description": "Get lessons by type"
+        },
+        {
+          "name": "getPreviewLessonsByCourse",
+          "parameters": [{"name": "courseId", "type": "Long"}],
+          "return_type": "List<LessonDTO>",
+          "description": "Get preview lessons for course"
+        },
+        {
+          "name": "createLesson",
+          "parameters": [{"name": "lessonDTO", "type": "LessonDTO"}],
+          "return_type": "LessonDTO",
+          "description": "Create a new lesson"
+        },
+        {
+          "name": "updateLesson",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "lessonDTO", "type": "LessonDTO"}],
+          "return_type": "LessonDTO",
+          "description": "Update lesson details"
+        },
+        {
+          "name": "deleteLesson",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete a lesson"
+        },
+        {
+          "name": "existsById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if lesson exists"
+        },
+        {
+          "name": "belongsToChapter",
+          "parameters": [{"name": "lessonId", "type": "Long"}, {"name": "chapterId", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if lesson belongs to chapter"
+        },
+        {
+          "name": "belongsToCourse",
+          "parameters": [{"name": "lessonId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if lesson belongs to course"
+        }
+      ]
+    },
+    "LessonMediaService": {
+      "methods": [
+        {
+          "name": "createMedia",
+          "parameters": [{"name": "mediaDTO", "type": "LessonMediaDTO"}],
+          "return_type": "LessonMediaDTO",
+          "description": "Create a new media item for lesson"
+        },
+        {
+          "name": "updateMedia",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "mediaDTO", "type": "LessonMediaDTO"}],
+          "return_type": "LessonMediaDTO",
+          "description": "Update media item"
+        },
+        {
+          "name": "deleteMedia",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete media item"
+        },
+        {
+          "name": "getMediaById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "LessonMediaDTO",
+          "description": "Get media by ID"
+        },
+        {
+          "name": "getMediaByLesson",
+          "parameters": [{"name": "lessonId", "type": "Long"}],
+          "return_type": "List<LessonMediaDTO>",
+          "description": "Get all media for a lesson ordered by position"
+        },
+        {
+          "name": "reorderMedia",
+          "parameters": [{"name": "lessonId", "type": "Long"}, {"name": "mediaIds", "type": "List<Long>"}],
+          "return_type": "List<LessonMediaDTO>",
+          "description": "Reorder media items in lesson"
+        }
+      ]
+    },
+    "LessonProgressService": {
+      "methods": [
+        {
+          "name": "getProgressByStudentAndLesson",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "lessonId", "type": "Long"}],
+          "return_type": "LessonProgress",
+          "description": "Get progress for specific lesson and student"
+        },
+        {
+          "name": "getProgressByStudentAndCourse",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "List<LessonProgress>",
+          "description": "Get all lesson progress for student in course"
+        },
+        {
+          "name": "getCourseProgressSummary",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "CourseProgressSummary",
+          "description": "Get course progress summary with statistics"
+        },
+        {
+          "name": "createOrUpdateProgress",
+          "parameters": [{"name": "request", "type": "CreateLessonProgressRequest"}],
+          "return_type": "LessonProgress",
+          "description": "Create or update lesson progress and trigger completion checks"
+        },
+        {
+          "name": "countCompletedLessonsInCourse",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "courseId", "type": "Long"}],
+          "return_type": "Long",
+          "description": "Count completed lessons in course"
+        }
+      ]
+    },
+    "PackService": {
+      "methods": [
+        {
+          "name": "createPack",
+          "parameters": [{"name": "packDTO", "type": "PackDTO"}],
+          "return_type": "PackDTO",
+          "description": "Create a new course pack"
+        },
+        {
+          "name": "updatePack",
+          "parameters": [{"name": "id", "type": "Long"}, {"name": "packDTO", "type": "PackDTO"}],
+          "return_type": "PackDTO",
+          "description": "Update pack details"
+        },
+        {
+          "name": "getById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "PackDTO",
+          "description": "Get pack by ID"
+        },
+        {
+          "name": "getAllPacks",
+          "parameters": [],
+          "return_type": "List<PackDTO>",
+          "description": "Get all packs"
+        },
+        {
+          "name": "getByTutorId",
+          "parameters": [{"name": "tutorId", "type": "Long"}],
+          "return_type": "List<PackDTO>",
+          "description": "Get packs by tutor"
+        },
+        {
+          "name": "getByStatus",
+          "parameters": [{"name": "status", "type": "PackStatus"}],
+          "return_type": "List<PackDTO>",
+          "description": "Get packs by status"
+        },
+        {
+          "name": "getByCategoryAndLevel",
+          "parameters": [{"name": "category", "type": "String"}, {"name": "level", "type": "String"}],
+          "return_type": "List<PackDTO>",
+          "description": "Get packs by category and level"
+        },
+        {
+          "name": "getAvailablePacksByCategoryAndLevel",
+          "parameters": [{"name": "category", "type": "String"}, {"name": "level", "type": "String"}],
+          "return_type": "List<PackDTO>",
+          "description": "Get available packs by category and level"
+        },
+        {
+          "name": "getAllAvailablePacks",
+          "parameters": [],
+          "return_type": "List<PackDTO>",
+          "description": "Get all available packs"
+        },
+        {
+          "name": "getByCreatedBy",
+          "parameters": [{"name": "academicId", "type": "Long"}],
+          "return_type": "List<PackDTO>",
+          "description": "Get packs created by academic"
+        },
+        {
+          "name": "deletePack",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete pack and all enrollments"
+        },
+        {
+          "name": "incrementEnrollment",
+          "parameters": [{"name": "packId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Increment pack enrollment count"
+        },
+        {
+          "name": "decrementEnrollment",
+          "parameters": [{"name": "packId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Decrement pack enrollment count"
+        }
+      ]
+    },
+    "PackEnrollmentService": {
+      "methods": [
+        {
+          "name": "enrollStudent",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "packId", "type": "Long"}],
+          "return_type": "PackEnrollmentDTO",
+          "description": "Enroll student in pack and auto-enroll in all pack courses"
+        },
+        {
+          "name": "getById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "PackEnrollmentDTO",
+          "description": "Get enrollment by ID with dynamic progress"
+        },
+        {
+          "name": "getByStudentId",
+          "parameters": [{"name": "studentId", "type": "Long"}],
+          "return_type": "List<PackEnrollmentDTO>",
+          "description": "Get all enrollments for student"
+        },
+        {
+          "name": "getByPackId",
+          "parameters": [{"name": "packId", "type": "Long"}],
+          "return_type": "List<PackEnrollmentDTO>",
+          "description": "Get all enrollments for pack"
+        },
+        {
+          "name": "getByTutorId",
+          "parameters": [{"name": "tutorId", "type": "Long"}],
+          "return_type": "List<PackEnrollmentDTO>",
+          "description": "Get enrollments for tutor's packs"
+        },
+        {
+          "name": "getActiveEnrollmentsByStudent",
+          "parameters": [{"name": "studentId", "type": "Long"}],
+          "return_type": "List<PackEnrollmentDTO>",
+          "description": "Get active enrollments for student"
+        },
+        {
+          "name": "updateProgress",
+          "parameters": [{"name": "enrollmentId", "type": "Long"}, {"name": "progressPercentage", "type": "Integer"}],
+          "return_type": "PackEnrollmentDTO",
+          "description": "Update progress (deprecated - calculated dynamically)"
+        },
+        {
+          "name": "completeEnrollment",
+          "parameters": [{"name": "enrollmentId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Mark enrollment as complete"
+        },
+        {
+          "name": "cancelEnrollment",
+          "parameters": [{"name": "enrollmentId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Cancel enrollment"
+        },
+        {
+          "name": "isStudentEnrolled",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "packId", "type": "Long"}],
+          "return_type": "boolean",
+          "description": "Check if student is enrolled in pack"
+        },
+        {
+          "name": "calculatePackProgress",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "packId", "type": "Long"}],
+          "return_type": "double",
+          "description": "Calculate pack progress using weighted lesson-based formula"
+        },
+        {
+          "name": "getCompletedCoursesCount",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "packId", "type": "Long"}],
+          "return_type": "int",
+          "description": "Get count of completed courses in pack"
+        },
+        {
+          "name": "checkAndMarkPackCompletion",
+          "parameters": [{"name": "studentId", "type": "Long"}, {"name": "packId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Check if pack is completed and mark it"
+        }
+      ]
+    },
+    "TutorAvailabilityService": {
+      "methods": [
+        {
+          "name": "createOrUpdateAvailability",
+          "parameters": [{"name": "availabilityDTO", "type": "TutorAvailabilityDTO"}],
+          "return_type": "TutorAvailabilityDTO",
+          "description": "Create or update tutor availability"
+        },
+        {
+          "name": "getByTutorId",
+          "parameters": [{"name": "tutorId", "type": "Long"}],
+          "return_type": "TutorAvailabilityDTO",
+          "description": "Get availability by tutor ID"
+        },
+        {
+          "name": "getById",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "TutorAvailabilityDTO",
+          "description": "Get availability by ID"
+        },
+        {
+          "name": "getAllAvailabilities",
+          "parameters": [],
+          "return_type": "List<TutorAvailabilityDTO>",
+          "description": "Get all tutor availabilities"
+        },
+        {
+          "name": "getByStatus",
+          "parameters": [{"name": "status", "type": "TutorStatus"}],
+          "return_type": "List<TutorAvailabilityDTO>",
+          "description": "Get availabilities by status"
+        },
+        {
+          "name": "getAvailableTutorsByCategoryAndLevel",
+          "parameters": [{"name": "category", "type": "String"}, {"name": "level", "type": "String"}],
+          "return_type": "List<TutorAvailabilityDTO>",
+          "description": "Get available tutors by category and level"
+        },
+        {
+          "name": "getTutorsWithCapacity",
+          "parameters": [],
+          "return_type": "List<TutorAvailabilityDTO>",
+          "description": "Get tutors with available capacity"
+        },
+        {
+          "name": "incrementStudentCount",
+          "parameters": [{"name": "tutorId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Increment tutor's student count"
+        },
+        {
+          "name": "decrementStudentCount",
+          "parameters": [{"name": "tutorId", "type": "Long"}],
+          "return_type": "void",
+          "description": "Decrement tutor's student count"
+        },
+        {
+          "name": "deleteAvailability",
+          "parameters": [{"name": "id", "type": "Long"}],
+          "return_type": "void",
+          "description": "Delete tutor availability"
+        }
+      ]
+    }
+  }
+}

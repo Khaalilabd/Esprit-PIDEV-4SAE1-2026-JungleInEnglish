@@ -71,4 +71,8 @@ public interface ILessonService {
      * Check if lesson belongs to course
      */
     boolean belongsToCourse(Long lessonId, Long courseId);
+    
+    // FIX 3: Bulk publish/unpublish methods
+    List<LessonDTO> publishAllLessonsByCourse(Long courseId);
+    List<LessonDTO> unpublishAllLessonsByCourse(Long courseId);
 }

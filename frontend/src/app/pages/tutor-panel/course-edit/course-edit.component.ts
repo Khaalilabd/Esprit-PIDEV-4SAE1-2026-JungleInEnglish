@@ -72,7 +72,7 @@ export class CourseEditComponent implements OnInit {
         this.course = course;
         // Construct full URL for thumbnail if it exists
         if (course.thumbnailUrl && !course.thumbnailUrl.startsWith('http')) {
-          this.thumbnailPreview = `http://localhost:8080/api${course.thumbnailUrl}`;
+          this.thumbnailPreview = `http://localhost:8088/api${course.thumbnailUrl}`;
         } else {
           this.thumbnailPreview = course.thumbnailUrl || null;
         }

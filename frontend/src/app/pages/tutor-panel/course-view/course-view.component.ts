@@ -126,7 +126,7 @@ export class CourseViewComponent implements OnInit {
   getContentUrl(url: string | undefined): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `http://localhost:8080/api${url}`;
+    return `http://localhost:8088/api${url}`;
   }
 
   isVideoLesson(): boolean {
@@ -144,7 +144,7 @@ export class CourseViewComponent implements OnInit {
   getThumbnailUrl(thumbnailUrl: string | undefined): string {
     if (!thumbnailUrl) return '';
     if (thumbnailUrl.startsWith('http')) return thumbnailUrl;
-    return `http://localhost:8080/api${thumbnailUrl}`;
+    return `http://localhost:8088/api${thumbnailUrl}`;
   }
 
   loadCategories(): void {

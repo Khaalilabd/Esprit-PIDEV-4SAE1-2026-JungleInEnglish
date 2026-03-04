@@ -1,10 +1,12 @@
 package com.englishflow.courses.service;
 
-import com.englishflow.courses.client.AuthServiceClient;
 import com.englishflow.courses.dto.PackEnrollmentDTO;
-import com.englishflow.courses.dto.UserDTO;
+import com.englishflow.courses.entity.Course;
+import com.englishflow.courses.entity.CourseEnrollment;
 import com.englishflow.courses.entity.Pack;
 import com.englishflow.courses.entity.PackEnrollment;
+import com.englishflow.courses.repository.CourseEnrollmentRepository;
+import com.englishflow.courses.repository.CourseRepository;
 import com.englishflow.courses.repository.PackEnrollmentRepository;
 import com.englishflow.courses.repository.PackRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,11 @@ public class PackEnrollmentService implements IPackEnrollmentService {
     private final PackEnrollmentRepository enrollmentRepository;
     private final PackRepository packRepository;
     private final IPackService packService;
-    private final AuthServiceClient authServiceClient;
+    private final CourseEnrollmentRepository courseEnrollmentRepository;
+    private final CourseRepository courseRepository;
+    private final com.englishflow.courses.repository.LessonRepository lessonRepository;
+    private final LessonProgressService lessonProgressService;
+    private final CourseEnrollmentService courseEnrollmentService;
     
     @Override
     @Transactional
@@ -46,10 +52,10 @@ public class PackEnrollmentService implements IPackEnrollmentService {
             throw new RuntimeException("Enrollment is not open for this pack");
         }
         
-        // Create enrollment
+        // Create pack enrollment
         PackEnrollment enrollment = new PackEnrollment();
         enrollment.setStudentId(studentId);
-        enrollment.setStudentName("Student " + studentId); // Should be fetched from user service
+        enrollment.setStudentName("Student " + studentId);
         enrollment.setPackId(packId);
         enrollment.setPackName(pack.getName());
         enrollment.setPackCategory(pack.getCategory());
@@ -57,70 +63,205 @@ public class PackEnrollmentService implements IPackEnrollmentService {
         enrollment.setTutorId(pack.getTutorId());
         enrollment.setTutorName(pack.getTutorName());
         enrollment.setTotalCourses(pack.getCourseIds() != null ? pack.getCourseIds().size() : 0);
-        enrollment.setCompletedCourses(0);
         enrollment.setStatus("ACTIVE");
         enrollment.setIsActive(true);
-        enrollment.setProgressPercentage(0);
         
         PackEnrollment saved = enrollmentRepository.save(enrollment);
+        
+        // Auto-enroll student in all courses in the pack
+        if (pack.getCourseIds() != null && !pack.getCourseIds().isEmpty()) {
+            enrollStudentInPackCourses(studentId, pack.getCourseIds());
+        }
         
         // Update pack enrollment count
         packService.incrementEnrollment(packId);
         
-        return toDTO(saved);
+        return mapToDTO(saved, studentId);
+    }
+    
+    /**
+     * Automatically enroll student in all courses within the pack
+     */
+    @Transactional
+    private void enrollStudentInPackCourses(Long studentId, List<Long> courseIds) {
+        for (Long courseId : courseIds) {
+            try {
+                // Check if already enrolled in this course
+                if (!courseEnrollmentRepository.existsByStudentIdAndCourseIdAndIsActive(studentId, courseId, true)) {
+                    // FIX 2: Validate course exists and is PUBLISHED before enrolling
+                    Course course = courseRepository.findById(courseId).orElse(null);
+                    if (course == null) {
+                        System.err.println("Course " + courseId + " not found, skipping enrollment");
+                        continue;
+                    }
+                    
+                    if (course.getStatus() != com.englishflow.courses.enums.CourseStatus.PUBLISHED) {
+                        System.err.println("Course " + courseId + " is " + course.getStatus() + ", skipping enrollment");
+                        continue;
+                    }
+                    
+                    // Course is valid and published, proceed with enrollment
+                    CourseEnrollment courseEnrollment = new CourseEnrollment();
+                    courseEnrollment.setStudentId(studentId);
+                    courseEnrollment.setCourse(course);
+                    courseEnrollment.setIsActive(true);
+                    
+                    // Calculate total PUBLISHED lessons for this course
+                    Long totalLessons = lessonRepository.countPublishedByCourseId(courseId);
+                    courseEnrollment.setTotalLessons(totalLessons != null ? totalLessons.intValue() : 0);
+                    
+                    courseEnrollmentRepository.save(courseEnrollment);
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to enroll student " + studentId + " in course " + courseId + ": " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Calculate pack progress using WEIGHTED lesson-based formula
+     * Formula: (total completed lessons across all courses) / (total lessons across all courses) × 100
+     */
+    @Transactional(readOnly = true)
+    public double calculatePackProgress(Long studentId, Long packId) {
+        Pack pack = packRepository.findById(packId)
+            .orElseThrow(() -> new RuntimeException("Pack not found"));
+        
+        if (pack.getCourseIds() == null || pack.getCourseIds().isEmpty()) {
+            return 0.0;
+        }
+        
+        int totalCompletedLessons = 0;
+        int totalLessons = 0;
+        
+        // Get all course enrollments for this student in this pack
+        List<CourseEnrollment> courseEnrollments = courseEnrollmentRepository
+            .findByStudentIdAndIsActive(studentId, true).stream()
+            .filter(ce -> pack.getCourseIds().contains(ce.getCourse().getId()))
+            .collect(Collectors.toList());
+        
+        // Aggregate lesson counts across all courses
+        for (CourseEnrollment enrollment : courseEnrollments) {
+            totalLessons += enrollment.getTotalLessons();
+            totalCompletedLessons += courseEnrollmentService.getCompletedLessonsCount(
+                studentId, 
+                enrollment.getCourse().getId()
+            );
+        }
+        
+        // Calculate weighted percentage
+        if (totalLessons == 0) {
+            return 0.0;
+        }
+        
+        return (totalCompletedLessons / (double) totalLessons) * 100.0;
+    }
+    
+    /**
+     * Get count of completed courses in pack
+     */
+    @Transactional(readOnly = true)
+    public int getCompletedCoursesCount(Long studentId, Long packId) {
+        Pack pack = packRepository.findById(packId)
+            .orElseThrow(() -> new RuntimeException("Pack not found"));
+        
+        if (pack.getCourseIds() == null || pack.getCourseIds().isEmpty()) {
+            return 0;
+        }
+        
+        int completedCount = 0;
+        
+        for (Long courseId : pack.getCourseIds()) {
+            if (courseEnrollmentService.isCourseCompleted(studentId, courseId)) {
+                completedCount++;
+            }
+        }
+        
+        return completedCount;
+    }
+    
+    /**
+     * Check if pack is completed and mark it
+     * Pack is completed when ALL courses are completed
+     */
+    @Transactional
+    public void checkAndMarkPackCompletion(Long studentId, Long packId) {
+        PackEnrollment enrollment = enrollmentRepository.findByStudentIdAndPackId(studentId, packId)
+            .orElse(null);
+        
+        if (enrollment == null || enrollment.getCompletedAt() != null) {
+            return;
+        }
+        
+        Pack pack = packRepository.findById(packId).orElse(null);
+        if (pack == null || pack.getCourseIds() == null || pack.getCourseIds().isEmpty()) {
+            return;
+        }
+        
+        // Check if all courses are completed
+        boolean allCoursesCompleted = true;
+        for (Long courseId : pack.getCourseIds()) {
+            if (!courseEnrollmentService.isCourseCompleted(studentId, courseId)) {
+                allCoursesCompleted = false;
+                break;
+            }
+        }
+        
+        if (allCoursesCompleted) {
+            enrollment.setCompletedAt(LocalDateTime.now());
+            enrollment.setStatus("COMPLETED");
+            enrollment.setIsActive(false);
+            enrollmentRepository.save(enrollment);
+        }
     }
     
     @Override
     public PackEnrollmentDTO getById(Long id) {
-        return enrollmentRepository.findById(id)
-            .map(this::toDTO)
+        PackEnrollment enrollment = enrollmentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Enrollment not found with id: " + id));
+        
+        return mapToDTO(enrollment, enrollment.getStudentId());
     }
     
     @Override
     public List<PackEnrollmentDTO> getByStudentId(Long studentId) {
         return enrollmentRepository.findByStudentId(studentId).stream()
-            .map(this::toDTO)
+            .map(enrollment -> mapToDTO(enrollment, studentId))
             .collect(Collectors.toList());
     }
     
     @Override
     public List<PackEnrollmentDTO> getByPackId(Long packId) {
         return enrollmentRepository.findByPackId(packId).stream()
-            .map(this::toDTO)
+            .map(enrollment -> mapToDTO(enrollment, enrollment.getStudentId()))
             .collect(Collectors.toList());
     }
     
     @Override
     public List<PackEnrollmentDTO> getByTutorId(Long tutorId) {
         return enrollmentRepository.findByTutorId(tutorId).stream()
-            .map(this::toDTO)
+            .map(enrollment -> mapToDTO(enrollment, enrollment.getStudentId()))
             .collect(Collectors.toList());
     }
     
     @Override
     public List<PackEnrollmentDTO> getActiveEnrollmentsByStudent(Long studentId) {
         return enrollmentRepository.findByStudentIdAndIsActive(studentId, true).stream()
-            .map(this::toDTO)
+            .map(enrollment -> mapToDTO(enrollment, studentId))
             .collect(Collectors.toList());
     }
     
     @Override
     @Transactional
     public PackEnrollmentDTO updateProgress(Long enrollmentId, Integer progressPercentage) {
+        // This method is deprecated - progress is now calculated dynamically
         PackEnrollment enrollment = enrollmentRepository.findById(enrollmentId)
             .orElseThrow(() -> new RuntimeException("Enrollment not found with id: " + enrollmentId));
         
-        enrollment.setProgressPercentage(progressPercentage);
+        // Check and mark completion if needed
+        checkAndMarkPackCompletion(enrollment.getStudentId(), enrollment.getPackId());
         
-        // Auto-complete if 100%
-        if (progressPercentage >= 100) {
-            enrollment.setCompletedAt(LocalDateTime.now());
-            enrollment.setIsActive(false);
-        }
-        
-        PackEnrollment updated = enrollmentRepository.save(enrollment);
-        return toDTO(updated);
+        return mapToDTO(enrollment, enrollment.getStudentId());
     }
     
     @Override
@@ -131,7 +272,7 @@ public class PackEnrollmentService implements IPackEnrollmentService {
         
         enrollment.setCompletedAt(LocalDateTime.now());
         enrollment.setIsActive(false);
-        enrollment.setProgressPercentage(100);
+        enrollment.setStatus("COMPLETED");
         
         enrollmentRepository.save(enrollment);
     }
@@ -143,6 +284,7 @@ public class PackEnrollmentService implements IPackEnrollmentService {
             .orElseThrow(() -> new RuntimeException("Enrollment not found with id: " + enrollmentId));
         
         enrollment.setIsActive(false);
+        enrollment.setStatus("CANCELLED");
         enrollmentRepository.save(enrollment);
         
         // Update pack enrollment count
@@ -154,7 +296,10 @@ public class PackEnrollmentService implements IPackEnrollmentService {
         return enrollmentRepository.findByStudentIdAndPackId(studentId, packId).isPresent();
     }
     
-    private PackEnrollmentDTO toDTO(PackEnrollment enrollment) {
+    /**
+     * Map entity to DTO with dynamically calculated progress
+     */
+    private PackEnrollmentDTO mapToDTO(PackEnrollment enrollment, Long studentId) {
         PackEnrollmentDTO dto = new PackEnrollmentDTO();
         dto.setId(enrollment.getId());
         dto.setStudentId(enrollment.getStudentId());
@@ -166,12 +311,18 @@ public class PackEnrollmentService implements IPackEnrollmentService {
         dto.setTutorId(enrollment.getTutorId());
         dto.setTutorName(enrollment.getTutorName());
         dto.setTotalCourses(enrollment.getTotalCourses());
-        dto.setCompletedCourses(enrollment.getCompletedCourses());
         dto.setEnrolledAt(enrollment.getEnrolledAt());
         dto.setCompletedAt(enrollment.getCompletedAt());
         dto.setStatus(enrollment.getStatus());
-        dto.setProgressPercentage(enrollment.getProgressPercentage());
         dto.setIsActive(enrollment.getIsActive());
+        
+        // Calculate progress and completed courses dynamically
+        double progress = calculatePackProgress(studentId, enrollment.getPackId());
+        int completedCourses = getCompletedCoursesCount(studentId, enrollment.getPackId());
+        
+        dto.setProgressPercentage((int) Math.round(progress));
+        dto.setCompletedCourses(completedCourses);
+        
         return dto;
     }
 }

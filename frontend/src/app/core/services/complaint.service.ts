@@ -79,7 +79,7 @@ export interface ComplaintNotification {
   providedIn: 'root'
 })
 export class ComplaintService {
-  private apiUrl = 'http://localhost:8080/api/complaints';
+  private apiUrl = 'http://localhost:8088/api/complaints';
 
   constructor(private http: HttpClient) {}
 

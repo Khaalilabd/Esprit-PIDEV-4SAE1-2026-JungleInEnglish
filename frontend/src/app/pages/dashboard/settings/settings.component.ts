@@ -56,7 +56,7 @@ export class AdminSettingsComponent implements OnInit {
   loadUserProfile() {
     if (!this.currentUser) return;
     
-    this.http.get<any>(`http://localhost:8080/api/users/${this.currentUser.id}`).subscribe({
+    this.http.get<any>(`http://localhost:8088/api/users/${this.currentUser.id}`).subscribe({
       next: (userData) => {
         // Update current user with fresh data
         if (this.currentUser) {
@@ -132,7 +132,7 @@ export class AdminSettingsComponent implements OnInit {
     formData.append('file', this.selectedFile);
     
     // Use correct endpoint
-    this.http.post<any>(`http://localhost:8080/api/users/${this.currentUser.id}/upload-photo`, formData).subscribe({
+    this.http.post<any>(`http://localhost:8088/api/users/${this.currentUser.id}/upload-photo`, formData).subscribe({
       next: (response) => {
         Swal.fire({ icon: 'success', title: 'Success!', text: 'Profile photo updated', confirmButtonColor: '#3B82F6', timer: 2000 });
         this.profilePhotoPreview = null;

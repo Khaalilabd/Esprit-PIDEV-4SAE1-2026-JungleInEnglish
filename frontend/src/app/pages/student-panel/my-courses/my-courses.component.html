@@ -119,17 +119,27 @@
               </div>
             </div>
 
-            <!-- Action Button -->
-            <button class="start-btn" (click)="startCourse(course)">
-              @if (getCourseProgress(course.id!) > 0) {
-                <span>Continue Learning</span>
-              } @else {
-                <span>Start Course</span>
-              }
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </button>
+            <!-- Action Buttons -->
+            <div class="course-actions">
+              <button class="start-btn" (click)="startCourse(course)">
+                @if (getCourseProgress(course.id!) > 0) {
+                  <span>Continue Learning</span>
+                } @else {
+                  <span>Start Course</span>
+                }
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+              
+              <!-- FIX 1: Unenroll button -->
+              <button class="unenroll-btn" (click)="unenrollFromCourse(course)" title="Unenroll from this course">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Unenroll
+              </button>
+            </div>
           </div>
         </div>
       }

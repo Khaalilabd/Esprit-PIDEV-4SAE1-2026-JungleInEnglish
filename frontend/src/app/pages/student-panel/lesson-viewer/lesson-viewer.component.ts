@@ -121,11 +121,14 @@ export class LessonViewerComponent implements OnInit, OnDestroy {
         }
         
         // Process document URL if it's a document lesson
-        if (lesson.lessonType === 'DOCUMENT' && lesson.contentUrl) {
+        // Only set documentUrl if there's a contentUrl AND no HTML content
+        if (lesson.lessonType === 'DOCUMENT' && lesson.contentUrl && (!lesson.content || lesson.content.trim().length === 0)) {
           // Remove leading slash if present to avoid double slash
           const cleanUrl = lesson.contentUrl.startsWith('/') ? lesson.contentUrl.substring(1) : lesson.contentUrl;
           const docUrl = `http://localhost:8086/${cleanUrl}`;
           this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(docUrl);
+        } else {
+          this.documentUrl = null;
         }
       },
       error: (error) => {
@@ -285,12 +288,11 @@ export class LessonViewerComponent implements OnInit, OnDestroy {
       // Check if next lesson is unlocked
       if (this.isLessonUnlocked(nextLesson)) {
         this.navigateToLesson(nextLesson);
-      } else {
-        alert('Complete the current lesson to unlock the next one!');
       }
+      // Removed alert - just don't navigate if locked
     } else {
       // Last lesson - go back to course learning
-      alert('Congratulations! You completed all lessons in this course!');
+      // Removed congratulations alert
       this.goBack();
     }
   }
@@ -344,7 +346,7 @@ export class LessonViewerComponent implements OnInit, OnDestroy {
     
     // Check if lesson is unlocked
     if (!this.isLessonUnlocked(lesson)) {
-      alert('Complete previous lessons to unlock this one!');
+      // Removed alert - just don't navigate if locked
       return;
     }
     
@@ -429,5 +431,20 @@ export class LessonViewerComponent implements OnInit, OnDestroy {
       case 'INTERACTIVE': return '#ec4899';
       default: return '#6b7280';
     }
+  }
+
+  // Helper methods for DOCUMENT lessons with HTML content
+  hasDocumentHtmlContent(): boolean {
+    return !!(this.lesson?.lessonType === 'DOCUMENT' && this.lesson?.content && this.lesson.content.trim().length > 0);
+  }
+
+  getSafeDocumentHtml() {
+    if (!this.lesson?.content) return '';
+    return this.sanitizer.bypassSecurityTrustHtml(this.lesson.content);
+  }
+
+  getSafeTextHtml() {
+    if (!this.lesson?.content) return '';
+    return this.sanitizer.bypassSecurityTrustHtml(this.lesson.content);
   }
 }

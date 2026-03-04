@@ -164,7 +164,7 @@ export class RegisterComponent {
         
         // Rediriger vers la page HTML backend avec animation (via API Gateway)
         if (this.registerForm.get('role')?.value === 'STUDENT') {
-          window.location.href = `http://localhost:8080/activation-pending?email=${encodeURIComponent(this.registerForm.get('email')?.value)}&firstName=${encodeURIComponent(this.registerForm.get('firstName')?.value)}`;
+          window.location.href = `http://localhost:8088/activation-pending?email=${encodeURIComponent(this.registerForm.get('email')?.value)}&firstName=${encodeURIComponent(this.registerForm.get('firstName')?.value)}`;
         } else {
           // Pour TUTOR/ACADEMIC: rediriger vers la page Angular statique (activation par admin)
           this.router.navigate(['/activation-pending'], {

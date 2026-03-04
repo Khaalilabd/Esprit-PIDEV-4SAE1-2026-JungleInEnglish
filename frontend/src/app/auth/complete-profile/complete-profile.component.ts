@@ -34,7 +34,7 @@ export class CompleteProfileComponent implements OnInit {
   validationErrors: {field: string, message: string}[] = [];
   success = false;
 
-  private apiUrl = 'http://localhost:8080/api/auth'; // Via API Gateway
+  private apiUrl = 'http://localhost:8088/api/auth'; // Via API Gateway
 
   constructor(
     private route: ActivatedRoute,

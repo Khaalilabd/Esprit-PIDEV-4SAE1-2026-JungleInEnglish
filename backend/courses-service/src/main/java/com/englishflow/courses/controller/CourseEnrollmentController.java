@@ -52,15 +52,6 @@ public class CourseEnrollmentController {
         return ResponseEntity.ok(enrolled);
     }
     
-    @PutMapping("/progress")
-    public ResponseEntity<CourseEnrollmentDTO> updateProgress(
-            @RequestParam Long studentId,
-            @RequestParam Long courseId,
-            @RequestParam Double progress,
-            @RequestParam Integer completedLessons) {
-        CourseEnrollmentDTO updated = enrollmentService.updateProgress(studentId, courseId, progress, completedLessons);
-        return ResponseEntity.ok(updated);
-    }
     
     @GetMapping("/details")
     public ResponseEntity<CourseEnrollmentDTO> getEnrollment(
@@ -80,7 +71,8 @@ public class CourseEnrollmentController {
     public ResponseEntity<CourseEnrollmentDTO> calculateAndUpdateProgress(
             @RequestParam Long studentId,
             @RequestParam Long courseId) {
-        CourseEnrollmentDTO updated = enrollmentService.calculateAndUpdateProgress(studentId, courseId);
-        return ResponseEntity.ok(updated);
+        // Progress is now calculated dynamically - just fetch the enrollment
+        CourseEnrollmentDTO enrollment = enrollmentService.getEnrollment(studentId, courseId);
+        return ResponseEntity.ok(enrollment);
     }
 }

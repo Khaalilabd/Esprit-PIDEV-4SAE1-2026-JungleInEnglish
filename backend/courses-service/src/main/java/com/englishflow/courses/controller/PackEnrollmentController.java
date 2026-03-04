@@ -59,13 +59,6 @@ public class PackEnrollmentController {
         return ResponseEntity.ok(enrollments);
     }
     
-    @PutMapping("/{id}/progress")
-    public ResponseEntity<PackEnrollmentDTO> updateProgress(
-            @PathVariable Long id,
-            @RequestParam Integer progressPercentage) {
-        PackEnrollmentDTO updated = enrollmentService.updateProgress(id, progressPercentage);
-        return ResponseEntity.ok(updated);
-    }
     
     @PutMapping("/{id}/complete")
     public ResponseEntity<Void> completeEnrollment(@PathVariable Long id) {
@@ -85,5 +78,24 @@ public class PackEnrollmentController {
             @RequestParam Long packId) {
         boolean enrolled = enrollmentService.isStudentEnrolled(studentId, packId);
         return ResponseEntity.ok(enrolled);
+    }
+    
+    @PostMapping("/recalculate-progress")
+    public ResponseEntity<PackEnrollmentDTO> recalculateProgress(
+            @RequestParam Long studentId,
+            @RequestParam Long packId) {
+        try {
+            // Progress is now calculated dynamically - just fetch the enrollment
+            PackEnrollmentDTO enrollment = enrollmentService.getById(
+                enrollmentService.getByStudentId(studentId).stream()
+                    .filter(e -> e.getPackId().equals(packId))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Enrollment not found"))
+                    .getId()
+            );
+            return ResponseEntity.ok(enrollment);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 }

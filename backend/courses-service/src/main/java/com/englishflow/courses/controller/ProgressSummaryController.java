@@ -14,9 +14,9 @@ import java.util.List;
 public class ProgressSummaryController {
     
     private final ICourseEnrollmentService enrollmentService;
-    private final IChapterProgressService chapterProgressService;
     private final LessonProgressService lessonProgressService;
     private final ICourseService courseService;
+    private final ChapterService chapterService;
     
     @GetMapping("/summary")
     public ResponseEntity<StudentProgressSummaryDTO> getProgressSummary(
@@ -29,9 +29,6 @@ public class ProgressSummaryController {
         // Get course details
         CourseDTO course = courseService.getCourseById(courseId);
         
-        // Get chapter progress
-        List<ChapterProgressDTO> chapterProgress = chapterProgressService.getStudentCourseChapterProgress(studentId, courseId);
-        
         // Get lesson progress
         List<LessonProgressDTO> lessonProgress = List.of(); // Empty list for now
         
@@ -39,8 +36,8 @@ public class ProgressSummaryController {
         StudentProgressSummaryDTO.ProgressStatsDTO stats = new StudentProgressSummaryDTO.ProgressStatsDTO();
         stats.setTotalLessons(enrollment.getTotalLessons());
         stats.setCompletedLessons(enrollment.getCompletedLessons());
-        stats.setTotalChapters(chapterProgress.size());
-        stats.setCompletedChapters((int) chapterProgress.stream().filter(ChapterProgressDTO::getIsCompleted).count());
+        stats.setTotalChapters(0); // Can be calculated from course if needed
+        stats.setCompletedChapters(0); // Can be calculated if needed
         stats.setOverallProgress(enrollment.getProgress());
         stats.setTotalTimeSpentMinutes(lessonProgress.stream()
                 .mapToInt(lp -> lp.getTimeSpentMinutes() != null ? lp.getTimeSpentMinutes() : 0)
@@ -52,7 +49,7 @@ public class ProgressSummaryController {
         summary.setCourseId(courseId);
         summary.setCourseTitle(course.getTitle());
         summary.setEnrollment(enrollment);
-        summary.setChapterProgress(chapterProgress);
+        summary.setChapterProgress(List.of()); // No longer tracking chapter progress
         summary.setLessonProgress(lessonProgress);
         summary.setStats(stats);
         

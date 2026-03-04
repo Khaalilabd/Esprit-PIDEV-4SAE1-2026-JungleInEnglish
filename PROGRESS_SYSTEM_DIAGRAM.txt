@@ -1,0 +1,334 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    PROGRESS TRACKING SYSTEM ARCHITECTURE                     ║
+║                              EnglishFlow Platform                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          BEFORE REFACTORING (PROBLEMS)                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────┐
+    │ LessonProgress  │ ◄─── Stored in DB
+    │  (Source Data)  │
+    └────────┬────────┘
+             │
+             ├──────────────────────────────────────┐
+             │                                      │
+             ▼                                      ▼
+    ┌─────────────────────┐              ┌─────────────────────┐
+    │ CourseEnrollment    │              │  ChapterProgress    │
+    │ ─────────────────── │              │ ─────────────────── │
+    │ • progress          │◄─────────────│ • progress          │
+    │ • completedLessons  │   Events     │ • completedLessons  │
+    └──────────┬──────────┘              └─────────────────────┘
+               │                                    ▲
+               │ Events                             │
+               ▼                                    │
+    ┌─────────────────────┐                        │
+    │  PackEnrollment     │                        │
+    │ ─────────────────── │                        │
+    │ • progressPercentage│◄───────────────────────┘
+    │ • completedCourses  │      Events
+    └─────────────────────┘
+
+    PROBLEMS:
+    ❌ Multiple sources of truth (4 places storing progress)
+    ❌ Data synchronization issues (events can fail)
+    ❌ Stale data (calculated values not updated)
+    ❌ Incorrect formula (average instead of weighted)
+    ❌ Complex event cascade (hard to debug)
+    ❌ Race conditions (event timing issues)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          AFTER REFACTORING (SOLUTION)                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                      LessonProgress                             │
+    │                  (SINGLE SOURCE OF TRUTH)                       │
+    │ ─────────────────────────────────────────────────────────────── │
+    │ • studentId                                                     │
+    │ • lessonId                                                      │
+    │ • courseId                                                      │
+    │ • isCompleted ◄─── Only this is stored                         │
+    │ • completedAt                                                   │
+    │ • timeSpent                                                     │
+    └───────────────────────────┬─────────────────────────────────────┘
+                                │
+                                │ Queries (no events)
+                                │
+                ┌───────────────┼───────────────┐
+                │               │               │
+                ▼               ▼               ▼
+    ┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
+    │ ChapterService   │ │CourseService │ │  PackService     │
+    │ ──────────────── │ │────────────  │ │ ──────────────── │
+    │ calculate        │ │ calculate    │ │ calculate        │
+    │ ChapterProgress()│ │ CourseProgress│ │ PackProgress()   │
+    │                  │ │              │ │                  │
+    │ Returns:         │ │ Returns:     │ │ Returns:         │
+    │ • progress       │ │ • progress   │ │ • progress       │
+    │ • completed      │ │ • completed  │ │ • completed      │
+    │   lessons        │ │   lessons    │ │   courses        │
+    └──────────────────┘ └──────────────┘ └──────────────────┘
+            │                    │                   │
+            │                    │                   │
+            └────────────────────┴───────────────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │   Frontend      │
+                        │   Components    │
+                        │ ─────────────── │
+                        │ Display values  │
+                        │ (no calculation)│
+                        └─────────────────┘
+
+    BENEFITS:
+    ✅ Single source of truth (LessonProgress only)
+    ✅ No synchronization issues (direct queries)
+    ✅ Always accurate (calculated on-demand)
+    ✅ Correct weighted formula
+    ✅ Simple architecture (no events)
+    ✅ No race conditions
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              PROGRESS FORMULAS                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CHAPTER PROGRESS                                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Formula: (completedLessons / totalLessons) × 100                         │
+│                                                                             │
+│   Example:                                                                  │
+│   ┌──────────────────────────────────────────────────────────────┐        │
+│   │ Chapter: "Introduction to Grammar"                           │        │
+│   │ Total Lessons: 5                                             │        │
+│   │ Completed: 3                                                 │        │
+│   │                                                               │        │
+│   │ Progress = (3 / 5) × 100 = 60%                              │        │
+│   └──────────────────────────────────────────────────────────────┘        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ COURSE PROGRESS                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Formula: (completedLessons / totalLessons) × 100                         │
+│                                                                             │
+│   Example:                                                                  │
+│   ┌──────────────────────────────────────────────────────────────┐        │
+│   │ Course: "English Grammar Fundamentals"                       │        │
+│   │ Total Lessons: 20                                            │        │
+│   │ Completed: 15                                                │        │
+│   │                                                               │        │
+│   │ Progress = (15 / 20) × 100 = 75%                            │        │
+│   └──────────────────────────────────────────────────────────────┘        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PACK PROGRESS (WEIGHTED - CORRECT)                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Formula: (Σ completedLessons / Σ totalLessons) × 100                    │
+│                                                                             │
+│   Example:                                                                  │
+│   ┌──────────────────────────────────────────────────────────────┐        │
+│   │ Pack: "Complete English Course Bundle"                       │        │
+│   │                                                               │        │
+│   │ Course 1: Grammar Basics                                     │        │
+│   │   • Total: 10 lessons                                        │        │
+│   │   • Completed: 10 lessons (100%)                             │        │
+│   │                                                               │        │
+│   │ Course 2: Vocabulary Building                                │        │
+│   │   • Total: 10 lessons                                        │        │
+│   │   • Completed: 5 lessons (50%)                               │        │
+│   │                                                               │        │
+│   │ Course 3: Pronunciation                                      │        │
+│   │   • Total: 5 lessons                                         │        │
+│   │   • Completed: 0 lessons (0%)                                │        │
+│   │                                                               │        │
+│   │ ─────────────────────────────────────────────────────────── │        │
+│   │                                                               │        │
+│   │ OLD (Average - WRONG):                                       │        │
+│   │   (100% + 50% + 0%) / 3 = 50%                               │        │
+│   │   ❌ Treats all courses equally                              │        │
+│   │                                                               │        │
+│   │ NEW (Weighted - CORRECT):                                    │        │
+│   │   (10 + 5 + 0) / (10 + 10 + 5) × 100                        │        │
+│   │   = 15 / 25 × 100                                            │        │
+│   │   = 60%                                                       │        │
+│   │   ✅ Accounts for different lesson counts                    │        │
+│   └──────────────────────────────────────────────────────────────┘        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           PROGRESS BAR COLORS                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    0%                    25%                   50%                   75%                  100%
+    │                     │                     │                     │                     │
+    ▼                     ▼                     ▼                     ▼                     ▼
+┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐
+│ Blood   │         │  Dark   │         │ Brown/  │         │  Olive  │         │  Dark   │
+│  Red    │────────▶│  Red    │────────▶│ Orange  │────────▶│  Green  │────────▶│  Green  │
+│ #8B0000 │         │ #691900 │         │ #453200 │         │ #234B00 │         │ #006400 │
+└─────────┘         └─────────┘         └─────────┘         └─────────┘         └─────────┘
+rgb(139,0,0)      rgb(104,25,0)      rgb(69,50,0)       rgb(35,75,0)       rgb(0,100,0)
+
+Linear interpolation between Blood Red (0%) and Dark Green (100%)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              DATA FLOW                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    USER ACTION                    BACKEND                         FRONTEND
+    ───────────                    ───────                         ────────
+
+    Complete Lesson
+         │
+         ▼
+    POST /lesson-progress
+         │
+         ▼
+    ┌─────────────────────┐
+    │ LessonProgressService│
+    │ ─────────────────── │
+    │ 1. Mark completed   │
+    │ 2. Set timestamp    │
+    │ 3. Save to DB       │
+    └──────────┬──────────┘
+               │
+               ▼
+    ┌─────────────────────┐
+    │   Database          │
+    │ ─────────────────── │
+    │ lesson_progress     │
+    │ • is_completed=true │
+    └─────────────────────┘
+
+
+    View Progress
+         │
+         ▼
+    GET /pack-enrollments/student/{id}
+         │
+         ▼
+    ┌─────────────────────┐
+    │PackEnrollmentService│
+    │ ─────────────────── │
+    │ 1. Fetch enrollment │
+    │ 2. Calculate        │──────────┐
+    │    progress         │          │
+    │ 3. Return DTO       │          │
+    └──────────┬──────────┘          │
+               │                     │
+               │                     ▼
+               │              ┌─────────────────┐
+               │              │ Query DB:       │
+               │              │ COUNT lessons   │
+               │              │ WHERE completed │
+               │              └─────────────────┘
+               │
+               ▼
+    ┌─────────────────────┐
+    │   PackEnrollmentDTO │
+    │ ─────────────────── │
+    │ • progressPercentage│────────────────────▶ Display in UI
+    │ • completedCourses  │                      (no calculation)
+    │ • totalCourses      │
+    └─────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           DATABASE SCHEMA                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ lesson_progress (SOURCE OF TRUTH)                                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ id                BIGINT PRIMARY KEY                                        │
+│ student_id        BIGINT NOT NULL                                           │
+│ lesson_id         BIGINT NOT NULL                                           │
+│ course_id         BIGINT NOT NULL                                           │
+│ is_completed      BOOLEAN NOT NULL DEFAULT false  ◄─── ONLY STORED VALUE   │
+│ completed_at      TIMESTAMP                                                 │
+│ time_spent        INTEGER                                                   │
+│ last_accessed_at  TIMESTAMP                                                 │
+│ created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP                       │
+│ updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP                       │
+│                                                                             │
+│ UNIQUE (student_id, lesson_id)  ◄─── Prevents duplicates                   │
+│ INDEX (student_id)               ◄─── Performance                           │
+│ INDEX (course_id)                ◄─── Performance                           │
+│ INDEX (student_id, course_id)   ◄─── Performance                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ course_enrollments                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ id                BIGINT PRIMARY KEY                                        │
+│ student_id        BIGINT NOT NULL                                           │
+│ course_id         BIGINT NOT NULL                                           │
+│ enrolled_at       TIMESTAMP NOT NULL                                        │
+│ completed_at      TIMESTAMP                                                 │
+│ is_active         BOOLEAN NOT NULL                                          │
+│ total_lessons     INTEGER DEFAULT 0                                         │
+│ last_accessed_at  TIMESTAMP                                                 │
+│                                                                             │
+│ ❌ REMOVED: progress (was DOUBLE)                                           │
+│ ❌ REMOVED: completed_lessons (was INTEGER)                                 │
+│                                                                             │
+│ ✅ Progress now calculated from lesson_progress table                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ pack_enrollments                                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ id                BIGINT PRIMARY KEY                                        │
+│ student_id        BIGINT NOT NULL                                           │
+│ pack_id           BIGINT NOT NULL                                           │
+│ enrolled_at       TIMESTAMP NOT NULL                                        │
+│ completed_at      TIMESTAMP                                                 │
+│ status            VARCHAR(20) NOT NULL                                      │
+│ is_active         BOOLEAN NOT NULL                                          │
+│ total_courses     INTEGER NOT NULL                                          │
+│                                                                             │
+│ ❌ REMOVED: progress_percentage (was INTEGER)                               │
+│ ❌ REMOVED: completed_courses (was INTEGER)                                 │
+│                                                                             │
+│ ✅ Progress now calculated from lesson_progress table                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ chapter_progress                                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ❌ DELETED - Entire table removed                                           │
+│                                                                             │
+│ ✅ Chapter progress now calculated dynamically from lesson_progress         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              SUMMARY                                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✅ Single Source of Truth: LessonProgress table
+✅ Dynamic Calculation: All progress calculated on-demand
+✅ Correct Formula: Weighted pack progress (not average)
+✅ Simple Architecture: No event cascade
+✅ Data Consistency: No synchronization issues
+✅ Better Performance: Indexed queries
+✅ Easier Maintenance: Deterministic calculations
+
+Status: ✅ REFACTORING COMPLETE
+Date: March 2, 2026

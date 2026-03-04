@@ -3,17 +3,19 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { EditorModule } from '@tinymce/tinymce-angular';
 import { LessonService } from '../../../core/services/lesson.service';
 import { ChapterService } from '../../../core/services/chapter.service';
 import { CourseService } from '../../../core/services/course.service';
 import { Lesson, LessonType, CreateLessonRequest, UpdateLessonRequest } from '../../../core/models/lesson.model';
 import { Chapter } from '../../../core/models/chapter.model';
 import { Course } from '../../../core/models/course.model';
+import * as mammoth from 'mammoth';
 
 @Component({
   selector: 'app-lesson-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EditorModule],
   templateUrl: './lesson-management.component.html',
   styleUrl: './lesson-management.component.scss'
 })
@@ -35,13 +37,28 @@ export class LessonManagementComponent implements OnInit {
   lessonTypes = Object.values(LessonType);
   LessonType = LessonType;
   
+  // TinyMCE configuration with free plugins only
+  tinyMceConfig = {
+    plugins: [
+      'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 
+      'image', 'link', 'lists', 'media', 'searchreplace', 
+      'table', 'visualblocks', 'wordcount', 'code',
+      'fullscreen', 'help', 'insertdatetime', 'preview'
+    ],
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align | numlist bullist indent outdent | emoticons charmap | searchreplace | code fullscreen preview | help',
+    height: 400,
+    menubar: false,
+    branding: false,
+    resize: false
+  };
+  
   // Form data
   lessonForm: CreateLessonRequest = {
     title: '',
     description: '',
     content: '',
     contentUrl: '',
-    lessonType: LessonType.VIDEO,
+    lessonType: LessonType.TEXT,
     orderIndex: 0,
     duration: 0,
     isPreview: false,
@@ -56,6 +73,12 @@ export class LessonManagementComponent implements OnInit {
   previewVideoUrl: any = null;
   filePreviewUrl: any = null;
 
+  // Document conversion properties
+  convertingDocument = false;
+  conversionError: string | null = null;
+  convertedFileName: string | null = null;
+  showEditor = false;
+  
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -116,7 +139,7 @@ export class LessonManagementComponent implements OnInit {
       description: '',
       content: '',
       contentUrl: '',
-      lessonType: LessonType.VIDEO,
+      lessonType: LessonType.TEXT,
       orderIndex: this.lessons.length,
       duration: 0,
       isPreview: false,
@@ -142,6 +165,16 @@ export class LessonManagementComponent implements OnInit {
       chapterId: lesson.chapterId
     };
     this.selectedFile = null;
+    
+    // For DOCUMENT type lessons, if there's HTML content, show the editor
+    if (lesson.lessonType === LessonType.DOCUMENT && lesson.content && lesson.content.trim().length > 0) {
+      this.showEditor = true;
+      this.convertedFileName = lesson.title || 'document';
+    } else {
+      this.showEditor = false;
+      this.convertedFileName = null;
+    }
+    
     this.showEditModal = true;
   }
 
@@ -210,6 +243,18 @@ export class LessonManagementComponent implements OnInit {
     if (file) {
       this.selectedFile = file;
       
+      // Handle document conversion for DOCUMENT type lessons
+      if (this.lessonForm.lessonType === LessonType.DOCUMENT) {
+        const fileExtension = file.name.split('.').pop()?.toLowerCase();
+        
+        if (fileExtension === 'pdf' || fileExtension === 'docx') {
+          this.convertDocumentToHtml(file);
+          return;
+        } else {
+          this.conversionError = 'Only PDF and DOCX files can be converted to editable content. Other file types will be uploaded as downloadable documents.';
+        }
+      }
+      
       // Create preview URL for the file
       if (file.type.startsWith('video/')) {
         this.filePreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file));
@@ -232,7 +277,7 @@ export class LessonManagementComponent implements OnInit {
       case LessonType.VIDEO:
         return 'video/*';
       case LessonType.DOCUMENT:
-        return '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx';
+        return '.docx';
       default:
         return '*';
     }
@@ -259,6 +304,94 @@ export class LessonManagementComponent implements OnInit {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
+  async convertDocumentToHtml(file: File): Promise<void> {
+    this.convertingDocument = true;
+    this.conversionError = null;
+    this.convertedFileName = file.name;
+
+    try {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileExtension === 'docx') {
+        await this.convertWordToHtml(file);
+        this.showEditor = true;
+      } else {
+        this.conversionError = 'Only DOCX files are supported. Please upload a .docx file.';
+      }
+    } catch (error) {
+      console.error('Conversion error:', error);
+      this.conversionError = 'Failed to convert document. Please try again or upload a different file.';
+    } finally {
+      this.convertingDocument = false;
+    }
+  }
+
+  private async convertWordToHtml(file: File): Promise<void> {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    this.lessonForm.content = result.value;
+    // Clear contentUrl since we're using HTML content instead
+    this.lessonForm.contentUrl = '';
+    
+    if (result.messages.length > 0) {
+      console.warn('Conversion warnings:', result.messages);
+    }
+  }
+
+  changeFile(): void {
+    this.showEditor = false;
+    this.convertedFileName = null;
+    this.lessonForm.content = '';
+    this.selectedFile = null;
+    this.conversionError = null;
+  }
+
+  // FIX 3: Publish validation method
+  canPublish(lesson: any): boolean {
+    switch (lesson.lessonType) {
+      case LessonType.VIDEO:
+        return !!(lesson.contentUrl && lesson.contentUrl.trim().length > 0);
+      case LessonType.DOCUMENT:
+        return !!(
+          (lesson.contentUrl && lesson.contentUrl.trim().length > 0) ||
+          (lesson.content && lesson.content.trim().length > 0)
+        );
+      case LessonType.TEXT:
+        return !!(lesson.content && lesson.content.trim().length > 0);
+      case LessonType.QUIZ:
+        return false; // Quiz builder not implemented yet
+      case LessonType.ASSIGNMENT:
+        return !!(
+          (lesson.content && lesson.content.trim().length > 0) ||
+          (lesson.contentUrl && lesson.contentUrl.trim().length > 0)
+        );
+      case LessonType.INTERACTIVE:
+        return !!(lesson.contentUrl && lesson.contentUrl.trim().length > 0);
+      default:
+        return false;
+    }
+  }
+
+  getPublishTooltip(lesson: any): string {
+    if (lesson.lessonType === LessonType.QUIZ) {
+      return 'Quiz builder coming soon - cannot publish yet';
+    }
+    return 'Add content before publishing';
+  }
+
+  // Helper methods for template null checking
+  hasDocumentContent(lesson: any): boolean {
+    return lesson?.content && lesson.content.trim().length > 0;
+  }
+
+  hasNoDocumentContent(lesson: any): boolean {
+    return !lesson?.content || lesson.content.trim().length === 0;
+  }
+
+  getDocumentContent(lesson: any): string {
+    return lesson?.content || '';
+  }
+
   createLesson(): void {
     if (!this.lessonForm.title || !this.lessonForm.description) {
       alert('Please fill in all required fields');
@@ -268,15 +401,19 @@ export class LessonManagementComponent implements OnInit {
     console.log('Creating lesson with data:', this.lessonForm);
     this.loading = true;
     
+    // For DOCUMENT type lessons that have been converted to HTML, don't upload the file
+    const shouldUploadFile = this.selectedFile && 
+      !(this.lessonForm.lessonType === LessonType.DOCUMENT && this.showEditor && this.lessonForm.content);
+    
     // First create the lesson
     this.lessonService.createLesson(this.lessonForm).subscribe({
       next: (createdLesson) => {
-        // If there's a file to upload, upload it
-        if (this.selectedFile && createdLesson.id) {
+        // If there's a file to upload and it's not a converted document, upload it
+        if (shouldUploadFile && createdLesson.id) {
           this.uploadingFile = true;
           const uploadObservable = this.lessonForm.lessonType === LessonType.VIDEO
-            ? this.lessonService.uploadVideo(createdLesson.id, this.selectedFile)
-            : this.lessonService.uploadDocument(createdLesson.id, this.selectedFile);
+            ? this.lessonService.uploadVideo(createdLesson.id, this.selectedFile!)
+            : this.lessonService.uploadDocument(createdLesson.id, this.selectedFile!);
           
           uploadObservable.subscribe({
             next: (response) => {
@@ -312,69 +449,110 @@ export class LessonManagementComponent implements OnInit {
   }
 
   updateLesson(): void {
-    if (!this.selectedLesson?.id) return;
-    
-    if (!this.lessonForm.title || !this.lessonForm.description) {
-      alert('Please fill in all required fields');
-      return;
+      if (!this.selectedLesson?.id) return;
+
+      if (!this.lessonForm.title || !this.lessonForm.description) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      this.loading = true;
+      const updateRequest: UpdateLessonRequest = {
+        title: this.lessonForm.title,
+        description: this.lessonForm.description,
+        content: this.lessonForm.content,
+        contentUrl: this.lessonForm.contentUrl,
+        lessonType: this.lessonForm.lessonType,
+        orderIndex: this.lessonForm.orderIndex,
+        duration: this.lessonForm.duration,
+        isPreview: this.lessonForm.isPreview,
+        isPublished: this.lessonForm.isPublished,
+        chapterId: this.chapterId
+      };
+
+      // FIX 1: Check if we need to replace existing file
+      const hasExistingFile = this.selectedLesson.contentUrl && this.selectedLesson.contentUrl.trim().length > 0;
+      const hasNewFile = this.selectedFile !== null;
+
+      if (hasExistingFile && hasNewFile) {
+        // Confirm file replacement
+        const confirmed = confirm('This will replace the existing file. Continue?');
+        if (!confirmed) {
+          // User cancelled - clear selected file and keep existing
+          this.selectedFile = null;
+          this.loading = false;
+          return;
+        }
+
+        // Delete old file first
+        this.lessonService.deleteContentFile(this.selectedLesson.id).subscribe({
+          next: () => {
+            console.log('Old file deleted successfully');
+            // Now proceed with update and new file upload
+            this.proceedWithUpdate(updateRequest);
+          },
+          error: (error) => {
+            console.error('Error deleting old file:', error);
+            alert('Failed to delete old file. Please try again.');
+            this.loading = false;
+          }
+        });
+      } else {
+        // No file replacement needed, proceed normally
+        this.proceedWithUpdate(updateRequest);
+      }
     }
-    
-    this.loading = true;
-    const updateRequest: UpdateLessonRequest = {
-      title: this.lessonForm.title,
-      description: this.lessonForm.description,
-      content: this.lessonForm.content,
-      contentUrl: this.lessonForm.contentUrl,
-      lessonType: this.lessonForm.lessonType,
-      orderIndex: this.lessonForm.orderIndex,
-      duration: this.lessonForm.duration,
-      isPreview: this.lessonForm.isPreview,
-      isPublished: this.lessonForm.isPublished,
-      chapterId: this.chapterId
-    };
-    
-    // First update the lesson
-    this.lessonService.updateLesson(this.selectedLesson.id, updateRequest).subscribe({
-      next: (updatedLesson) => {
-        // If there's a new file to upload, upload it
-        if (this.selectedFile && updatedLesson.id) {
-          this.uploadingFile = true;
-          const uploadObservable = this.lessonForm.lessonType === LessonType.VIDEO
-            ? this.lessonService.uploadVideo(updatedLesson.id, this.selectedFile)
-            : this.lessonService.uploadDocument(updatedLesson.id, this.selectedFile);
-          
-          uploadObservable.subscribe({
-            next: (response) => {
-              this.uploadingFile = false;
-              this.uploadProgress = 100;
-              console.log('File uploaded successfully:', response.message);
-              this.loadLessons();
-              this.closeModals();
-              this.loading = false;
-            },
-            error: (error) => {
-              this.uploadingFile = false;
-              console.error('Error uploading file:', error);
-              alert('Lesson updated but file upload failed: ' + (error.error?.error || 'Unknown error'));
-              this.loadLessons();
-              this.closeModals();
-              this.loading = false;
-            }
-          });
-        } else {
-          // No file to upload, just reload
-          this.loadLessons();
-          this.closeModals();
+
+    private proceedWithUpdate(updateRequest: UpdateLessonRequest): void {
+      if (!this.selectedLesson?.id) return;
+
+      // For DOCUMENT type lessons that have been converted to HTML, don't upload the file
+      const shouldUploadFile = this.selectedFile && 
+        !(this.lessonForm.lessonType === LessonType.DOCUMENT && this.showEditor && this.lessonForm.content);
+
+      // First update the lesson
+      this.lessonService.updateLesson(this.selectedLesson.id, updateRequest).subscribe({
+        next: (updatedLesson) => {
+          // If there's a new file to upload and it's not a converted document, upload it
+          if (shouldUploadFile && updatedLesson.id) {
+            this.uploadingFile = true;
+            const uploadObservable = this.lessonForm.lessonType === LessonType.VIDEO
+              ? this.lessonService.uploadVideo(updatedLesson.id, this.selectedFile!)
+              : this.lessonService.uploadDocument(updatedLesson.id, this.selectedFile!);
+
+            uploadObservable.subscribe({
+              next: (response) => {
+                this.uploadingFile = false;
+                this.uploadProgress = 100;
+                console.log('File uploaded successfully:', response.message);
+                this.loadLessons();
+                this.closeModals();
+                this.loading = false;
+              },
+              error: (error) => {
+                this.uploadingFile = false;
+                console.error('Error uploading file:', error);
+                alert('Lesson updated but file upload failed: ' + (error.error?.error || 'Unknown error'));
+                this.loadLessons();
+                this.closeModals();
+                this.loading = false;
+              }
+            });
+          } else {
+            // No file to upload, just reload
+            this.loadLessons();
+            this.closeModals();
+            this.loading = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error updating lesson:', error);
+          alert('Error updating lesson: ' + (error.error?.message || 'Unknown error'));
           this.loading = false;
         }
-      },
-      error: (error) => {
-        console.error('Error updating lesson:', error);
-        alert('Error updating lesson: ' + (error.error?.message || 'Unknown error'));
-        this.loading = false;
-      }
-    });
-  }
+      });
+    }
+
 
   deleteLesson(): void {
     if (!this.selectedLesson?.id) return;
@@ -458,4 +636,5 @@ export class LessonManagementComponent implements OnInit {
     };
     return colors[type] || 'bg-gray-100 text-gray-700';
   }
+
 }

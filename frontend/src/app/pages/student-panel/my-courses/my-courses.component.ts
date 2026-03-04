@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { PackEnrollmentService } from '../../../core/services/pack-enrollment.service';
 import { PackService } from '../../../core/services/pack.service';
 import { CourseService } from '../../../core/services/course.service';
+import { CourseEnrollmentService } from '../../../core/services/course-enrollment.service';
 import { CourseCategoryService } from '../../../core/services/course-category.service';
 import { LessonProgressService } from '../../../core/services/lesson-progress.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -39,6 +40,7 @@ export class MyCoursesComponent implements OnInit {
     private packEnrollmentService: PackEnrollmentService,
     private packService: PackService,
     private courseService: CourseService,
+    private courseEnrollmentService: CourseEnrollmentService,
     private categoryService: CourseCategoryService,
     private progressService: LessonProgressService,
     private authService: AuthService,
@@ -230,5 +232,34 @@ export class MyCoursesComponent implements OnInit {
     this.selectedCategory = null;
     this.selectedLevel = null;
     this.searchQuery = '';
+  }
+
+  // FIX 1: Unenroll from course functionality
+  unenrollFromCourse(course: Course): void {
+    if (!course.id) return;
+    
+    const confirmed = confirm(
+      `Are you sure you want to unenroll from "${course.title}"?\n\nYour progress will be lost and cannot be recovered.`
+    );
+    
+    if (!confirmed) return;
+    
+    this.courseEnrollmentService.unenrollStudent(this.currentStudentId, course.id).subscribe({
+      next: () => {
+        // Clear cache for this course
+        this.progressService.clearCache(course.id);
+        
+        // Remove course from local list
+        this.courses = this.courses.filter(c => c.id !== course.id);
+        this.courseProgressMap.delete(course.id!);
+        
+        // Show success message
+        alert(`Successfully unenrolled from "${course.title}"`);
+      },
+      error: (error) => {
+        console.error('Error unenrolling from course:', error);
+        alert('Failed to unenroll. Please try again.');
+      }
+    });
   }
 }

@@ -58,7 +58,7 @@ export class StudentSettingsComponent implements OnInit {
     
     console.log('Loading user profile for ID:', this.currentUser.id);
     
-    this.http.get<any>(`http://localhost:8080/api/users/${this.currentUser.id}`).subscribe({
+    this.http.get<any>(`http://localhost:8088/api/users/${this.currentUser.id}`).subscribe({
       next: (userData) => {
         console.log('User data loaded from backend:', userData);
         // Update current user with fresh data
@@ -138,7 +138,7 @@ export class StudentSettingsComponent implements OnInit {
     console.log('Uploading profile photo for user ID:', this.currentUser.id);
     
     // Use correct endpoint
-    this.http.post<any>(`http://localhost:8080/api/users/${this.currentUser.id}/upload-photo`, formData).subscribe({
+    this.http.post<any>(`http://localhost:8088/api/users/${this.currentUser.id}/upload-photo`, formData).subscribe({
       next: (response) => {
         console.log('Upload response:', response);
         Swal.fire({ icon: 'success', title: 'Success!', text: 'Profile photo updated', confirmButtonColor: '#F6BD60', timer: 2000 });

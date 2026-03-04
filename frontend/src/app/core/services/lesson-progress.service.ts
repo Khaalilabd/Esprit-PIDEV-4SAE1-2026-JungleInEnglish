@@ -76,10 +76,6 @@ export class LessonProgressService {
       );
   }
 
-  // Update progress
-  updateProgress(progressId: number, request: UpdateLessonProgressRequest): Observable<LessonProgress> {
-    return this.http.put<LessonProgress>(`${this.apiUrl}/${progressId}`, request);
-  }
 
   // Check if lesson is completed (from cache or API)
   isLessonCompleted(courseId: number, lessonId: number): boolean {
@@ -87,9 +83,16 @@ export class LessonProgressService {
     return completedSet ? completedSet.has(lessonId) : false;
   }
 
-  // Clear cache (useful when switching courses)
-  clearCache(): void {
-    this.completedLessonsCache.clear();
+  // FIX 4: Clear cache (useful when switching courses or unenrolling)
+  // Now accepts optional courseId to clear specific course or all courses
+  clearCache(courseId?: number): void {
+    if (courseId !== undefined) {
+      // Clear cache for specific course only
+      this.completedLessonsCache.delete(courseId);
+    } else {
+      // Clear all cache
+      this.completedLessonsCache.clear();
+    }
   }
 
   // Get all completed lesson IDs for a course

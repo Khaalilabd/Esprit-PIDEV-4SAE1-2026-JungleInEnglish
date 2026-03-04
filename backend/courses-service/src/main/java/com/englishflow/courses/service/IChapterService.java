@@ -50,4 +50,8 @@ public interface IChapterService {
      * Check if chapter belongs to course
      */
     boolean belongsToCourse(Long chapterId, Long courseId);
+    
+    // FIX 3: Bulk publish/unpublish methods
+    List<ChapterDTO> publishAllChaptersByCourse(Long courseId);
+    List<ChapterDTO> unpublishAllChaptersByCourse(Long courseId);
 }

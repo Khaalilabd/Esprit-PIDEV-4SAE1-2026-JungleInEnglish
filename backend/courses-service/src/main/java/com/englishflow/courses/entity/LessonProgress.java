@@ -10,7 +10,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "lesson_progress")
+@Table(name = "lesson_progress",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "lesson_id"}),
+    indexes = {
+        @Index(name = "idx_student_id", columnList = "student_id"),
+        @Index(name = "idx_course_id", columnList = "course_id"),
+        @Index(name = "idx_student_course", columnList = "student_id, course_id")
+    })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

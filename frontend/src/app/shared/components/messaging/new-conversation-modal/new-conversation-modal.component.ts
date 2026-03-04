@@ -96,7 +96,7 @@ export class NewConversationModalComponent implements OnInit {
 
   getUserAvatar(user: User): string {
     if (user.profilePhotoUrl && !user.profilePhotoUrl.includes('ui-avatars.com')) {
-      return `http://localhost:8080${user.profilePhotoUrl}`;
+      return `http://localhost:8088${user.profilePhotoUrl}`;
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=667eea&color=fff&bold=true&size=128`;
   }

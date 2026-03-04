@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/englishflow_courses
     username: postgres
-    password: postgres
+    password: root
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

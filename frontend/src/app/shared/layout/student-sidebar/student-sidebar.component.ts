@@ -67,6 +67,11 @@ export class StudentSidebarComponent {
           badgeColor: "bg-green-500"
         },
         {
+          icon: 'fas fa-shopping-bag',
+          name: "Browse Packs",
+          path: "/user-panel/pack-catalog",
+        },
+        {
           icon: 'fas fa-book',
           name: "My Courses",
           path: "/user-panel/my-courses",

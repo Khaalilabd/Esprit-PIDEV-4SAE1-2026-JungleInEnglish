@@ -154,13 +154,17 @@
 
           <!-- TEXT Lesson -->
           @if (lesson.lessonType === 'TEXT') {
-            <div class="text-content" [innerHTML]="lesson.content"></div>
+            <div class="text-content" [innerHTML]="getSafeTextHtml()"></div>
           }
 
           <!-- DOCUMENT Lesson -->
           @if (lesson.lessonType === 'DOCUMENT') {
             <div class="document-container">
-              @if (documentUrl) {
+              <!-- Show HTML content if available -->
+              @if (hasDocumentHtmlContent()) {
+                <div class="text-content" [innerHTML]="getSafeDocumentHtml()"></div>
+              } @else if (documentUrl) {
+                <!-- Show file preview and download button only if no HTML content -->
                 <div class="document-preview">
                   <iframe [src]="documentUrl" frameborder="0"></iframe>
                 </div>

@@ -441,7 +441,7 @@ export class MessagingContainerComponent implements OnInit, OnDestroy {
   getFileUrl(fileUrl?: string): string {
     if (!fileUrl) return '';
     if (fileUrl.startsWith('http')) return fileUrl;
-    return `http://localhost:8080${fileUrl}`;
+    return `http://localhost:8088${fileUrl}`;
   }
   
   formatFileSize(bytes?: number): string {
@@ -493,7 +493,7 @@ export class MessagingContainerComponent implements OnInit, OnDestroy {
   getAvatar(conv: Conversation): string {
     const other = conv.participants.find(p => p.userId !== this.currentUserId);
     if (other?.userAvatar && !other.userAvatar.includes('ui-avatars.com')) {
-      return `http://localhost:8080${other.userAvatar}`;
+      return `http://localhost:8088${other.userAvatar}`;
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(this.getTitle(conv))}&background=667eea&color=fff&bold=true&size=128`;
   }

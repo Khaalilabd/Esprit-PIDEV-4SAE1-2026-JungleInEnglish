@@ -69,4 +69,17 @@ public class ChapterController {
         boolean belongs = chapterService.belongsToCourse(chapterId, courseId);
         return ResponseEntity.ok(belongs);
     }
+    
+    // FIX 3: Bulk publish/unpublish all chapters in a course
+    @PutMapping("/course/{courseId}/publish-all")
+    public ResponseEntity<List<ChapterDTO>> publishAllChaptersByCourse(@PathVariable Long courseId) {
+        List<ChapterDTO> chapters = chapterService.publishAllChaptersByCourse(courseId);
+        return ResponseEntity.ok(chapters);
+    }
+    
+    @PutMapping("/course/{courseId}/unpublish-all")
+    public ResponseEntity<List<ChapterDTO>> unpublishAllChaptersByCourse(@PathVariable Long courseId) {
+        List<ChapterDTO> chapters = chapterService.unpublishAllChaptersByCourse(courseId);
+        return ResponseEntity.ok(chapters);
+    }
 }

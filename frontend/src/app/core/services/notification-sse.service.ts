@@ -63,7 +63,7 @@ export class NotificationSseService {
     
     // SOLUTION FIABLE: Connexion directe au service pour SSE
     // Spring Cloud Gateway (Reactor Netty) ne supporte pas bien les SSE
-    // Tous les autres endpoints passent par le Gateway (8080)
+    // Tous les autres endpoints passent par le Gateway (8088)
     // Seul SSE passe directement par le service (8087)
     const url = `http://localhost:8087/notifications/stream/${userId}?role=${encodeURIComponent(userRole)}`;
     console.log('🔌 Connecting to SSE (direct to service):', url);

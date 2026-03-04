@@ -18,6 +18,7 @@ public class ChapterService implements IChapterService {
     
     private final ChapterRepository chapterRepository;
     private final CourseRepository courseRepository;
+    private final com.englishflow.courses.repository.LessonProgressRepository progressRepository;
     
     @Override
     @Transactional(readOnly = true)
@@ -127,5 +128,94 @@ public class ChapterService implements IChapterService {
         chapter.setEstimatedDuration(dto.getEstimatedDuration());
         chapter.setIsPublished(dto.getIsPublished() != null ? dto.getIsPublished() : false);
         return chapter;
+    }
+    
+    /**
+     * Calculate chapter progress dynamically from LessonProgress
+     * Formula: (completed lessons in chapter / total lessons in chapter) × 100
+     */
+    @Transactional(readOnly = true)
+    public double calculateChapterProgress(Long studentId, Long chapterId) {
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            return 0.0;
+        }
+        
+        // Get all lessons in this chapter
+        List<com.englishflow.courses.entity.Lesson> lessons = chapter.getLessons();
+        if (lessons == null || lessons.isEmpty()) {
+            return 0.0;
+        }
+        
+        // Count published lessons only
+        long totalLessons = lessons.stream()
+                .filter(lesson -> lesson.getIsPublished() != null && lesson.getIsPublished())
+                .count();
+        
+        if (totalLessons == 0) {
+            return 0.0;
+        }
+        
+        // Count completed lessons
+        List<Long> lessonIds = lessons.stream()
+                .filter(lesson -> lesson.getIsPublished() != null && lesson.getIsPublished())
+                .map(com.englishflow.courses.entity.Lesson::getId)
+                .collect(Collectors.toList());
+        
+        long completedLessons = lessonIds.stream()
+                .filter(lessonId -> {
+                    com.englishflow.courses.entity.LessonProgress progress = 
+                        progressRepository.findByStudentIdAndLessonId(studentId, lessonId).orElse(null);
+                    return progress != null && progress.getIsCompleted();
+                })
+                .count();
+        
+        return (completedLessons / (double) totalLessons) * 100.0;
+    }
+    
+    /**
+     * Get completed lessons count in a chapter
+     */
+    @Transactional(readOnly = true)
+    public int getCompletedLessonsInChapter(Long studentId, Long chapterId) {
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            return 0;
+        }
+        
+        List<com.englishflow.courses.entity.Lesson> lessons = chapter.getLessons();
+        if (lessons == null || lessons.isEmpty()) {
+            return 0;
+        }
+        
+        List<Long> lessonIds = lessons.stream()
+                .filter(lesson -> lesson.getIsPublished() != null && lesson.getIsPublished())
+                .map(com.englishflow.courses.entity.Lesson::getId)
+                .collect(Collectors.toList());
+        
+        return (int) lessonIds.stream()
+                .filter(lessonId -> {
+                    com.englishflow.courses.entity.LessonProgress progress = 
+                        progressRepository.findByStudentIdAndLessonId(studentId, lessonId).orElse(null);
+                    return progress != null && progress.getIsCompleted();
+                })
+                .count();
+    }
+    
+    // FIX 3: Bulk publish/unpublish all chapters in a course
+    @Transactional
+    public List<ChapterDTO> publishAllChaptersByCourse(Long courseId) {
+        List<Chapter> chapters = chapterRepository.findByCourseIdOrderByOrderIndexAsc(courseId);
+        chapters.forEach(chapter -> chapter.setIsPublished(true));
+        List<Chapter> updated = chapterRepository.saveAll(chapters);
+        return updated.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public List<ChapterDTO> unpublishAllChaptersByCourse(Long courseId) {
+        List<Chapter> chapters = chapterRepository.findByCourseIdOrderByOrderIndexAsc(courseId);
+        chapters.forEach(chapter -> chapter.setIsPublished(false));
+        List<Chapter> updated = chapterRepository.saveAll(chapters);
+        return updated.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 }

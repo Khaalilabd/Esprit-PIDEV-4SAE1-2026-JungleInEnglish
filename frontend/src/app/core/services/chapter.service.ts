@@ -21,10 +21,6 @@ export class ChapterService {
     return this.http.get<Chapter>(`${this.apiUrl}/${id}`);
   }
 
-  getAllChapters(): Observable<Chapter[]> {
-    return this.http.get<Chapter[]>(this.apiUrl);
-  }
-
   getChaptersByCourse(courseId: number): Observable<Chapter[]> {
     return this.http.get<Chapter[]>(`${this.apiUrl}/course/${courseId}`);
   }
@@ -41,11 +37,12 @@ export class ChapterService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  chapterExists(id: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${id}/exists`);
+  // FIX 3: Bulk publish/unpublish all chapters in a course
+  publishAllChaptersByCourse(courseId: number): Observable<Chapter[]> {
+    return this.http.put<Chapter[]>(`${this.apiUrl}/course/${courseId}/publish-all`, {});
   }
 
-  chapterBelongsToCourse(chapterId: number, courseId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${chapterId}/belongs-to-course/${courseId}`);
+  unpublishAllChaptersByCourse(courseId: number): Observable<Chapter[]> {
+    return this.http.put<Chapter[]>(`${this.apiUrl}/course/${courseId}/unpublish-all`, {});
   }
 }

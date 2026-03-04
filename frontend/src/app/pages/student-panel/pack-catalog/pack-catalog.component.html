@@ -1,63 +1,68 @@
 <div class="space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Pack Catalog</h1>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Browse and enroll in learning packs</p>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Browse Packs</h1>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Discover and enroll in learning packs</p>
     </div>
+    <button 
+      routerLink="/user-panel/my-packs"
+      class="inline-flex items-center justify-center px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      My Packs
+    </button>
+  </div>
 
-    <!-- Message Alert -->
-    <div *ngIf="message" 
-      class="p-4 rounded-lg"
-      [ngClass]="{
-        'bg-green-50 text-green-800 border border-green-200': messageType === 'success',
-        'bg-red-50 text-red-800 border border-red-200': messageType === 'error'
-      }">
-      {{ message }}
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Category Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Category
-          </label>
-          <select
-            [(ngModel)]="selectedCategory"
-            (ngModelChange)="onCategoryChange()"
-            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
-            <option value="">All Categories</option>
-            <option *ngFor="let category of categories" [value]="category.name">
-              {{ category.icon }} {{ category.name }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Level Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Level
-          </label>
-          <select
-            [(ngModel)]="selectedLevel"
-            (ngModelChange)="onLevelChange()"
-            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
-            <option value="">All Levels</option>
-            <option *ngFor="let level of allLevels" [value]="level">{{ level }}</option>
-          </select>
-        </div>
-
-        <!-- Clear Filters -->
-        <div class="flex items-end">
-          <button
-            (click)="clearFilters()"
-            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-            Clear Filters
-          </button>
-        </div>
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Search -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search packs..."
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
       </div>
+
+      <!-- Category Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+        <select
+          [(ngModel)]="selectedCategory"
+          (ngModelChange)="onCategoryChange()"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category.name">
+            {{ category.icon }} {{ category.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Level Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Level</label>
+        <select
+          [(ngModel)]="selectedLevel"
+          (ngModelChange)="onLevelChange()"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+          <option value="">All Levels</option>
+          <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Clear Filters -->
+    <div *ngIf="searchTerm || selectedCategory || selectedLevel" class="mt-4">
+      <button
+        (click)="clearFilters()"
+        class="text-sm text-primary hover:text-primary-600 font-medium">
+        Clear all filters
+      </button>
     </div>
   </div>
 
@@ -67,197 +72,125 @@
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="!loading && packs.length === 0" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+  <div *ngIf="!loading && filteredPacks.length === 0" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
     <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No packs available</h3>
-    <p class="text-gray-600 dark:text-gray-400">Try adjusting your filters or check back later for new packs.</p>
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No packs found</h3>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">Try adjusting your filters or check back later</p>
+    <button
+      (click)="clearFilters()"
+      class="inline-flex items-center justify-center px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all">
+      Clear Filters
+    </button>
   </div>
 
   <!-- Packs Grid -->
-  <div *ngIf="!loading && packs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let pack of packs" 
-      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-200">
+  <div *ngIf="!loading && filteredPacks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let pack of filteredPacks"
+      (click)="viewPackDetails(pack)"
+      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer">
       
-      <!-- Pack Header with Category Color -->
+      <!-- Category Color Bar -->
       <div 
         class="h-2"
         [style.background-color]="getCategoryColor(pack.category)">
       </div>
 
       <div class="p-6">
-        <!-- Category Badge & Level -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span 
-              class="px-3 py-1 rounded-full text-sm font-medium"
-              [style.background-color]="getCategoryColor(pack.category) + '20'"
-              [style.color]="getCategoryColor(pack.category)">
-              {{ getCategoryIcon(pack.category) }} {{ pack.category }}
-            </span>
-            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-              {{ pack.level }}
-            </span>
+        <!-- Pack Header -->
+        <div class="flex items-start gap-3 mb-4">
+          <div 
+            class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
+            [style.background-color]="getCategoryColor(pack.category) + '20'"
+            [style.color]="getCategoryColor(pack.category)">
+            {{ getCategoryIcon(pack.category) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1 line-clamp-2">
+              {{ pack.name }}
+            </h3>
+            <div class="flex items-center gap-2 text-sm">
+              <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+                {{ pack.category }}
+              </span>
+              <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded">
+                {{ pack.level }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Pack Name -->
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          {{ pack.name }}
-        </h3>
-
         <!-- Description -->
-        <p *ngIf="pack.description" class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-          {{ pack.description }}
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+          {{ pack.description || 'No description available' }}
         </p>
 
         <!-- Tutor Info -->
-        <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-2 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
             </svg>
           </div>
-          <div class="flex-1">
+          <div>
             <p class="text-sm font-medium text-gray-900 dark:text-white">{{ pack.tutorName }}</p>
-            <div class="flex items-center gap-1 text-xs text-gray-500">
-              <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
-              </svg>
-              <span>{{ pack.tutorRating || 0 }}/5</span>
-            </div>
+            <p class="text-xs text-gray-500">Tutor</p>
           </div>
         </div>
 
-        <!-- Pack Stats -->
-        <div class="space-y-2 mb-4">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Courses:</span>
-            <span class="font-medium text-gray-900 dark:text-white">{{ pack.coursesCount }} courses</span>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="text-center">
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Courses</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ pack.coursesCount || (pack.courseIds ? pack.courseIds.length : 0) }}</p>
           </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Duration:</span>
-            <span class="font-medium text-gray-900 dark:text-white">{{ pack.estimatedDuration }} hours</span>
+          <div class="text-center">
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Duration</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ pack.estimatedDuration }}h</p>
           </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Available Slots:</span>
-            <span class="font-medium" [ngClass]="getEnrollmentColor(getEnrollmentPercentage(pack))">
-              {{ pack.availableSlots }} / {{ pack.maxStudents }}
+          <div class="text-center">
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Slots</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ pack.availableSlots }}</p>
+          </div>
+        </div>
+
+        <!-- Enrollment Progress -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-600 dark:text-gray-400">Enrollment</span>
+            <span class="text-xs font-medium text-gray-900 dark:text-white">
+              {{ pack.currentEnrolledStudents }}/{{ pack.maxStudents }}
             </span>
           </div>
-        </div>
-
-        <!-- Enrollment Progress Bar -->
-        <div class="mb-4">
           <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div 
-              class="h-2 rounded-full transition-all"
-              [style.width.%]="getEnrollmentPercentage(pack)"
-              [ngClass]="{
-                'bg-green-500': getEnrollmentPercentage(pack) < 50,
-                'bg-orange-500': getEnrollmentPercentage(pack) >= 50 && getEnrollmentPercentage(pack) < 80,
-                'bg-red-500': getEnrollmentPercentage(pack) >= 80
-              }">
+              class="bg-primary h-2 rounded-full transition-all"
+              [style.width.%]="pack.enrollmentPercentage">
             </div>
           </div>
-          <p class="text-xs text-gray-500 mt-1 text-center">
-            {{ getEnrollmentPercentage(pack) }}% enrolled
-          </p>
         </div>
 
-        <!-- Price -->
-        <div class="mb-4">
-          <div class="text-3xl font-bold text-primary">${{ pack.price }}</div>
-          <p class="text-xs text-gray-500">One-time payment</p>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex gap-2">
+        <!-- Price and Action -->
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-2xl font-bold text-primary">${{ pack.price }}</p>
+          </div>
           <button
-            (click)="viewPackDetails(pack)"
-            class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-            View Details
+            *ngIf="!isEnrolled(pack.id)"
+            (click)="enrollInPack(pack, $event)"
+            [disabled]="enrolling"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ enrolling ? 'Enrolling...' : 'Enroll Now' }}
           </button>
           <button
-            (click)="openEnrollModal(pack)"
-            [disabled]="pack.availableSlots === 0"
-            class="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            {{ pack.availableSlots === 0 ? 'Full' : 'Enroll Now' }}
+            *ngIf="isEnrolled(pack.id)"
+            (click)="$event.stopPropagation()"
+            routerLink="/user-panel/my-packs"
+            class="px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-all text-sm font-medium">
+            Enrolled ✓
           </button>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Enrollment Confirmation Modal -->
-<div *ngIf="showEnrollModal && selectedPack" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-    <div class="p-6">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Confirm Enrollment</h2>
-      
-      <div class="space-y-4 mb-6">
-        <!-- Pack Info -->
-        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <div class="flex items-center gap-2 mb-2">
-            <span 
-              class="text-2xl"
-              [style.color]="getCategoryColor(selectedPack.category)">
-              {{ getCategoryIcon(selectedPack.category) }}
-            </span>
-            <div>
-              <h3 class="font-semibold text-gray-900 dark:text-white">{{ selectedPack.name }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400">{{ selectedPack.category }} - {{ selectedPack.level }}</p>
-            </div>
-          </div>
-          
-          <div class="space-y-2 mt-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600 dark:text-gray-400">Tutor:</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ selectedPack.tutorName }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600 dark:text-gray-400">Courses:</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ selectedPack.coursesCount }} courses</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600 dark:text-gray-400">Duration:</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ selectedPack.estimatedDuration }} hours</span>
-            </div>
-            <div class="flex justify-between text-sm border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
-              <span class="text-gray-600 dark:text-gray-400">Price:</span>
-              <span class="text-xl font-bold text-primary">${{ selectedPack.price }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Confirmation Message -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p class="text-sm text-blue-800 dark:text-blue-300">
-            By enrolling, you'll get access to all courses in this pack and can start learning immediately.
-          </p>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex justify-end gap-3">
-        <button
-          (click)="closeEnrollModal()"
-          [disabled]="enrolling"
-          class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50">
-          Cancel
-        </button>
-        <button
-          (click)="confirmEnrollment()"
-          [disabled]="enrolling"
-          class="px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all disabled:opacity-50">
-          <span *ngIf="!enrolling">Confirm Enrollment</span>
-          <span *ngIf="enrolling" class="flex items-center gap-2">
-            <span class="animate-spin">⏳</span>
-            Enrolling...
-          </span>
-        </button>
       </div>
     </div>
   </div>

@@ -45,9 +45,4 @@ public interface ICourseEnrollmentService {
      * Get enrollment count for a course
      */
     Long getCourseEnrollmentCount(Long courseId);
-    
-    /**
-     * Calculate and update course progress based on lesson completions
-     */
-    CourseEnrollmentDTO calculateAndUpdateProgress(Long studentId, Long courseId);
 }

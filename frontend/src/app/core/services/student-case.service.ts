@@ -13,7 +13,7 @@ import {
   providedIn: 'root'
 })
 export class StudentCaseService {
-  private apiUrl = 'http://localhost:8080/api/student-cases';
+  private apiUrl = 'http://localhost:8088/api/student-cases';
 
   constructor(private http: HttpClient) {}
 

@@ -206,4 +206,17 @@ public class LessonController {
 
         return ResponseEntity.ok(Map.of("message", "Content file deleted successfully"));
     }
+    
+    // FIX 3: Bulk publish/unpublish all lessons in a course
+    @PutMapping("/course/{courseId}/publish-all")
+    public ResponseEntity<List<LessonDTO>> publishAllLessonsByCourse(@PathVariable Long courseId) {
+        List<LessonDTO> lessons = lessonService.publishAllLessonsByCourse(courseId);
+        return ResponseEntity.ok(lessons);
+    }
+    
+    @PutMapping("/course/{courseId}/unpublish-all")
+    public ResponseEntity<List<LessonDTO>> unpublishAllLessonsByCourse(@PathVariable Long courseId) {
+        List<LessonDTO> lessons = lessonService.unpublishAllLessonsByCourse(courseId);
+        return ResponseEntity.ok(lessons);
+    }
 }
