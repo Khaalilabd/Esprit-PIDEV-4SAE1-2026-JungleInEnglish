@@ -1,0 +1,248 @@
+<div *ngIf="loading" class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading your exam...</p>
+</div>
+
+<div class="exam-taking-container" *ngIf="!loading && attempt">
+  <!-- Warning Overlay -->
+  <div class="warning-overlay" *ngIf="showWarning">
+    <div class="warning-content">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <p>{{warningMessage}}</p>
+    </div>
+  </div>
+
+  <!-- Exit Confirmation Modal -->
+  <div class="exit-modal-overlay" *ngIf="showExitConfirmation">
+    <div class="exit-modal">
+      <div class="exit-modal-header">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <h3>Exit Exam?</h3>
+      </div>
+      <div class="exit-modal-body">
+        <p>Are you sure you want to exit this exam?</p>
+        <p class="warning-text">All your progress will be lost and the exam attempt will be deleted.</p>
+      </div>
+      <div class="exit-modal-footer">
+        <button class="btn-cancel" (click)="cancelExit()">
+          <i class="bi bi-x-circle"></i>
+          Cancel
+        </button>
+        <button class="btn-confirm-exit" (click)="confirmExit()">
+          <i class="bi bi-box-arrow-right"></i>
+          Exit Exam
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Timer Bar at Top -->
+  <div class="timer-bar" [class.warning]="timeRemaining > 0 && timeRemaining < 600" [class.critical]="timeRemaining > 0 && timeRemaining < 300">
+    <div class="timer-content">
+      <div class="exam-info-left">
+        <i class="bi bi-file-earmark-text"></i>
+        <span>{{ attempt.exam.title }}</span>
+        <span class="level-badge">{{ attempt.exam.level }}</span>
+      </div>
+      <div class="timer-display">
+        <i class="bi bi-clock-fill"></i>
+        <div class="time-info">
+          <span class="time">{{ formattedTime }}</span>
+          <span class="label">Remaining ({{ timeRemaining }}s)</span>
+        </div>
+      </div>
+      <div class="timer-actions">
+        <button class="btn-exit-exam" (click)="exitExam()" title="Exit Exam">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Exit</span>
+        </button>
+      </div>
+      <div class="progress-info">
+        <div class="progress-numbers">
+          <span class="answered">{{ getAnsweredCount() }}</span>
+          <span class="separator">/</span>
+          <span class="total">{{ getTotalQuestions() }}</span>
+        </div>
+        <span class="label">Questions</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="exam-content">
+    <!-- Part Navigation Tabs -->
+    <div class="part-tabs">
+      <button 
+        *ngFor="let part of attempt.exam.parts; let i = index"
+        class="part-tab"
+        [class.active]="i === currentPartIndex"
+        (click)="goToPart(i)">
+        <span class="part-number">Part {{ i + 1 }}</span>
+        <span class="part-title">{{ part.title }}</span>
+      </button>
+    </div>
+
+    <!-- Current Part -->
+    <div class="part-container" *ngIf="currentPart">
+      <!-- Part Header -->
+      <div class="part-header-card">
+        <h2>{{ currentPart.title }}</h2>
+        <p class="instructions" *ngIf="currentPart.instructions">
+          <i class="bi bi-info-circle"></i>
+          {{ currentPart.instructions }}
+        </p>
+      </div>
+
+      <!-- Reading Passage -->
+      <div class="reading-passage-card" *ngIf="currentPart.readingText">
+        <h3><i class="bi bi-book"></i> Reading Passage</h3>
+        <div class="passage-content">{{ currentPart.readingText }}</div>
+      </div>
+
+      <!-- Audio -->
+      <div class="audio-card" *ngIf="currentPart.audioUrl">
+        <h3><i class="bi bi-volume-up"></i> Listening Audio</h3>
+        <audio controls [src]="currentPart.audioUrl"></audio>
+      </div>
+
+      <!-- Questions -->
+      <div class="questions-container">
+        <div class="debug-info" *ngIf="currentPart && (!currentPart.questions || currentPart.questions.length === 0)">
+          <p style="color: red; padding: 20px; background: #fff3cd; border-radius: 8px;">
+            ⚠️ No questions found in this part. Please contact support.
+          </p>
+        </div>
+        <div *ngFor="let question of currentPart.questions; let qIndex = index" class="question-card">
+          <div class="question-header">
+            <div class="question-number-badge">Q{{ qIndex + 1 }}</div>
+            <div class="question-points">{{ question.points }} pts</div>
+          </div>
+
+          <div class="question-prompt">{{ question.prompt }}</div>
+
+          <!-- Question Media -->
+          <div class="question-media" *ngIf="question.mediaUrl">
+            <img *ngIf="isImageUrl(question.mediaUrl)" [src]="question.mediaUrl" alt="Question image">
+            <audio *ngIf="isAudioUrl(question.mediaUrl)" controls [src]="question.mediaUrl"></audio>
+          </div>
+
+          <!-- Answer Inputs -->
+          <div class="answer-section">
+            <!-- Multiple Choice -->
+            <div *ngIf="question.questionType === QuestionType.MULTIPLE_CHOICE" class="options-grid">
+              <label *ngFor="let option of question.options" class="option-label" [class.selected]="getAnswer(question.id)?.includes(option.id)">
+                <input 
+                  type="checkbox"
+                  [checked]="getAnswer(question.id)?.includes(option.id)"
+                  (change)="toggleOption(question.id, option.id)">
+                <span class="option-text">{{ option.label }}</span>
+                <i class="bi bi-check-circle-fill check-icon"></i>
+              </label>
+            </div>
+
+            <!-- True/False -->
+            <div *ngIf="question.questionType === QuestionType.TRUE_FALSE" class="tf-options">
+              <label class="tf-option" [class.selected]="getAnswer(question.id) === true">
+                <input 
+                  type="radio" 
+                  [name]="'q_' + question.id"
+                  [value]="true"
+                  [checked]="getAnswer(question.id) === true"
+                  (change)="setAnswer(question.id, true)">
+                <i class="bi bi-check-circle"></i>
+                <span>True</span>
+              </label>
+              <label class="tf-option" [class.selected]="getAnswer(question.id) === false">
+                <input 
+                  type="radio" 
+                  [name]="'q_' + question.id"
+                  [value]="false"
+                  [checked]="getAnswer(question.id) === false"
+                  (change)="setAnswer(question.id, false)">
+                <i class="bi bi-x-circle"></i>
+                <span>False</span>
+              </label>
+            </div>
+
+            <!-- Fill in Gap -->
+            <div *ngIf="question.questionType === QuestionType.FILL_IN_GAP">
+              <input 
+                type="text"
+                class="text-input"
+                placeholder="Type your answer..."
+                [value]="getAnswer(question.id) || ''"
+                (input)="setAnswer(question.id, $any($event.target).value)">
+            </div>
+
+            <!-- Word Ordering -->
+            <div *ngIf="question.questionType === QuestionType.WORD_ORDERING">
+              <textarea 
+                class="text-area"
+                rows="2"
+                placeholder="Arrange the words in the correct order..."
+                [value]="getAnswer(question.id) || ''"
+                (input)="setAnswer(question.id, $any($event.target).value)"></textarea>
+            </div>
+
+            <!-- Open Writing -->
+            <div *ngIf="question.questionType === QuestionType.OPEN_WRITING">
+              <textarea 
+                class="text-area essay"
+                rows="10"
+                placeholder="Write your essay here..."
+                [value]="getAnswer(question.id) || ''"
+                (input)="setAnswer(question.id, $any($event.target).value)"></textarea>
+              <small class="hint"><i class="bi bi-info-circle"></i> This will be manually graded</small>
+            </div>
+
+            <!-- Audio Response -->
+            <div *ngIf="question.questionType === QuestionType.AUDIO_RESPONSE">
+              <textarea 
+                class="text-area"
+                rows="5"
+                placeholder="Listen and respond..."
+                [value]="getAnswer(question.id) || ''"
+                (input)="setAnswer(question.id, $any($event.target).value)"></textarea>
+              <small class="hint"><i class="bi bi-mic"></i> Respond to the audio</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Footer -->
+    <div class="nav-footer">
+      <button 
+        class="nav-btn prev"
+        [disabled]="currentPartIndex === 0"
+        (click)="previousPart()">
+        <i class="bi bi-arrow-left"></i>
+        Previous Part
+      </button>
+
+      <button 
+        class="nav-btn save"
+        (click)="saveAnswers(true)">
+        <i class="bi bi-cloud-upload"></i>
+        Save Progress
+      </button>
+
+      <button 
+        *ngIf="attempt && currentPartIndex < attempt.exam.parts.length - 1"
+        class="nav-btn next"
+        (click)="nextPart()">
+        Next Part
+        <i class="bi bi-arrow-right"></i>
+      </button>
+
+      <button 
+        *ngIf="attempt && currentPartIndex === attempt.exam.parts.length - 1"
+        class="nav-btn submit"
+        [disabled]="submitting"
+        (click)="submitExam()">
+        <i class="bi bi-check-circle-fill"></i>
+        {{ submitting ? 'Submitting...' : 'Submit Exam' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -183,9 +183,9 @@
 
           <!-- QUIZ Lesson -->
           @if (lesson.lessonType === 'QUIZ') {
-            @if (lesson.quizId) {
+            @if (lessonQuizId) {
               <app-quiz-take 
-                [quizId]="lesson.quizId" 
+                [quizId]="lessonQuizId" 
                 (quizCompleted)="onQuizCompleted()">
               </app-quiz-take>
             } @else {

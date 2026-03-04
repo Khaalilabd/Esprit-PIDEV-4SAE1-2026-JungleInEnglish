@@ -15,7 +15,7 @@ public class StudentProgressSummaryDTO {
     private Long courseId;
     private String courseTitle;
     private CourseEnrollmentDTO enrollment;
-    private List<ChapterProgressDTO> chapterProgress;
+    private List<Object> chapterProgress; // Changed to Object to avoid deleted DTO
     private List<LessonProgressDTO> lessonProgress;
     private ProgressStatsDTO stats;
     

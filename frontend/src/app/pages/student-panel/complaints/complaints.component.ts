@@ -375,6 +375,18 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validation des champs
+    const validationErrors = this.validateComplaintForm();
+    if (validationErrors.length > 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        html: validationErrors.join('<br>'),
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
+    }
+
     this.isSubmitting = true;
 
     // Determine targetRole based on category
@@ -523,6 +535,81 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
 
   trackByComplaintId(index: number, complaint: any): number {
     return complaint.id || index;
+  }
+
+  /**
+   * Valider le formulaire de complaint avant soumission
+   */
+  validateComplaintForm(): string[] {
+    const errors: string[] = [];
+
+    // Validation du sujet
+    if (!this.complaintForm.subject || this.complaintForm.subject.trim().length === 0) {
+      errors.push('❌ Subject is required');
+    } else if (this.complaintForm.subject.trim().length < 5) {
+      errors.push('❌ Subject must be at least 5 characters long');
+    } else if (this.complaintForm.subject.trim().length > 200) {
+      errors.push('❌ Subject must not exceed 200 characters');
+    }
+
+    // Validation de la description
+    if (!this.complaintForm.description || this.complaintForm.description.trim().length === 0) {
+      errors.push('❌ Description is required');
+    } else if (this.complaintForm.description.trim().length < 20) {
+      errors.push('❌ Description must be at least 20 characters long');
+    } else if (this.complaintForm.description.trim().length > 5000) {
+      errors.push('❌ Description must not exceed 5000 characters');
+    }
+
+    // Validation spécifique pour CLUB_SUSPENSION
+    if (this.complaintForm.category === 'CLUB_SUSPENSION') {
+      if (!this.complaintForm.clubId) {
+        errors.push('❌ Please select a suspended club');
+      }
+      if (!this.complaintForm.issueType) {
+        errors.push('❌ Please select a reason for appeal');
+      }
+    }
+
+    // Validation du sessionCount si fourni
+    if (this.complaintForm.sessionCount !== null && this.complaintForm.sessionCount !== undefined) {
+      if (this.complaintForm.sessionCount < 0) {
+        errors.push('❌ Session count cannot be negative');
+      }
+      if (this.complaintForm.sessionCount > 1000) {
+        errors.push('❌ Session count seems unrealistic (max 1000)');
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Vérifier si le formulaire peut passer à l'étape suivante
+   */
+  canProceedToNextStep(): boolean {
+    if (this.currentStep === 1) {
+      // Vérifier que les champs requis de l'étape 1 sont remplis
+      if (this.complaintForm.category === 'PEDAGOGICAL') {
+        return !!(this.complaintForm.courseType && this.complaintForm.difficulty);
+      }
+      if (this.complaintForm.category === 'TUTOR_BEHAVIOR') {
+        return !!this.complaintForm.issueType;
+      }
+      if (this.complaintForm.category === 'SCHEDULE') {
+        return !!(this.complaintForm.issueType && this.complaintForm.courseType);
+      }
+      if (this.complaintForm.category === 'TECHNICAL') {
+        return !!(this.complaintForm.issueType && this.complaintForm.difficulty);
+      }
+      if (this.complaintForm.category === 'ADMINISTRATIVE') {
+        return !!this.complaintForm.issueType;
+      }
+      if (this.complaintForm.category === 'CLUB_SUSPENSION') {
+        return !!(this.complaintForm.clubId && this.complaintForm.issueType);
+      }
+    }
+    return true;
   }
 
   getResponderInfo(complaint: any): string {

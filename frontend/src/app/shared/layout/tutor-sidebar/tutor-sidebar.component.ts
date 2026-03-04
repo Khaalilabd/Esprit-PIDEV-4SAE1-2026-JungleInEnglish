@@ -44,6 +44,7 @@ export class TutorSidebarComponent implements OnInit {
         { icon: 'fas fa-calendar-alt', label: 'Schedule', route: '/tutor-panel/schedule' },
         { icon: 'fas fa-tasks', label: 'Assignments', route: '/tutor-panel/assignments' },
         { icon: 'fas fa-clipboard-list', label: 'Quiz Management', route: '/tutor-panel/quiz-management' },
+        { icon: 'fas fa-graduation-cap', label: 'Exam Grading', route: '/tutor-panel/exam-grading' },
         { icon: 'fas fa-book-open', label: 'Ebooks', route: '/tutor-panel/ebooks' }
       ]
     },

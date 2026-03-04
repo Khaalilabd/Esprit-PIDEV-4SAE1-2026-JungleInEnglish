@@ -50,15 +50,13 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
         enrollment.setStudentId(studentId);
         enrollment.setCourse(course);
         enrollment.setIsActive(true);
-        enrollment.setProgress(0.0);
-        enrollment.setCompletedLessons(0);
         
         // Calculate total PUBLISHED lessons for this course
         Long totalLessons = lessonRepository.countPublishedByCourseId(courseId);
         enrollment.setTotalLessons(totalLessons.intValue());
         
         CourseEnrollment savedEnrollment = enrollmentRepository.save(enrollment);
-        return mapToDTO(savedEnrollment);
+        return mapToDTO(savedEnrollment, studentId);
     }
     
     @Override
@@ -69,13 +67,16 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
         
         enrollment.setIsActive(false);
         enrollmentRepository.save(enrollment);
+        
+        // FIX 1: Clean up all lesson progress records when student unenrolls
+        lessonProgressService.deleteProgressByStudentAndCourse(studentId, courseId);
     }
     
     @Override
     @Transactional(readOnly = true)
     public List<CourseEnrollmentDTO> getStudentEnrollments(Long studentId) {
         return enrollmentRepository.findByStudentIdAndIsActive(studentId, true).stream()
-                .map(this::mapToDTO)
+                .map(enrollment -> mapToDTO(enrollment, studentId))
                 .collect(Collectors.toList());
     }
     
@@ -83,7 +84,7 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
     @Transactional(readOnly = true)
     public List<CourseEnrollmentDTO> getCourseEnrollments(Long courseId) {
         return enrollmentRepository.findActiveByCourseIdOrderByEnrolledAt(courseId).stream()
-                .map(this::mapToDTO)
+                .map(enrollment -> mapToDTO(enrollment, enrollment.getStudentId()))
                 .collect(Collectors.toList());
     }
     
@@ -96,20 +97,18 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
     @Override
     @Transactional
     public CourseEnrollmentDTO updateProgress(Long studentId, Long courseId, Double progress, Integer completedLessons) {
+        // This method is deprecated - progress is now calculated dynamically
+        // Just update last accessed time
         CourseEnrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
                 .orElseThrow(() -> new RuntimeException("Enrollment not found"));
         
-        enrollment.setProgress(progress);
-        enrollment.setCompletedLessons(completedLessons);
         enrollment.setLastAccessedAt(LocalDateTime.now());
         
-        // Mark as completed if progress is 100%
-        if (progress >= 100.0 && enrollment.getCompletedAt() == null) {
-            enrollment.setCompletedAt(LocalDateTime.now());
-        }
+        // Check if course should be marked as completed
+        checkAndMarkCourseCompletion(studentId, courseId, enrollment);
         
         CourseEnrollment updatedEnrollment = enrollmentRepository.save(enrollment);
-        return mapToDTO(updatedEnrollment);
+        return mapToDTO(updatedEnrollment, studentId);
     }
     
     @Override
@@ -117,7 +116,7 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
     public CourseEnrollmentDTO getEnrollment(Long studentId, Long courseId) {
         CourseEnrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
                 .orElseThrow(() -> new RuntimeException("Enrollment not found"));
-        return mapToDTO(enrollment);
+        return mapToDTO(enrollment, studentId);
     }
     
     @Override
@@ -125,36 +124,93 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
     public Long getCourseEnrollmentCount(Long courseId) {
         return enrollmentRepository.countActiveByCourseId(courseId);
     }
-    
-    /**
-     * Calculate and update course progress based on lesson completions
-     */
+
+    @Override
     @Transactional
     public CourseEnrollmentDTO calculateAndUpdateProgress(Long studentId, Long courseId) {
         CourseEnrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
                 .orElseThrow(() -> new RuntimeException("Enrollment not found"));
-        
-        // Count completed lessons for this student in this course
-        Long completedLessons = lessonProgressService.countCompletedLessonsInCourse(studentId, courseId);
-        enrollment.setCompletedLessons(completedLessons.intValue());
-        
-        // Calculate progress percentage
-        if (enrollment.getTotalLessons() > 0) {
-            double progress = (completedLessons.doubleValue() / enrollment.getTotalLessons()) * 100.0;
-            enrollment.setProgress(progress);
-            
-            // Mark as completed if progress is 100%
-            if (progress >= 100.0 && enrollment.getCompletedAt() == null) {
-                enrollment.setCompletedAt(LocalDateTime.now());
-            }
-        }
-        
+
         enrollment.setLastAccessedAt(LocalDateTime.now());
+
+        // Check if course should be marked as completed
+        checkAndMarkCourseCompletion(studentId, courseId, enrollment);
+
         CourseEnrollment updatedEnrollment = enrollmentRepository.save(enrollment);
-        return mapToDTO(updatedEnrollment);
+        return mapToDTO(updatedEnrollment, studentId);
     }
     
-    private CourseEnrollmentDTO mapToDTO(CourseEnrollment enrollment) {
+    /**
+     * Calculate course progress dynamically from LessonProgress
+     * Formula: (completedLessons / totalLessons) × 100
+     */
+    @Transactional(readOnly = true)
+    public double calculateCourseProgress(Long studentId, Long courseId) {
+        CourseEnrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
+                .orElse(null);
+        
+        if (enrollment == null || enrollment.getTotalLessons() == 0) {
+            return 0.0;
+        }
+        
+        // Count completed lessons from LessonProgress (source of truth)
+        Long completedLessons = lessonProgressService.countCompletedLessonsInCourse(studentId, courseId);
+        
+        // Calculate percentage
+        return (completedLessons.doubleValue() / enrollment.getTotalLessons()) * 100.0;
+    }
+    
+    /**
+     * Get completed lessons count for a course
+     */
+    @Transactional(readOnly = true)
+    public int getCompletedLessonsCount(Long studentId, Long courseId) {
+        Long count = lessonProgressService.countCompletedLessonsInCourse(studentId, courseId);
+        return count.intValue();
+    }
+    
+    /**
+     * Check if course is completed and mark it
+     * Course is completed when completedLessons == totalLessons
+     */
+    @Transactional
+    public void checkAndMarkCourseCompletion(Long studentId, Long courseId, CourseEnrollment enrollment) {
+        if (enrollment == null) {
+            enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
+                    .orElse(null);
+        }
+        
+        if (enrollment != null && enrollment.getCompletedAt() == null) {
+            int completedLessons = getCompletedLessonsCount(studentId, courseId);
+            
+            // Use equality check, not threshold
+            if (completedLessons >= enrollment.getTotalLessons() && enrollment.getTotalLessons() > 0) {
+                enrollment.setCompletedAt(LocalDateTime.now());
+                enrollmentRepository.save(enrollment);
+            }
+        }
+    }
+    
+    /**
+     * Check if course is completed
+     */
+    @Transactional(readOnly = true)
+    public boolean isCourseCompleted(Long studentId, Long courseId) {
+        CourseEnrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
+                .orElse(null);
+        
+        if (enrollment == null || enrollment.getTotalLessons() == 0) {
+            return false;
+        }
+        
+        int completedLessons = getCompletedLessonsCount(studentId, courseId);
+        return completedLessons >= enrollment.getTotalLessons();
+    }
+    
+    /**
+     * Map entity to DTO with dynamically calculated progress
+     */
+    private CourseEnrollmentDTO mapToDTO(CourseEnrollment enrollment, Long studentId) {
         CourseEnrollmentDTO dto = new CourseEnrollmentDTO();
         dto.setId(enrollment.getId());
         dto.setStudentId(enrollment.getStudentId());
@@ -163,10 +219,18 @@ public class CourseEnrollmentService implements ICourseEnrollmentService {
         dto.setEnrolledAt(enrollment.getEnrolledAt());
         dto.setCompletedAt(enrollment.getCompletedAt());
         dto.setIsActive(enrollment.getIsActive());
-        dto.setProgress(enrollment.getProgress());
-        dto.setCompletedLessons(enrollment.getCompletedLessons());
         dto.setTotalLessons(enrollment.getTotalLessons());
         dto.setLastAccessedAt(enrollment.getLastAccessedAt());
+        
+        // Calculate progress dynamically
+        int completedLessons = getCompletedLessonsCount(studentId, enrollment.getCourse().getId());
+        double progress = enrollment.getTotalLessons() > 0 
+            ? (completedLessons / (double) enrollment.getTotalLessons()) * 100.0 
+            : 0.0;
+        
+        dto.setCompletedLessons(completedLessons);
+        dto.setProgress(progress);
+        
         return dto;
     }
 }

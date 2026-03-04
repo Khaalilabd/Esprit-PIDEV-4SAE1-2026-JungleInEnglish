@@ -34,7 +34,7 @@ public class PackDTO {
     private String description;
     private PackStatus status;
     private Long createdBy;
-    private Long conversationId; // ID du groupe de discussion associé
+    private Long conversationId; // ID du groupe de discussion
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isEnrollmentOpen;

@@ -39,6 +39,11 @@ export class LessonViewerComponent implements OnInit, OnDestroy {
   isCompleted = false;
   sidebarCollapsed = false;
   
+  // Getter for quizId (temporary until Lesson model is updated)
+  get lessonQuizId(): number | undefined {
+    return (this.lesson as any)?.quizId;
+  }
+  
   private progressSubscription?: Subscription;
   private currentStudentId: number = 0;
 
@@ -85,7 +90,7 @@ export class LessonViewerComponent implements OnInit, OnDestroy {
         this.lesson = lesson;
         console.log('📚 Loaded lesson:', lesson);
         console.log('📝 Lesson type:', lesson.lessonType);
-        console.log('🎯 Quiz ID:', lesson.quizId);
+        console.log('🎯 Quiz ID:', this.lessonQuizId);
         
         // Load chapter to get courseId
         if (lesson.chapterId) {

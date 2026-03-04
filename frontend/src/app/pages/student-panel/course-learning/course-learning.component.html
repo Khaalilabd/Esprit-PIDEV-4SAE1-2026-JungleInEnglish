@@ -5,7 +5,11 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
       </svg>
-      Back to Courses
+      @if (packId) {
+        Back to Pack
+      } @else {
+        Back to My Courses
+      }
     </button>
 
     @if (course) {
@@ -22,6 +26,22 @@
         </div>
         @if (course.description) {
           <p class="course-description">{{ course.description }}</p>
+        }
+        
+        <!-- Course Progress -->
+        @if (currentStudentId) {
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Course Progress</span>
+              <span class="progress-value">{{ courseProgress }}%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" [style.width.%]="courseProgress"></div>
+            </div>
+            <div class="progress-stats">
+              <span>{{ completedLessonsCount }} / {{ totalLessonsCount }} lessons completed</span>
+            </div>
+          </div>
         }
       </div>
     }
@@ -52,6 +72,12 @@
                       <p class="chapter-description">{{ chapter.description }}</p>
                     }
                     <p class="chapter-meta">
+                      @if (getChapterProgress(chapter.id!); as progress) {
+                        <span class="progress-indicator">
+                          {{ progress.completedLessons }} / {{ progress.totalLessons }} lessons completed
+                        </span>
+                        <span> • </span>
+                      }
                       {{ getLessons(chapter.id!).length }} lessons
                       @if (chapter.estimatedDuration) {
                         <span> • {{ formatDuration(chapter.estimatedDuration) }}</span>
@@ -107,7 +133,13 @@
           <div class="empty-icon">📚</div>
           <h3>No Chapters Available</h3>
           <p>This course doesn't have any chapters yet.</p>
-          <button class="btn-primary" (click)="goBack()">Back to Courses</button>
+          <button class="btn-primary" (click)="goBack()">
+            @if (packId) {
+              Back to Pack
+            } @else {
+              Back to My Courses
+            }
+          </button>
         </div>
       }
     </div>

@@ -2,13 +2,11 @@ package com.englishflow.courses.service;
 
 import com.englishflow.courses.dto.CourseProgressSummary;
 import com.englishflow.courses.dto.CreateLessonProgressRequest;
-import com.englishflow.courses.entity.Lesson;
 import com.englishflow.courses.entity.LessonProgress;
-import com.englishflow.courses.entity.PackEnrollment;
 import com.englishflow.courses.repository.LessonProgressRepository;
 import com.englishflow.courses.repository.LessonRepository;
-import com.englishflow.courses.repository.PackEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +14,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class LessonProgressService {
     
     private final LessonProgressRepository progressRepository;
     private final LessonRepository lessonRepository;
-    private final PackEnrollmentRepository packEnrollmentRepository;
+    private final CourseEnrollmentService courseEnrollmentService;
+    private final PackEnrollmentService packEnrollmentService;
+    
+    // Use @Lazy to avoid circular dependency
+    public LessonProgressService(
+            LessonProgressRepository progressRepository,
+            LessonRepository lessonRepository,
+            @Lazy CourseEnrollmentService courseEnrollmentService,
+            @Lazy PackEnrollmentService packEnrollmentService) {
+        this.progressRepository = progressRepository;
+        this.lessonRepository = lessonRepository;
+        this.courseEnrollmentService = courseEnrollmentService;
+        this.packEnrollmentService = packEnrollmentService;
+    }
     
     public LessonProgress getProgressByStudentAndLesson(Long studentId, Long lessonId) {
         return progressRepository.findByStudentIdAndLessonId(studentId, lessonId)
@@ -68,6 +78,8 @@ public class LessonProgressService {
                 .findByStudentIdAndLessonId(request.getStudentId(), request.getLessonId())
                 .orElse(new LessonProgress());
         
+        boolean wasCompleted = progress.getIsCompleted() != null && progress.getIsCompleted();
+        
         // Update fields
         progress.setStudentId(request.getStudentId());
         progress.setLessonId(request.getLessonId());
@@ -86,38 +98,20 @@ public class LessonProgressService {
         
         LessonProgress savedProgress = progressRepository.save(progress);
         
-        // Update pack enrollment progress
-        updatePackEnrollmentProgress(request.getStudentId(), request.getCourseId());
+        // If lesson is newly completed, trigger course and pack completion checks
+        if (request.getIsCompleted() && !wasCompleted) {
+            // Direct service calls instead of events
+            courseEnrollmentService.checkAndMarkCourseCompletion(
+                request.getStudentId(), 
+                request.getCourseId(),
+                null
+            );
+            
+            // Check pack completion for all packs containing this course
+            // This will be handled when pack progress is requested
+        }
         
         return savedProgress;
-    }
-    
-    /**
-     * Update pack enrollment progress based on completed lessons
-     */
-    @Transactional
-    public void updatePackEnrollmentProgress(Long studentId, Long courseId) {
-        // Find all pack enrollments for this student
-        List<PackEnrollment> enrollments = packEnrollmentRepository.findByStudentId(studentId);
-        
-        for (PackEnrollment enrollment : enrollments) {
-            // Get only PUBLISHED lessons in all courses of this pack
-            Long totalLessons = lessonRepository.countPublishedByCourseId(courseId);
-            Long completedLessons = progressRepository.countCompletedLessonsByStudentAndCourse(studentId, courseId);
-            
-            if (totalLessons > 0) {
-                int progressPercentage = (int) ((completedLessons * 100.0) / totalLessons);
-                enrollment.setProgressPercentage(progressPercentage);
-                
-                // Mark as completed if 100%
-                if (progressPercentage >= 100 && enrollment.getCompletedAt() == null) {
-                    enrollment.setCompletedAt(LocalDateTime.now());
-                    enrollment.setStatus("COMPLETED");
-                }
-                
-                packEnrollmentRepository.save(enrollment);
-            }
-        }
     }
     
     public Long countCompletedLessonsInCourse(Long studentId, Long courseId) {
@@ -167,5 +161,11 @@ public class LessonProgressService {
             progress.setCompletedAt(java.time.LocalDateTime.now());
             progressRepository.save(progress);
         }
+    }
+    
+    // FIX 1: Delete all lesson progress for a student in a course (for unenroll cleanup)
+    @Transactional
+    public void deleteProgressByStudentAndCourse(Long studentId, Long courseId) {
+        progressRepository.deleteByStudentIdAndCourseId(studentId, courseId);
     }
 }

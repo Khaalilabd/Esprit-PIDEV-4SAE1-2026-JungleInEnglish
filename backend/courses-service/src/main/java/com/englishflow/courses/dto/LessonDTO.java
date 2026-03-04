@@ -21,7 +21,6 @@ public class LessonDTO {
     private Integer duration;
     private Boolean isPreview;
     private Boolean isPublished;
-    private Long quizId;
     private Long chapterId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

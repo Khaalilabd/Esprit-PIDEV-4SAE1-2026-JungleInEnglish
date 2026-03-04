@@ -1,0 +1,200 @@
+<div class="results-monitoring">
+  <!-- List View -->
+  <div *ngIf="!selectedAttempt" class="list-view">
+    <div class="page-header">
+      <h1>Exam Results Monitoring</h1>
+      <div class="header-actions">
+        <button class="btn-export" (click)="exportToCSV()">
+          <i class="bi bi-download"></i> Export CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-box">
+        <span class="stat-number">{{stats.total}}</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number">{{stats.pending}}</span>
+        <span class="stat-label">Pending</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number">{{stats.graded}}</span>
+        <span class="stat-label">Graded</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number">{{stats.passRate}}%</span>
+        <span class="stat-label">Pass Rate</span>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" 
+             [(ngModel)]="searchTerm" 
+             (ngModelChange)="onFilterChange()"
+             placeholder="Search by name or ID..."
+             class="search-input">
+      <select [(ngModel)]="filterStatus" (change)="onFilterChange()" class="filter-select">
+        <option value="ALL">All Status</option>
+        <option value="SUBMITTED">Pending</option>
+        <option value="GRADED">Graded</option>
+      </select>
+    </div>
+
+    <!-- Results List -->
+    <div *ngIf="loading" class="loading">Loading...</div>
+
+    <div *ngIf="!loading && filteredAttempts.length === 0" class="empty">
+      <i class="bi bi-inbox"></i>
+      <p>No results found</p>
+    </div>
+
+    <div class="results-list">
+      <div *ngFor="let attempt of filteredAttempts" class="result-item" (click)="viewDetails(attempt)">
+        <div class="student-info">
+          <div class="avatar">
+            <img *ngIf="getProfilePicture(attempt) && !attempt.imageError" 
+                 [src]="getProfilePicture(attempt)" 
+                 (error)="attempt.imageError = true">
+            <span *ngIf="!getProfilePicture(attempt) || attempt.imageError">
+              {{getUserInitials(attempt)}}
+            </span>
+          </div>
+          <div class="details">
+            <h3>{{getUserFullName(attempt)}}</h3>
+            <p>ID: {{attempt.userId}} • {{attempt.submittedAt | date:'short'}}</p>
+          </div>
+        </div>
+        
+        <div class="result-info">
+          <span class="status" [class.pending]="attempt.status === 'SUBMITTED'" [class.graded]="attempt.status === 'GRADED'">
+            {{attempt.status}}
+          </span>
+          <span *ngIf="attempt.status === 'GRADED'" class="score">
+            {{Math.floor(attempt.percentageScore)}}%
+          </span>
+          <span *ngIf="attempt.passed !== null" class="badge" [class.pass]="attempt.passed" [class.fail]="!attempt.passed">
+            {{attempt.passed ? 'PASS' : 'FAIL'}}
+          </span>
+        </div>
+        
+        <button class="btn-view">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div *ngIf="selectedAttempt && attemptDetails" class="detail-view">
+    <div class="detail-header">
+      <button class="btn-back" (click)="backToList()">
+        <i class="bi bi-arrow-left"></i> Back
+      </button>
+      <div class="student-header">
+        <div class="avatar-large">
+          <img *ngIf="getProfilePicture(selectedAttempt) && !selectedAttempt.imageError" 
+               [src]="getProfilePicture(selectedAttempt)" 
+               (error)="selectedAttempt.imageError = true">
+          <span *ngIf="!getProfilePicture(selectedAttempt) || selectedAttempt.imageError">
+            {{getUserInitials(selectedAttempt)}}
+          </span>
+        </div>
+        <div>
+          <h2>{{getUserFullName(selectedAttempt)}}</h2>
+          <p>User ID: {{selectedAttempt.userId}}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="exam-summary">
+      <div class="summary-card">
+        <h3>{{attemptDetails.exam.title}}</h3>
+        <div class="summary-details">
+          <span><i class="bi bi-bookmark"></i> {{attemptDetails.exam.level}}</span>
+          <span><i class="bi bi-clock"></i> {{selectedAttempt.timeSpent}} min</span>
+          <span><i class="bi bi-calendar"></i> {{selectedAttempt.submittedAt | date:'medium'}}</span>
+        </div>
+      </div>
+      
+      <div *ngIf="selectedAttempt.status === 'GRADED'" class="score-card">
+        <div class="score-display">
+          <span class="score-big">{{Math.floor(selectedAttempt.percentageScore)}}%</span>
+          <span class="score-points">{{selectedAttempt.totalScore}} points</span>
+        </div>
+        <div class="result-badge-large" [class.pass]="selectedAttempt.passed" [class.fail]="!selectedAttempt.passed">
+          <i class="bi" [ngClass]="selectedAttempt.passed ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+          {{selectedAttempt.passed ? 'PASSED' : 'FAILED'}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Answers Section -->
+    <div class="answers-section">
+      <h3>Student Answers</h3>
+      
+      <div *ngFor="let part of attemptDetails.exam.parts; let partIndex = index" class="part-section">
+        <h4>{{part.title}}</h4>
+        
+        <div *ngFor="let question of part.questions; let qIndex = index" class="question-block">
+          <div class="question-header">
+            <span class="q-number">Q{{partIndex + 1}}.{{qIndex + 1}}</span>
+            <span class="q-type">{{question.questionType}}</span>
+            <span class="q-points">{{question.points}} pts</span>
+          </div>
+          
+          <p class="question-text">{{question.prompt}}</p>
+          
+          <div class="answer-display">
+            <div class="answer-row">
+              <label>Student Answer:</label>
+              <div class="answer-value student">
+                <span *ngIf="getStudentAnswer(question.id) as answer">
+                  <span *ngIf="question.questionType === 'MULTIPLE_CHOICE'">
+                    {{getSelectedOptionLabel(question, answer.answerData)}}
+                  </span>
+                  <span *ngIf="question.questionType === 'TRUE_FALSE'">
+                    {{getTrueFalseDisplay(answer.answerData)}}
+                  </span>
+                  <span *ngIf="question.questionType === 'FILL_IN_GAP' || question.questionType === 'OPEN_WRITING' || question.questionType === 'WORD_ORDERING'">
+                    {{parseAnswerData(answer.answerData)}}
+                  </span>
+                  <span *ngIf="!answer.answerData" class="no-answer">No answer</span>
+                </span>
+                <span *ngIf="!getStudentAnswer(question.id)" class="no-answer">Not answered</span>
+              </div>
+            </div>
+            
+            <div class="answer-row">
+              <label>Correct Answer:</label>
+              <div class="answer-value correct">
+                <span *ngIf="question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'TRUE_FALSE'">
+                  {{getCorrectOptionLabel(question)}}
+                </span>
+                <span *ngIf="question.questionType === 'FILL_IN_GAP' || question.questionType === 'WORD_ORDERING'">
+                  {{getCorrectAnswer(question)}}
+                </span>
+                <span *ngIf="question.questionType === 'OPEN_WRITING' || question.questionType === 'AUDIO_RESPONSE'" class="manual">
+                  Manual grading required
+                </span>
+              </div>
+            </div>
+            
+            <div *ngIf="getStudentAnswer(question.id)?.isGraded" class="grade-row">
+              <label>Grade:</label>
+              <div class="grade-info">
+                <span class="grade-score">{{getStudentAnswer(question.id).score}} / {{question.points}}</span>
+                <span *ngIf="getStudentAnswer(question.id).feedback" class="grade-feedback">
+                  "{{getStudentAnswer(question.id).feedback}}"
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

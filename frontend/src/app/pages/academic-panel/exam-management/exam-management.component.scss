@@ -1,0 +1,35 @@
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &.success {
+    background: #10b981;
+    color: white;
+  }
+
+  &.error {
+    background: #ef4444;
+    color: white;
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+}

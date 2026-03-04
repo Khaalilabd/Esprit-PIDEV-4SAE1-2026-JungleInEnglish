@@ -22,4 +22,6 @@ public interface LessonProgressRepository extends JpaRepository<LessonProgress, 
     Long countCompletedLessonsByStudentAndCourse(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
     
     boolean existsByStudentIdAndLessonId(Long studentId, Long lessonId);
+    
+    void deleteByStudentIdAndCourseId(Long studentId, Long courseId);
 }

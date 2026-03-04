@@ -89,6 +89,16 @@ export class StudentSidebarComponent {
           path: "/user-panel/quizzes",
         },
         {
+          icon: 'fas fa-graduation-cap',
+          name: "CEFR Exams",
+          path: "/user-panel/exams",
+        },
+        {
+          icon: 'fas fa-trophy',
+          name: "My Exam Results",
+          path: "/user-panel/my-exam-results",
+        },
+        {
           icon: 'fas fa-book-open',
           name: "Ebooks",
           path: "/user-panel/ebooks",

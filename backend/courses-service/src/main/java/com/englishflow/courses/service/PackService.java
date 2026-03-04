@@ -1,13 +1,11 @@
 package com.englishflow.courses.service;
 
-import com.englishflow.courses.client.MessagingServiceClient;
 import com.englishflow.courses.dto.PackDTO;
 import com.englishflow.courses.entity.Pack;
 import com.englishflow.courses.enums.PackStatus;
 import com.englishflow.courses.repository.PackRepository;
 import com.englishflow.courses.repository.PackEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +14,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PackService implements IPackService {
     
     private final PackRepository packRepository;
     private final PackEnrollmentRepository enrollmentRepository;
-    private final MessagingServiceClient messagingServiceClient;
+    private final com.englishflow.courses.client.MessagingServiceClient messagingServiceClient;
     
     @Override
     @Transactional
@@ -45,13 +42,16 @@ public class PackService implements IPackService {
         
         Pack saved = packRepository.save(pack);
         
-        // Créer automatiquement un groupe de discussion pour le pack
+        // Créer automatiquement un groupe de discussion pour le pack avec le tuteur
         try {
+            List<Long> initialParticipants = new java.util.ArrayList<>();
+            initialParticipants.add(packDTO.getTutorId());
+            
             Long conversationId = messagingServiceClient.createPackGroup(
-                saved.getName(),
-                saved.getDescription(),
-                saved.getTutorId(),
-                List.of(saved.getTutorId()) // Le tuteur est le seul participant initial
+                packDTO.getName(),
+                packDTO.getDescription(),
+                packDTO.getTutorId(),
+                initialParticipants
             );
             
             if (conversationId != null) {
@@ -59,8 +59,7 @@ public class PackService implements IPackService {
                 saved = packRepository.save(saved);
             }
         } catch (Exception e) {
-            // Log l'erreur mais ne bloque pas la création du pack
-            System.err.println("Erreur lors de la création du groupe pour le pack: " + e.getMessage());
+            System.err.println("Failed to create messaging group for pack: " + e.getMessage());
         }
         
         return toDTO(saved);
@@ -147,23 +146,22 @@ public class PackService implements IPackService {
     @Override
     @Transactional
     public void deletePack(Long id) {
-        // Get pack to retrieve conversationId
         Pack pack = packRepository.findById(id).orElse(null);
         
-        // Delete all enrollments for this pack
-        enrollmentRepository.deleteByPackId(id);
-        
-        // Delete the pack
-        packRepository.deleteById(id);
-        
-        // Delete the associated conversation group
+        // Supprimer le groupe de discussion si existant
         if (pack != null && pack.getConversationId() != null) {
             try {
                 messagingServiceClient.deletePackGroup(pack.getConversationId());
             } catch (Exception e) {
-                log.error("Error deleting group for pack {}: {}", id, e.getMessage());
+                System.err.println("Failed to delete messaging group: " + e.getMessage());
             }
         }
+        
+        // First, delete all enrollments for this pack
+        enrollmentRepository.deleteByPackId(id);
+        
+        // Then delete the pack
+        packRepository.deleteById(id);
     }
     
     @Override

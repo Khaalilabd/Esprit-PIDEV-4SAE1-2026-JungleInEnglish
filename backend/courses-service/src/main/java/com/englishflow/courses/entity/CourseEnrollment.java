@@ -35,13 +35,7 @@ public class CourseEnrollment {
     private Boolean isActive = true;
     
     @Column
-    private Double progress = 0.0; // Progress percentage (0-100)
-    
-    @Column
-    private Integer completedLessons = 0;
-    
-    @Column
-    private Integer totalLessons = 0;
+    private Integer totalLessons = 0; // Total published lessons at enrollment time
     
     @Column
     private LocalDateTime lastAccessedAt;

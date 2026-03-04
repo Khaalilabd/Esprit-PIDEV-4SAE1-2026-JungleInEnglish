@@ -1,6 +1,6 @@
 <div class="pack-courses-container">
   <!-- Header -->
-  <div class="courses-header">
+  <div class="page-header">
     <button class="back-btn" (click)="goBack()">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -8,27 +8,26 @@
       Back to My Packs
     </button>
 
-    @if (pack) {
-      <div class="pack-info">
-        <h1 class="pack-title">{{ pack.name }}</h1>
+    <div class="header-content">
+      @if (pack) {
+        <h1 class="page-title">{{ pack.name }}</h1>
         <div class="pack-meta">
-          <span class="meta-item">{{ pack.category }}</span>
-          <span class="meta-divider">•</span>
-          <span class="meta-item">{{ pack.level }}</span>
-          <span class="meta-divider">•</span>
-          <span class="meta-item">{{ pack.tutorName }}</span>
+          <span class="meta-badge">{{ pack.category }}</span>
+          <span class="meta-badge">{{ pack.level }}</span>
+          <span class="meta-badge">{{ pack.tutorName }}</span>
         </div>
-      </div>
-    }
+      }
+    </div>
 
+    <!-- Pack Progress Card -->
     @if (enrollment) {
       <div class="progress-card">
-        <div class="progress-info">
-          <span class="progress-label">Your Progress</span>
-          <span class="progress-percentage">{{ enrollment.progressPercentage }}%</span>
+        <div class="progress-header">
+          <span class="progress-title">Your Progress</span>
+          <span class="progress-value">{{ enrollment.progressPercentage }}%</span>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill" [style.width.%]="enrollment.progressPercentage"></div>
+        <div class="progress-bar-large">
+          <div class="progress-fill-large" [style.width.%]="enrollment.progressPercentage"></div>
         </div>
         <div class="progress-stats">
           <span>{{ enrollment.completedCourses }} / {{ enrollment.totalCourses }} courses completed</span>
@@ -41,7 +40,7 @@
   @if (loading) {
     <div class="loading-state">
       <div class="spinner"></div>
-      <p>Loading courses...</p>
+      <p>Loading your courses...</p>
     </div>
   }
 
@@ -49,61 +48,55 @@
   @if (!loading && courses.length > 0) {
     <div class="courses-grid">
       @for (course of courses; track course.id) {
-        <div class="course-card" (click)="startCourse(course)">
-          <div class="course-thumbnail">
-            @if (course.thumbnailUrl) {
-              <img [src]="course.thumbnailUrl" [alt]="course.title">
-            } @else {
-              <div class="thumbnail-placeholder">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-              </div>
-            }
-            <div class="course-overlay">
-              <span class="course-level">{{ course.level }}</span>
-            </div>
+        <div class="course-card">
+          <!-- Course Thumbnail -->
+          <div class="course-thumbnail" [style.background]="getCategoryColor(course.category)">
+            <span class="category-icon">{{ getCategoryIcon(course.category) }}</span>
           </div>
 
+          <!-- Course Info -->
           <div class="course-content">
+            <div class="course-header">
+              <span class="course-level">{{ course.level }}</span>
+              <span class="course-category">{{ course.category }}</span>
+            </div>
+
             <h3 class="course-title">{{ course.title }}</h3>
             
             @if (course.description) {
               <p class="course-description">{{ course.description }}</p>
             }
 
-            <div class="course-stats">
-              <div class="stat-item">
+            <div class="course-meta">
+              <div class="meta-item">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                 </svg>
-                <span>{{ course.chapterCount || 0 }} Chapters</span>
+                <span>{{ course.chapterCount || 0 }} chapters</span>
               </div>
-              <div class="stat-item">
+              <div class="meta-item">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span>{{ course.lessonCount || 0 }} Lessons</span>
+                <span>{{ course.duration || 0 }}h</span>
               </div>
-              @if (course.duration) {
-                <div class="stat-item">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <span>{{ course.duration }}h</span>
+            </div>
+
+            <!-- New Progress Display -->
+            <div class="course-progress-wrapper">
+              <div class="progress-stats-row">
+                <span class="progress-text">{{ getProgressText(course.id!) }}</span>
+                <span class="progress-percent">{{ getProgressValue(course.id!) }}%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-indicator" [style.width.%]="getProgressValue(course.id!)">
+                  <div class="progress-glow"></div>
                 </div>
-              }
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="course-progress">
-              <div class="progress-bar-small">
-                <div class="progress-fill-small" [style.width.%]="getCourseProgress(course.id!)"></div>
               </div>
-              <span class="progress-text">{{ getCourseProgress(course.id!) }}%</span>
             </div>
 
-            <button class="btn-start">
+            <!-- Action Button -->
+            <button class="start-btn" (click)="startCourse(course)">
               @if (getCourseProgress(course.id!) > 0) {
                 <span>Continue Learning</span>
               } @else {
@@ -124,7 +117,7 @@
     <div class="empty-state">
       <div class="empty-icon">📚</div>
       <h3>No Courses Available</h3>
-      <p>This pack doesn't have any courses yet.</p>
+      <p>This pack doesn't have any courses yet</p>
       <button class="btn-primary" (click)="goBack()">Back to My Packs</button>
     </div>
   }

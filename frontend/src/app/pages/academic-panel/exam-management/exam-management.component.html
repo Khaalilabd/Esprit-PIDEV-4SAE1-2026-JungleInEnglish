@@ -1,0 +1,94 @@
+<div class="container mx-auto px-4 py-8">
+  <!-- Toast Notification -->
+  <div class="toast-notification" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+    <i class="bi" [class.bi-check-circle]="toastType === 'success'" [class.bi-exclamation-circle]="toastType === 'error'"></i>
+    <span>{{toastMessage}}</span>
+  </div>
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Exam Management</h1>
+      <p class="text-gray-600 mt-1">Create and manage CEFR English exams</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+      <i class="fas fa-plus"></i>
+      Build New Exam
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-12">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <p class="mt-4 text-gray-600">Loading exams...</p>
+  </div>
+
+  <!-- Exams Table -->
+  <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pass Score</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parts/Questions</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr *ngFor="let exam of exams" class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="text-sm font-medium text-gray-900">{{ exam.title }}</div>
+            <div class="text-sm text-gray-500">{{ exam.description | slice:0:50 }}{{ exam.description.length > 50 ? '...' : '' }}</div>
+          </td>
+          <td class="px-6 py-4">
+            <span [class]="getLevelColor(exam.level)" class="px-2 py-1 rounded-full text-xs font-semibold">
+              {{ exam.level }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">{{ exam.totalDuration }} min</td>
+          <td class="px-6 py-4 text-sm text-gray-900">{{ exam.passingScore }}%</td>
+          <td class="px-6 py-4 text-sm text-gray-900">{{ exam.partCount }} / {{ exam.questionCount }}</td>
+          <td class="px-6 py-4">
+            <span *ngIf="exam.isPublished" class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+              Published
+            </span>
+            <span *ngIf="!exam.isPublished" class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">
+              Draft
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm font-medium space-x-2">
+            <button
+              (click)="openEditModal(exam)"
+              class="text-blue-600 hover:text-blue-900"
+              title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button
+              (click)="togglePublish(exam)"
+              [class]="exam.isPublished ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'"
+              [title]="exam.isPublished ? 'Unpublish' : 'Publish'">
+              <i [class]="exam.isPublished ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+            <button
+              (click)="deleteExam(exam)"
+              class="text-red-600 hover:text-red-900"
+              title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="exams.length === 0">
+          <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+            <i class="fas fa-inbox text-4xl mb-4"></i>
+            <p>No exams created yet. Click "Build New Exam" to get started.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

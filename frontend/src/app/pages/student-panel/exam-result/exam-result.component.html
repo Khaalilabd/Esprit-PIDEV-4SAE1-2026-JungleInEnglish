@@ -1,0 +1,120 @@
+<div class="exam-result-container" *ngIf="!loading && result">
+  <!-- Result Header -->
+  <div class="result-header">
+    <div class="score-card">
+      <div class="score-main">
+        <h1>{{ result.percentageScore }}%</h1>
+        <div class="score-details">
+          <span>{{ result.totalScore }} points</span>
+        </div>
+      </div>
+      <div class="pass-status" [class]="passStatusClass">
+        <i class="bi" [class.bi-check-circle-fill]="result.passed" [class.bi-x-circle-fill]="!result.passed"></i>
+        <span>{{ passStatus }}</span>
+      </div>
+    </div>
+
+    <div class="cefr-recommendation">
+      <h3>CEFR Level Recommendation</h3>
+      <div class="cefr-badge">{{ cefrRecommendation }}</div>
+      <p class="cefr-description">Based on your performance</p>
+    </div>
+  </div>
+
+  <!-- Part Breakdown -->
+  <div class="part-breakdown-section" *ngIf="getPartBreakdown().length > 0">
+    <h2>Performance by Part</h2>
+    <div class="breakdown-grid">
+      <div *ngFor="let part of getPartBreakdown()" class="breakdown-card">
+        <h4>{{ part.name }}</h4>
+        <div class="breakdown-score">
+          <span class="score">{{ part.score }} / {{ part.maxScore }}</span>
+          <span class="percentage">{{ part.percentage }}%</span>
+        </div>
+        <div class="breakdown-bar">
+          <div class="bar-fill" [style.width.%]="part.percentage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question Review -->
+  <div class="question-review-section">
+    <h2>Question-by-Question Review</h2>
+    <div class="review-list">
+      <div *ngFor="let review of result.questionReviews; let i = index" 
+           class="review-card"
+           [class.correct]="review.isCorrect"
+           [class.incorrect]="review.isCorrect === false"
+           [class.pending]="review.isCorrect === null || review.isCorrect === undefined">
+        
+        <div class="review-header">
+          <div class="review-number">
+            <span class="number">Question {{ i + 1 }}</span>
+            <span class="type-badge">{{ getQuestionTypeLabel(review.questionType) }}</span>
+          </div>
+          <div class="review-score">
+            <span *ngIf="review.score !== null && review.score !== undefined">
+              {{ review.score }} / {{ review.maxPoints }} points
+            </span>
+            <span *ngIf="review.score === null || review.score === undefined" class="pending-badge">
+              Pending Manual Grading
+            </span>
+          </div>
+        </div>
+
+        <div class="review-content">
+          <div class="question-prompt">
+            <strong>Question:</strong>
+            <p>{{ review.prompt }}</p>
+          </div>
+
+          <div class="answer-section">
+            <div class="your-answer">
+              <strong>Your Answer:</strong>
+              <p>{{ formatAnswer(review.studentAnswer) }}</p>
+            </div>
+
+            <div class="correct-answer" *ngIf="review.correctAnswer">
+              <strong>Correct Answer:</strong>
+              <p>{{ formatAnswer(review.correctAnswer) }}</p>
+            </div>
+          </div>
+
+          <div class="explanation" *ngIf="review.explanation">
+            <strong>Explanation:</strong>
+            <p>{{ review.explanation }}</p>
+          </div>
+
+          <div class="manual-feedback" *ngIf="review.manualFeedback">
+            <strong>Instructor Feedback:</strong>
+            <p>{{ review.manualFeedback }}</p>
+          </div>
+
+          <div class="status-icon">
+            <i *ngIf="review.isCorrect === true" class="bi bi-check-circle-fill text-success"></i>
+            <i *ngIf="review.isCorrect === false" class="bi bi-x-circle-fill text-danger"></i>
+            <i *ngIf="review.isCorrect === null || review.isCorrect === undefined" class="bi bi-clock-fill text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <button class="btn btn-outline-primary" (click)="goToExams()">
+      <i class="bi bi-arrow-left"></i> Back to Exams
+    </button>
+    <button class="btn btn-primary" (click)="retakeExam()">
+      <i class="bi bi-arrow-repeat"></i> Take Another Exam
+    </button>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading results...</span>
+  </div>
+  <p>Loading your exam results...</p>
+</div>

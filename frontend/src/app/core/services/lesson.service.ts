@@ -20,9 +20,6 @@ export class LessonService {
     return this.http.get<Lesson>(`${this.apiUrl}/${id}`);
   }
 
-  getAllLessons(): Observable<Lesson[]> {
-    return this.http.get<Lesson[]>(this.apiUrl);
-  }
 
   getLessonsByChapter(chapterId: number): Observable<Lesson[]> {
     return this.http.get<Lesson[]>(`${this.apiUrl}/chapter/${chapterId}`);
@@ -36,9 +33,6 @@ export class LessonService {
     return this.http.get<Lesson[]>(`${this.apiUrl}/course/${courseId}`);
   }
 
-  getLessonsByType(lessonType: LessonType): Observable<Lesson[]> {
-    return this.http.get<Lesson[]>(`${this.apiUrl}/type/${lessonType}`);
-  }
 
   getPreviewLessonsByCourse(courseId: number): Observable<Lesson[]> {
     return this.http.get<Lesson[]>(`${this.apiUrl}/course/${courseId}/preview`);
@@ -52,17 +46,8 @@ export class LessonService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  lessonExists(id: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${id}/exists`);
-  }
 
-  lessonBelongsToChapter(lessonId: number, chapterId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${lessonId}/belongs-to-chapter/${chapterId}`);
-  }
 
-  lessonBelongsToCourse(lessonId: number, courseId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${lessonId}/belongs-to-course/${courseId}`);
-  }
 
   uploadVideo(lessonId: number, file: File): Observable<{url: string, message: string}> {
     const formData = new FormData();
@@ -78,5 +63,14 @@ export class LessonService {
 
   deleteContentFile(lessonId: number): Observable<{message: string}> {
     return this.http.delete<{message: string}>(`${this.apiUrl}/${lessonId}/content-file`);
+  }
+
+  // FIX 3: Bulk publish/unpublish all lessons in a course
+  publishAllLessonsByCourse(courseId: number): Observable<Lesson[]> {
+    return this.http.put<Lesson[]>(`${this.apiUrl}/course/${courseId}/publish-all`, {});
+  }
+
+  unpublishAllLessonsByCourse(courseId: number): Observable<Lesson[]> {
+    return this.http.put<Lesson[]>(`${this.apiUrl}/course/${courseId}/unpublish-all`, {});
   }
 }

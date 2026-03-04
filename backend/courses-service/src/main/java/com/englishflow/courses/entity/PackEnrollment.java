@@ -46,9 +46,6 @@ public class PackEnrollment {
     @Column(nullable = false)
     private Integer totalCourses = 0;
     
-    @Column
-    private Integer completedCourses = 0;
-    
     @Column(nullable = false)
     private LocalDateTime enrolledAt;
     
@@ -57,9 +54,6 @@ public class PackEnrollment {
     
     @Column(nullable = false, length = 20)
     private String status = "ACTIVE"; // ACTIVE, COMPLETED, CANCELLED
-    
-    @Column
-    private Integer progressPercentage = 0;
     
     @Column(nullable = false)
     private Boolean isActive = true;

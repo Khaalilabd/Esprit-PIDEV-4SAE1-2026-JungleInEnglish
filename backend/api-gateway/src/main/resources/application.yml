@@ -322,13 +322,61 @@ spring:
             - StripPrefix=1
           order: 23
             
+        - id: exam-service
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exams/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-attempts
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-attempts/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-parts
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-parts/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-questions
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/questions/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-results
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-results/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-grading
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/grading/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
         - id: gamification-service
-          uri: http://localhost:8086
+          uri: lb://gamification-service
           predicates:
             - Path=/api/gamification/**
           filters:
             - StripPrefix=1
-          order: 24
+          order: 25
             
         - id: notification-service
           uri: lb://notification-service
@@ -336,7 +384,7 @@ spring:
             - Path=/api/notifications/**
           filters:
             - StripPrefix=1
-          order: 25
+          order: 26
       globalcors:
         cors-configurations:
           '[/**]':

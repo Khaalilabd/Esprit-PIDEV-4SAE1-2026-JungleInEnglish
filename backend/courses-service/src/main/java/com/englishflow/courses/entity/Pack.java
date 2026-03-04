@@ -74,7 +74,7 @@ public class Pack {
     private Long createdBy; // academicId
     
     @Column
-    private Long conversationId; // ID du groupe de discussion associé
+    private Long conversationId; // ID du groupe de discussion dans messaging-service
     
     @Column(nullable = false)
     private LocalDateTime createdAt;

@@ -18,7 +18,6 @@ export interface Lesson {
   duration?: number;
   isPreview: boolean;
   isPublished: boolean;
-  quizId?: number;
   chapterId: number;
   createdAt?: string;
   updatedAt?: string;
@@ -34,7 +33,6 @@ export interface CreateLessonRequest {
   duration?: number;
   isPreview: boolean;
   isPublished: boolean;
-  quizId?: number;
   chapterId: number;
 }
 
@@ -48,6 +46,5 @@ export interface UpdateLessonRequest {
   duration?: number;
   isPreview: boolean;
   isPublished: boolean;
-  quizId?: number;
   chapterId: number;
 }

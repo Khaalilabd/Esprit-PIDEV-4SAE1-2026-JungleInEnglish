@@ -103,7 +103,6 @@ public class LessonService implements ILessonService {
         lesson.setDuration(lessonDTO.getDuration());
         lesson.setIsPreview(lessonDTO.getIsPreview());
         lesson.setIsPublished(lessonDTO.getIsPublished());
-        lesson.setQuizId(lessonDTO.getQuizId());
         
         Lesson updatedLesson = lessonRepository.save(lesson);
         return mapToDTO(updatedLesson);
@@ -160,7 +159,6 @@ public class LessonService implements ILessonService {
         dto.setDuration(lesson.getDuration());
         dto.setIsPreview(lesson.getIsPreview());
         dto.setIsPublished(lesson.getIsPublished());
-        dto.setQuizId(lesson.getQuizId());
         dto.setChapterId(lesson.getChapter().getId());
         dto.setCreatedAt(lesson.getCreatedAt());
         dto.setUpdatedAt(lesson.getUpdatedAt());
@@ -178,7 +176,23 @@ public class LessonService implements ILessonService {
         lesson.setDuration(dto.getDuration() != null ? dto.getDuration() : 0);
         lesson.setIsPreview(dto.getIsPreview() != null ? dto.getIsPreview() : false);
         lesson.setIsPublished(dto.getIsPublished() != null ? dto.getIsPublished() : false);
-        lesson.setQuizId(dto.getQuizId());
         return lesson;
+    }
+    
+    // FIX 3: Bulk publish/unpublish all lessons in a course
+    @Transactional
+    public List<LessonDTO> publishAllLessonsByCourse(Long courseId) {
+        List<Lesson> lessons = lessonRepository.findByCourseId(courseId);
+        lessons.forEach(lesson -> lesson.setIsPublished(true));
+        List<Lesson> updated = lessonRepository.saveAll(lessons);
+        return updated.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public List<LessonDTO> unpublishAllLessonsByCourse(Long courseId) {
+        List<Lesson> lessons = lessonRepository.findByCourseId(courseId);
+        lessons.forEach(lesson -> lesson.setIsPublished(false));
+        List<Lesson> updated = lessonRepository.saveAll(lessons);
+        return updated.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 }

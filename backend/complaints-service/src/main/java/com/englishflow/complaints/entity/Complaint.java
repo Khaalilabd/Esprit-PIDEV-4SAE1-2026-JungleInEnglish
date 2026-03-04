@@ -2,6 +2,7 @@ package com.englishflow.complaints.entity;
 
 import com.englishflow.complaints.enums.*;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,20 +22,27 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @NotNull(message = "User ID is required")
     @Column(nullable = false)
     private Long userId;
     
+    @NotNull(message = "Target role is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TargetRole targetRole;
     
+    @NotNull(message = "Category is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ComplaintCategory category;
     
+    @NotBlank(message = "Subject is required")
+    @Size(min = 5, max = 200, message = "Subject must be between 5 and 200 characters")
     @Column(nullable = false, length = 200)
     private String subject;
     
+    @NotBlank(message = "Description is required")
+    @Size(min = 20, max = 5000, message = "Description must be between 20 and 5000 characters")
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
     

@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { PackService } from '../../../core/services/pack.service';
 import { PackEnrollmentService } from '../../../core/services/pack-enrollment.service';
 import { CourseCategoryService } from '../../../core/services/course-category.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Pack, PackStatus } from '../../../core/models/pack.model';
+import { Pack } from '../../../core/models/pack.model';
 import { CourseCategory } from '../../../core/models/course-category.model';
 
 @Component({
@@ -18,21 +18,18 @@ import { CourseCategory } from '../../../core/models/course-category.model';
 })
 export class PackCatalogComponent implements OnInit {
   packs: Pack[] = [];
+  filteredPacks: Pack[] = [];
   categories: CourseCategory[] = [];
+  enrolledPackIds: Set<number> = new Set();
   
-  selectedCategory: string = '';
-  selectedLevel: string = '';
-  
-  loading = false;
+  loading = true;
   enrolling = false;
   
-  showEnrollModal = false;
-  selectedPack: Pack | null = null;
+  searchTerm = '';
+  selectedCategory = '';
+  selectedLevel = '';
   
-  message = '';
-  messageType: 'success' | 'error' = 'success';
-  
-  allLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
   constructor(
     private packService: PackService,
@@ -44,7 +41,8 @@ export class PackCatalogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
-    this.loadAvailablePacks();
+    this.loadPacks();
+    this.loadEnrolledPacks();
   }
 
   loadCategories(): void {
@@ -58,19 +56,51 @@ export class PackCatalogComponent implements OnInit {
     });
   }
 
-  loadAvailablePacks(): void {
+  loadPacks(): void {
     this.loading = true;
-    this.packService.getAvailablePacks().subscribe({
-      next: (packs) => {
-        this.packs = packs;
+    this.packService.getAllPacks().subscribe({
+      next: (packs: Pack[]) => {
+        // Only show ACTIVE packs with open enrollment
+        this.packs = packs.filter((p: Pack) => p.status === 'ACTIVE' && p.isEnrollmentOpen);
+        this.applyFilters();
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading packs:', error);
-        this.showMessage('Failed to load packs', 'error');
         this.loading = false;
       }
     });
+  }
+
+  loadEnrolledPacks(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) return;
+
+    this.packEnrollmentService.getByStudentId(currentUser.id).subscribe({
+      next: (enrollments) => {
+        this.enrolledPackIds = new Set(enrollments.map(e => e.packId));
+      },
+      error: (error) => {
+        console.error('Error loading enrollments:', error);
+      }
+    });
+  }
+
+  applyFilters(): void {
+    this.filteredPacks = this.packs.filter(pack => {
+      const matchesSearch = !this.searchTerm || 
+        pack.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        pack.description?.toLowerCase().includes(this.searchTerm.toLowerCase());
+      
+      const matchesCategory = !this.selectedCategory || pack.category === this.selectedCategory;
+      const matchesLevel = !this.selectedLevel || pack.level === this.selectedLevel;
+      
+      return matchesSearch && matchesCategory && matchesLevel;
+    });
+  }
+
+  onSearchChange(): void {
+    this.applyFilters();
   }
 
   onCategoryChange(): void {
@@ -81,98 +111,62 @@ export class PackCatalogComponent implements OnInit {
     this.applyFilters();
   }
 
-  applyFilters(): void {
-    if (!this.selectedCategory && !this.selectedLevel) {
-      this.loadAvailablePacks();
-      return;
-    }
-
-    this.loading = true;
-    
-    if (this.selectedCategory && this.selectedLevel) {
-      // Search by both category and level
-      const category = this.categories.find(c => c.name === this.selectedCategory);
-      if (category) {
-        this.packService.searchPacks(category.name as any, this.selectedLevel).subscribe({
-          next: (packs) => {
-            this.packs = packs.filter(p => p.status === PackStatus.ACTIVE && p.availableSlots! > 0);
-            this.loading = false;
-          },
-          error: (error) => {
-            console.error('Error searching packs:', error);
-            this.loading = false;
-          }
-        });
-      }
-    } else {
-      // Load all and filter client-side
-      this.packService.getAvailablePacks().subscribe({
-        next: (packs) => {
-          this.packs = packs.filter(p => {
-            const matchesCategory = !this.selectedCategory || p.category === this.selectedCategory;
-            const matchesLevel = !this.selectedLevel || p.level === this.selectedLevel;
-            return matchesCategory && matchesLevel;
-          });
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading packs:', error);
-          this.loading = false;
-        }
-      });
-    }
-  }
-
   clearFilters(): void {
+    this.searchTerm = '';
     this.selectedCategory = '';
     this.selectedLevel = '';
-    this.loadAvailablePacks();
+    this.applyFilters();
   }
 
-  openEnrollModal(pack: Pack): void {
-    this.selectedPack = pack;
-    this.showEnrollModal = true;
-  }
-
-  closeEnrollModal(): void {
-    this.showEnrollModal = false;
-    this.selectedPack = null;
-  }
-
-  confirmEnrollment(): void {
-    if (!this.selectedPack || !this.selectedPack.id) return;
-
-    const currentUser = this.authService.currentUserValue;
-    if (!currentUser) {
-      this.showMessage('Please login to enroll', 'error');
-      return;
-    }
-
-    this.enrolling = true;
-    this.packEnrollmentService.enrollStudent(currentUser.id, this.selectedPack.id).subscribe({
-      next: () => {
-        this.showMessage('Successfully enrolled in pack!', 'success');
-        this.closeEnrollModal();
-        this.enrolling = false;
-        
-        // Refresh packs to update available slots
-        this.applyFilters();
-        
-        // Navigate to my packs after 2 seconds
-        setTimeout(() => {
-          this.router.navigate(['/user-panel/my-packs']);
-        }, 2000);
-      },
-      error: (error) => {
-        console.error('Error enrolling:', error);
-        this.showMessage(error.error?.message || 'Failed to enroll in pack', 'error');
-        this.enrolling = false;
-      }
-    });
+  isEnrolled(packId: number | undefined): boolean {
+    if (!packId) return false;
+    return this.enrolledPackIds.has(packId);
   }
 
   viewPackDetails(pack: Pack): void {
-    this.router.navigate(['/user-panel/packs', pack.id]);
+    if (!pack.id) return;
+    this.router.navigate(['/user-panel/pack-details', pack.id]);
+  }
+
+  enrollInPack(pack: Pack, event: Event): void {
+    event.stopPropagation();
+    
+    if (!pack.id) return;
+    
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (currentUser.role !== 'STUDENT') {
+      alert('Only students can enroll in packs');
+      return;
+    }
+
+    if (this.isEnrolled(pack.id)) {
+      this.router.navigate(['/user-panel/my-packs']);
+      return;
+    }
+
+    if (confirm(`Enroll in "${pack.name}" for $${pack.price}?`)) {
+      this.enrolling = true;
+      this.packEnrollmentService.enrollStudent(currentUser.id, pack.id).subscribe({
+        next: () => {
+          this.enrolling = false;
+          this.enrolledPackIds.add(pack.id!);
+          alert('🎉 Enrollment successful! Redirecting to My Packs...');
+          setTimeout(() => {
+            this.router.navigate(['/user-panel/my-packs']);
+          }, 1000);
+        },
+        error: (error: any) => {
+          console.error('Error enrolling:', error);
+          this.enrolling = false;
+          alert('❌ Enrollment failed. Please try again.');
+        }
+      });
+    }
   }
 
   getCategoryIcon(categoryName: string): string {
@@ -183,23 +177,5 @@ export class PackCatalogComponent implements OnInit {
   getCategoryColor(categoryName: string): string {
     const category = this.categories.find(c => c.name === categoryName);
     return category?.color || '#3B82F6';
-  }
-
-  getEnrollmentPercentage(pack: Pack): number {
-    return pack.enrollmentPercentage || 0;
-  }
-
-  getEnrollmentColor(percentage: number): string {
-    if (percentage >= 80) return 'text-red-600';
-    if (percentage >= 50) return 'text-orange-600';
-    return 'text-green-600';
-  }
-
-  showMessage(text: string, type: 'success' | 'error'): void {
-    this.message = text;
-    this.messageType = type;
-    setTimeout(() => {
-      this.message = '';
-    }, 5000);
   }
 }
