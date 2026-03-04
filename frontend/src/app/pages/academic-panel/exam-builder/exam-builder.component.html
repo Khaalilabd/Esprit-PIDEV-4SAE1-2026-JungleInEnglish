@@ -1,0 +1,349 @@
+<div class="exam-builder-container">
+  <!-- Header -->
+  <div class="builder-header">
+    <h1>{{ isEditMode ? 'Edit' : 'Create' }} CEFR Exam</h1>
+    <p>Build a comprehensive English proficiency exam step by step</p>
+  </div>
+
+  <!-- Progress Steps -->
+  <div class="progress-steps">
+    <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="goToStep(1)">
+      <div class="step-number">1</div>
+      <div class="step-label">Exam Details</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep > 1"></div>
+    <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="goToStep(2)">
+      <div class="step-number">2</div>
+      <div class="step-label">Add Parts</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep > 2"></div>
+    <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3" (click)="goToStep(3)">
+      <div class="step-number">3</div>
+      <div class="step-label">Add Questions</div>
+    </div>
+  </div>
+
+  <!-- Step Content -->
+  <div class="step-content">
+    <!-- Step 1: Exam Details -->
+    <div *ngIf="currentStep === 1" class="step-panel">
+      <h2>Exam Information</h2>
+      <p class="step-description">Enter the basic information about your CEFR exam</p>
+
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>Exam Title *</label>
+          <input type="text" [(ngModel)]="examForm.title" placeholder="e.g., CEFR A2 English Test - Variant 1" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>CEFR Level *</label>
+          <select [(ngModel)]="examForm.level" class="form-control">
+            <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Total Duration (minutes) *</label>
+          <input type="number" [(ngModel)]="examForm.totalDuration" min="30" max="300" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Passing Score (%) *</label>
+          <input type="number" [(ngModel)]="examForm.passingScore" min="0" max="100" class="form-control">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Description *</label>
+          <textarea [(ngModel)]="examForm.description" rows="4" placeholder="Describe what this exam tests..." class="form-control"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Add Parts -->
+    <div *ngIf="currentStep === 2" class="step-panel">
+      <div class="step-header">
+        <div>
+          <h2>Exam Parts</h2>
+          <p class="step-description">Add sections to your exam (Reading, Listening, Grammar, etc.)</p>
+        </div>
+        <button class="btn btn-primary" (click)="openAddPartModal()">
+          <i class="bi bi-plus-circle"></i> Add Part
+        </button>
+      </div>
+
+      <div *ngIf="parts.length === 0" class="empty-state">
+        <i class="bi bi-folder-plus"></i>
+        <p>No parts added yet</p>
+        <button class="btn btn-primary" (click)="openAddPartModal()">Add Your First Part</button>
+      </div>
+
+      <div *ngIf="parts.length > 0" class="parts-list">
+        <div *ngFor="let part of parts; let i = index" class="part-card">
+          <div class="part-header">
+            <div class="part-info">
+              <h3>{{ part.title }}</h3>
+              <span class="part-type-badge">{{ part.partType }}</span>
+              <span class="question-count">{{ getPartQuestions(i).length }} questions</span>
+            </div>
+            <div class="part-actions">
+              <button class="btn-icon" (click)="movePartUp(i)" [disabled]="i === 0" title="Move up">
+                <i class="bi bi-arrow-up"></i>
+              </button>
+              <button class="btn-icon" (click)="movePartDown(i)" [disabled]="i === parts.length - 1" title="Move down">
+                <i class="bi bi-arrow-down"></i>
+              </button>
+              <button class="btn-icon" (click)="openEditPartModal(i)" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn-icon danger" (click)="deletePart(i)" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="part-details">
+            <p *ngIf="part.instructions">{{ part.instructions }}</p>
+            <div class="part-meta">
+              <span *ngIf="part.timeLimit"><i class="bi bi-clock"></i> {{ part.timeLimit }} min</span>
+              <span *ngIf="part.audioUrl"><i class="bi bi-volume-up"></i> Has audio</span>
+              <span *ngIf="part.readingText"><i class="bi bi-file-text"></i> Has reading text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Add Questions -->
+    <div *ngIf="currentStep === 3" class="step-panel">
+      <div class="step-header">
+        <div>
+          <h2>Questions</h2>
+          <p class="step-description">Add questions to each part of your exam</p>
+        </div>
+        <div class="stats">
+          <span class="stat-badge">{{ parts.length }} Parts</span>
+          <span class="stat-badge">{{ getTotalQuestions() }} Questions</span>
+        </div>
+      </div>
+
+      <div *ngFor="let part of parts; let partIndex = index" class="part-section">
+        <div class="part-section-header">
+          <h3>{{ part.title }}</h3>
+          <button class="btn btn-sm btn-primary" (click)="openAddQuestionModal(partIndex)">
+            <i class="bi bi-plus"></i> Add Question
+          </button>
+        </div>
+
+        <div *ngIf="getPartQuestions(partIndex).length === 0" class="empty-state-small">
+          <p>No questions in this part yet</p>
+          <button class="btn btn-sm btn-outline-primary" (click)="openAddQuestionModal(partIndex)">Add Question</button>
+        </div>
+
+        <div *ngIf="getPartQuestions(partIndex).length > 0" class="questions-list">
+          <div *ngFor="let question of getPartQuestions(partIndex); let qIndex = index" class="question-card">
+            <div class="question-header">
+              <span class="question-number">Q{{ qIndex + 1 }}</span>
+              <span class="question-type">{{ getQuestionTypeLabel(question.questionType) }}</span>
+              <span class="question-points">{{ question.points }} pts</span>
+              <div class="question-actions">
+                <button class="btn-icon-sm" (click)="openEditQuestionModal(partIndex, qIndex)" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn-icon-sm danger" (click)="deleteQuestion(partIndex, qIndex)" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="question-content">
+              <p class="question-prompt">{{ question.prompt }}</p>
+              <div *ngIf="question.options.length > 0" class="question-options">
+                <div *ngFor="let option of question.options" class="option-preview">
+                  {{ option.label }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Footer -->
+  <div class="builder-footer">
+    <button class="btn btn-secondary" (click)="cancel()">Cancel</button>
+    <div class="footer-actions">
+      <button *ngIf="currentStep > 1" class="btn btn-outline-primary" (click)="previousStep()">
+        <i class="bi bi-arrow-left"></i> Previous
+      </button>
+      <button *ngIf="currentStep < totalSteps" class="btn btn-primary" (click)="nextStep()">
+        Next <i class="bi bi-arrow-right"></i>
+      </button>
+      <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="saveExam()" [disabled]="saving">
+        <i class="bi bi-check-circle"></i> {{ saving ? 'Saving...' : 'Save Exam' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Part Modal -->
+<div *ngIf="showPartModal" class="modal-overlay" (click)="closePartModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editingPartIndex !== null ? 'Edit' : 'Add' }} Part</h3>
+      <button class="btn-close" (click)="closePartModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Part Title *</label>
+        <input type="text" [(ngModel)]="partForm.title" placeholder="e.g., Reading Comprehension" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Part Type *</label>
+        <select [(ngModel)]="partForm.partType" class="form-control">
+          <option *ngFor="let type of partTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Instructions</label>
+        <textarea [(ngModel)]="partForm.instructions" rows="3" placeholder="Instructions for this part..." class="form-control"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Time Limit (minutes)</label>
+        <input type="number" [(ngModel)]="partForm.timeLimit" min="1" placeholder="Optional" class="form-control">
+      </div>
+
+      <div class="form-group" *ngIf="partForm.partType === 'LISTENING'">
+        <label>Audio URL</label>
+        <input type="text" [(ngModel)]="partForm.audioUrl" placeholder="https://..." class="form-control">
+      </div>
+
+      <div class="form-group" *ngIf="partForm.partType === 'READING'">
+        <label>Reading Text</label>
+        <textarea [(ngModel)]="partForm.readingText" rows="6" placeholder="Paste the reading passage here..." class="form-control"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closePartModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="savePart()">Save Part</button>
+    </div>
+  </div>
+</div>
+
+<!-- Question Modal -->
+<div *ngIf="showQuestionModal" class="modal-overlay" (click)="closeQuestionModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editingQuestionIndex !== null ? 'Edit' : 'Add' }} Question</h3>
+      <button class="btn-close" (click)="closeQuestionModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Question Type *</label>
+        <select [(ngModel)]="questionForm.questionType" class="form-control">
+          <option *ngFor="let type of questionTypes" [value]="type">{{ getQuestionTypeLabel(type) }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Question Prompt *</label>
+        <textarea [(ngModel)]="questionForm.prompt" rows="3" placeholder="Enter the question..." class="form-control"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Points *</label>
+          <input type="number" [(ngModel)]="questionForm.points" min="0.5" step="0.5" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Media URL (optional)</label>
+          <input type="text" [(ngModel)]="questionForm.mediaUrl" placeholder="Image or audio URL" class="form-control">
+        </div>
+      </div>
+
+      <!-- Options for Multiple Choice / Dropdown -->
+      <div *ngIf="requiresOptions(questionForm.questionType)" class="form-group">
+        <label>Answer Options *</label>
+        <div class="options-list">
+          <div *ngFor="let option of questionForm.options; let i = index" class="option-item">
+            <input type="radio" 
+                   *ngIf="questionForm.questionType === 'MULTIPLE_CHOICE' || questionForm.questionType === 'DROPDOWN_SELECT'"
+                   [name]="'correct-option'"
+                   [value]="option.id"
+                   [(ngModel)]="questionForm.correctAnswer"
+                   class="form-check-input">
+            <input type="text" [(ngModel)]="option.label" placeholder="Option {{ i + 1 }}" class="form-control">
+            <button class="btn-icon-sm danger" (click)="removeOption(i)">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-primary" (click)="addOption()">
+          <i class="bi bi-plus"></i> Add Option
+        </button>
+        <small class="form-text">Select the radio button next to the correct answer</small>
+      </div>
+
+      <!-- Correct Answer for True/False -->
+      <div *ngIf="questionForm.questionType === 'TRUE_FALSE'" class="form-group">
+        <label>Correct Answer *</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="tf-answer" [value]="true" [(ngModel)]="questionForm.correctAnswer">
+            True
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="tf-answer" [value]="false" [(ngModel)]="questionForm.correctAnswer">
+            False
+          </label>
+        </div>
+      </div>
+
+      <!-- Correct Answer for Fill in Gap -->
+      <div *ngIf="questionForm.questionType === 'FILL_IN_GAP'" class="form-group">
+        <label>Correct Answer *</label>
+        <input type="text" [(ngModel)]="questionForm.correctAnswer" placeholder="Enter the correct word/phrase" class="form-control">
+        <small class="form-text">For multiple acceptable answers, separate with commas</small>
+      </div>
+
+      <!-- Correct Answer for Word Ordering -->
+      <div *ngIf="questionForm.questionType === 'WORD_ORDERING'" class="form-group">
+        <label>Correct Word Order *</label>
+        <textarea [(ngModel)]="questionForm.correctAnswer" rows="2" placeholder="Enter words in correct order, separated by spaces" class="form-control"></textarea>
+        <small class="form-text">Example: "The quick brown fox jumps"</small>
+      </div>
+
+      <!-- Correct Answer for Matching -->
+      <div *ngIf="questionForm.questionType === 'MATCHING'" class="form-group">
+        <label>Correct Matches *</label>
+        <textarea [(ngModel)]="questionForm.correctAnswer" rows="3" placeholder="Enter pairs in format: A-1, B-2, C-3" class="form-control"></textarea>
+        <small class="form-text">Format: item-match, item-match (e.g., "apple-fruit, car-vehicle")</small>
+      </div>
+
+      <!-- Rubric for Open Writing / Audio Response -->
+      <div *ngIf="questionForm.questionType === 'OPEN_WRITING' || questionForm.questionType === 'AUDIO_RESPONSE'" class="form-group">
+        <label>Grading Rubric / Sample Answer</label>
+        <textarea [(ngModel)]="questionForm.correctAnswer" rows="4" placeholder="Enter grading criteria or sample answer..." class="form-control"></textarea>
+        <small class="form-text">This will help graders evaluate student responses</small>
+      </div>
+
+      <div class="form-group">
+        <label>Explanation (optional)</label>
+        <textarea [(ngModel)]="questionForm.explanation" rows="2" placeholder="Explain why this is the correct answer..." class="form-control"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeQuestionModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveQuestion()">Save Question</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner-border text-primary"></div>
+  <p>Loading exam...</p>
+</div>

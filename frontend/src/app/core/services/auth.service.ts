@@ -200,6 +200,10 @@ export class AuthService {
     return this.http.get<any[]>('http://localhost:8088/public/users');
   }
 
+  getUserById(userId: number): Observable<any> {
+    return this.http.get<any>(`http://localhost:8088/public/users/${userId}`);
+  }
+
   uploadProfilePhoto(userId: number, formData: FormData): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`http://localhost:8088/api/users/${userId}/profile-photo`, formData).pipe(
       tap(response => {

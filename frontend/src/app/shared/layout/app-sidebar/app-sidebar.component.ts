@@ -203,7 +203,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
     }
   ];
 
-  // ACADEMIC_OFFICE_AFFAIR: Ebooks et Assignments
+  // ACADEMIC_OFFICE_AFFAIR: Ebooks et Assignments (WITHOUT EXAMS)
   academicContentItems: NavItem[] = [
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
@@ -234,6 +234,60 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       name: "Assignments Management",
       path: "/dashboard/assignments",
       roles: ['ACADEMIC_OFFICE_AFFAIR']
+    }
+  ];
+
+  // 📝 EXAMS - For ACADEMIC_OFFICE_AFFAIR
+  academicExamsItems: NavItem[] = [
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      name: "Exam Management",
+      path: "/dashboard/exams",
+      roles: ['ACADEMIC_OFFICE_AFFAIR']
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/></svg>`,
+      name: "Exam Results",
+      path: "/dashboard/exam-results",
+      roles: ['ACADEMIC_OFFICE_AFFAIR']
+    }
+  ];
+
+  // 🎓 STUDENT MENU - For STUDENT role
+  studentItems: NavItem[] = [
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 3.25C5.25736 3.25 4.25 4.25736 4.25 5.5V18.5C4.25 19.7426 5.25736 20.75 6.5 20.75H17.5C18.7426 20.75 19.75 19.7426 19.75 18.5V5.5C19.75 4.25736 18.7426 3.25 17.5 3.25H6.5ZM5.75 5.5C5.75 5.08579 6.08579 4.75 6.5 4.75H17.5C17.9142 4.75 18.25 5.08579 18.25 5.5V18.5C18.25 18.9142 17.9142 19.25 17.5 19.25H6.5C6.08579 19.25 5.75 18.9142 5.75 18.5V5.5Z" fill="currentColor"/></svg>`,
+      name: "My Courses",
+      path: "/student/courses",
+      roles: ['STUDENT']
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      name: "Exams",
+      path: "/student/exams",
+      roles: ['STUDENT']
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      name: "My Exam Results",
+      path: "/student/my-exam-results",
+      roles: ['STUDENT']
+    }
+  ];
+
+  // 👨‍🏫 TUTOR MENU - For TUTOR role
+  tutorItems: NavItem[] = [
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 3.25C5.25736 3.25 4.25 4.25736 4.25 5.5V18.5C4.25 19.7426 5.25736 20.75 6.5 20.75H17.5C18.7426 20.75 19.75 19.7426 19.75 18.5V5.5C19.75 4.25736 18.7426 3.25 17.5 3.25H6.5ZM5.75 5.5C5.75 5.08579 6.08579 4.75 6.5 4.75H17.5C17.9142 4.75 18.25 5.08579 18.25 5.5V18.5C18.25 18.9142 17.9142 19.25 17.5 19.25H6.5C6.08579 19.25 5.75 18.9142 5.75 18.5V5.5Z" fill="currentColor"/></svg>`,
+      name: "My Courses",
+      path: "/tutor-panel/courses",
+      roles: ['TUTOR']
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      name: "Exam Grading",
+      path: "/tutor-panel/exam-grading",
+      roles: ['TUTOR']
     }
   ];
 

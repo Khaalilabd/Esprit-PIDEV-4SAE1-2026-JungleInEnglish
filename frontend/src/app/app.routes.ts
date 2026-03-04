@@ -150,6 +150,26 @@ export const routes: Routes = [
         title: 'Ebooks | Jungle in English'
       },
       {
+        path: 'exams',
+        loadComponent: () => import('./pages/student-panel/exam-catalog/exam-catalog.component').then(m => m.ExamCatalogComponent),
+        title: 'CEFR Exams | Jungle in English'
+      },
+      {
+        path: 'exam-taking/:attemptId',
+        loadComponent: () => import('./pages/student-panel/exam-taking/exam-taking.component').then(m => m.ExamTakingComponent),
+        title: 'Taking Exam | Jungle in English'
+      },
+      {
+        path: 'exam-result/:attemptId',
+        loadComponent: () => import('./pages/student-panel/exam-result/exam-result.component').then(m => m.ExamResultComponent),
+        title: 'Exam Result | Jungle in English'
+      },
+      {
+        path: 'my-exam-results',
+        loadComponent: () => import('./pages/student-panel/my-exam-results/my-exam-results.component').then(m => m.MyExamResultsComponent),
+        title: 'My Exam Results | Jungle in English'
+      },
+      {
         path: 'clubs',
         loadComponent: () => import('./pages/student-panel/clubs/clubs.component').then(m => m.ClubsComponent),
         title: 'My Clubs | Jungle in English'
@@ -342,6 +362,11 @@ export const routes: Routes = [
         path: 'help',
         loadComponent: () => import('./pages/tutor-panel/help/help.component').then(m => m.TutorHelpComponent),
         title: 'Help & Support | Jungle in English'
+      },
+      {
+        path: 'exam-grading',
+        loadComponent: () => import('./pages/tutor-panel/exam-grading/exam-grading.component').then(m => m.ExamGradingComponent),
+        title: 'Exam Grading | Jungle in English'
       },
       {
         path: 'forum',
@@ -649,6 +674,30 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/dashboard/course-status-management/course-status-management.component').then(m => m.CourseStatusManagementComponent),
         canActivate: [roleGuard(['ACADEMIC_OFFICE_AFFAIR'])],
         title: 'Course Status Management | Jungle in English Dashboard'
+      },
+      {
+        path: 'exams',
+        loadComponent: () => import('./pages/academic-panel/exam-management/exam-management.component').then(m => m.ExamManagementComponent),
+        canActivate: [roleGuard(['ACADEMIC_OFFICE_AFFAIR'])],
+        title: 'Exam Management | Jungle in English Dashboard'
+      },
+      {
+        path: 'exams/create',
+        loadComponent: () => import('./pages/academic-panel/exam-builder/exam-builder.component').then(m => m.ExamBuilderComponent),
+        canActivate: [roleGuard(['ACADEMIC_OFFICE_AFFAIR'])],
+        title: 'Create Exam | Jungle in English Dashboard'
+      },
+      {
+        path: 'exams/edit/:id',
+        loadComponent: () => import('./pages/academic-panel/exam-builder/exam-builder.component').then(m => m.ExamBuilderComponent),
+        canActivate: [roleGuard(['ACADEMIC_OFFICE_AFFAIR'])],
+        title: 'Edit Exam | Jungle in English Dashboard'
+      },
+      {
+        path: 'exam-results',
+        loadComponent: () => import('./pages/academic-panel/exam-results-monitoring/exam-results-monitoring.component').then(m => m.ExamResultsMonitoringComponent),
+        canActivate: [roleGuard(['ACADEMIC_OFFICE_AFFAIR'])],
+        title: 'Exam Results Monitoring | Jungle in English Dashboard'
       },
       {
         path: 'form-elements',

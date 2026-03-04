@@ -48,6 +48,14 @@ export class TutorSidebarComponent implements OnInit {
       ]
     },
     {
+      id: 'exams',
+      title: 'EXAMS',
+      icon: '📝',
+      items: [
+        { icon: 'fas fa-clipboard-check', label: 'Exam Grading', route: '/tutor-panel/exam-grading', badge: 0 }
+      ]
+    },
+    {
       id: 'students',
       title: 'STUDENTS',
       icon: '👥',

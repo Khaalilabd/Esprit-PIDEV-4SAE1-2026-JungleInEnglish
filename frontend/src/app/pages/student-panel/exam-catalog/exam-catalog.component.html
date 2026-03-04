@@ -1,0 +1,68 @@
+<div class="exam-catalog">
+  <div class="page-header">
+    <h1>📝 Choose Your CEFR Level</h1>
+    <p>Select your English proficiency level to start a test. A random exam will be assigned to you.</p>
+  </div>
+
+  <div class="levels-grid">
+    <div *ngFor="let levelInfo of levels" 
+         class="level-card" 
+         [style.border-color]="levelInfo.color"
+         (click)="startExam(levelInfo.level)"
+         [class.disabled]="startingExam">
+      
+      <div class="card-header" [style.background-color]="levelInfo.bgColor">
+        <span class="level-icon">{{levelInfo.icon}}</span>
+        <div class="level-badge" [style.background-color]="levelInfo.color">
+          {{levelInfo.level}}
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h2>{{levelInfo.title}}</h2>
+        <p class="description">{{levelInfo.description}}</p>
+
+        <div class="skills-section">
+          <h4>Key Skills:</h4>
+          <ul>
+            <li *ngFor="let skill of levelInfo.skills">
+              <i class="bi bi-check-circle-fill"></i>
+              {{skill}}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="start-btn" [style.background-color]="levelInfo.color" [disabled]="startingExam">
+          <i class="bi bi-play-circle-fill"></i>
+          {{startingExam ? 'Starting...' : 'Start Test'}}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="info-card">
+      <i class="bi bi-info-circle"></i>
+      <div>
+        <h3>How it works</h3>
+        <p>Select your level and we'll randomly assign you an appropriate exam. All exams at the same level test similar skills and have the same difficulty.</p>
+      </div>
+    </div>
+    <div class="info-card">
+      <i class="bi bi-clock-history"></i>
+      <div>
+        <h3>Exam Duration</h3>
+        <p>Most exams take 60-90 minutes to complete. Make sure you have enough time before starting.</p>
+      </div>
+    </div>
+    <div class="info-card">
+      <i class="bi bi-trophy"></i>
+      <div>
+        <h3>Passing Score</h3>
+        <p>You need to score at least 70% to pass the exam and receive your certificate.</p>
+      </div>
+    </div>
+  </div>
+</div>

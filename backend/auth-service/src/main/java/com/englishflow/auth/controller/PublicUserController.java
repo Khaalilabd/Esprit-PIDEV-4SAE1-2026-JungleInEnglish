@@ -29,4 +29,18 @@ public class PublicUserController {
             ))
             .toList());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        return userRepository.findById(id)
+            .map(user -> ResponseEntity.ok(Map.of(
+                "id", user.getId(),
+                "firstName", user.getFirstName(),
+                "lastName", user.getLastName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString(),
+                "profilePicture", user.getProfilePhoto() != null ? user.getProfilePhoto() : ""
+            )))
+            .orElse(ResponseEntity.notFound().build());
+    }
 }

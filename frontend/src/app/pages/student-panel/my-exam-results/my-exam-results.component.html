@@ -1,0 +1,180 @@
+<div class="my-results">
+  <!-- List View -->
+  <div *ngIf="!selectedAttempt" class="list-view">
+    <div class="page-header">
+      <h1>📊 My Exam Results</h1>
+      <p>Track your progress and review your performance</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">{{stats.total}}</div>
+        <div class="stat-label">Total Exams</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{stats.graded}}</div>
+        <div class="stat-label">Graded</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{stats.pending}}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-value">{{stats.averageScore}}%</div>
+        <div class="stat-label">Average Score</div>
+      </div>
+    </div>
+
+    <!-- Loading/Empty States -->
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading your results...</p>
+    </div>
+
+    <div *ngIf="!loading && attempts.length === 0" class="empty">
+      <i class="bi bi-inbox"></i>
+      <h3>No Exam Results Yet</h3>
+      <p>Take your first exam to see results here</p>
+      <button class="btn-primary" (click)="retakeExam('')">
+        <i class="bi bi-play-circle"></i> Take an Exam
+      </button>
+    </div>
+
+    <!-- Results List -->
+    <div class="results-grid">
+      <div *ngFor="let attempt of attempts" class="result-card" (click)="viewResult(attempt)">
+        <div class="card-header">
+          <div class="exam-badge">{{attempt.exam?.level || 'N/A'}}</div>
+          <div class="status-badge" [class.pending]="attempt.status === 'SUBMITTED'" [class.graded]="attempt.status === 'GRADED'">
+            {{attempt.status}}
+          </div>
+        </div>
+
+        <h3>CEFR {{attempt.exam?.level || 'N/A'}} English Test</h3>
+        <p class="exam-date">
+          <i class="bi bi-calendar"></i> {{attempt.submittedAt | date:'medium'}}
+        </p>
+
+        <div *ngIf="attempt.status === 'GRADED'" class="score-section">
+          <div class="score-circle" [ngClass]="getScoreClass(attempt.percentageScore)">
+            <span class="score-number">{{Math.floor(attempt.percentageScore)}}%</span>
+          </div>
+          <div class="result-badge" [class.pass]="attempt.passed" [class.fail]="!attempt.passed">
+            <i class="bi" [ngClass]="attempt.passed ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+            {{attempt.passed ? 'PASSED' : 'FAILED'}}
+          </div>
+        </div>
+
+        <div *ngIf="attempt.status === 'SUBMITTED'" class="pending-section">
+          <i class="bi bi-hourglass-split"></i>
+          <p>Being graded...</p>
+        </div>
+
+        <div class="card-footer">
+          <span class="time-spent">
+            <i class="bi bi-clock"></i> {{attempt.timeSpent || 0}} min
+          </span>
+          <button class="btn-view" *ngIf="attempt.status === 'GRADED'">
+            View Details <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div *ngIf="selectedAttempt && resultDetails" class="detail-view">
+    <div class="detail-header">
+      <button class="btn-back" (click)="backToList()">
+        <i class="bi bi-arrow-left"></i> Back to Results
+      </button>
+    </div>
+
+    <!-- Score Summary -->
+    <div class="score-summary">
+      <div class="summary-left">
+        <h2>{{resultDetails.exam?.title}}</h2>
+        <div class="exam-meta">
+          <span><i class="bi bi-bookmark"></i> {{resultDetails.exam?.level}}</span>
+          <span><i class="bi bi-clock"></i> {{selectedAttempt.timeSpent}} minutes</span>
+          <span><i class="bi bi-calendar"></i> {{selectedAttempt.submittedAt | date:'short'}}</span>
+        </div>
+      </div>
+      <div class="summary-right">
+        <div class="big-score" [ngClass]="getScoreClass(selectedAttempt.percentageScore)">
+          <span class="score-percent">{{Math.floor(selectedAttempt.percentageScore)}}%</span>
+          <span class="score-points">{{selectedAttempt.totalScore}} points</span>
+        </div>
+        <div class="result-badge-large" [class.pass]="selectedAttempt.passed" [class.fail]="!selectedAttempt.passed">
+          <i class="bi" [ngClass]="selectedAttempt.passed ? 'bi-trophy-fill' : 'bi-x-circle-fill'"></i>
+          {{selectedAttempt.passed ? 'PASSED' : 'FAILED'}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Answers Review -->
+    <div class="answers-review">
+      <h3>📝 Your Answers</h3>
+      
+      <div *ngFor="let part of resultDetails.exam.parts; let partIndex = index" class="part-block">
+        <div class="part-header">
+          <h4>{{part.title}}</h4>
+        </div>
+
+        <div *ngFor="let question of part.questions; let qIndex = index" class="question-item">
+          <div class="question-top">
+            <span class="q-num">Question {{partIndex + 1}}.{{qIndex + 1}}</span>
+            <span class="q-points">{{question.points}} pts</span>
+            <span *ngIf="getStudentAnswer(question.id)?.isGraded" class="q-score" [class.correct]="getStudentAnswer(question.id).score === question.points" [class.partial]="getStudentAnswer(question.id).score > 0 && getStudentAnswer(question.id).score < question.points" [class.incorrect]="getStudentAnswer(question.id).score === 0">
+              {{getStudentAnswer(question.id).score}} / {{question.points}}
+            </span>
+          </div>
+
+          <p class="question-prompt">{{question.prompt}}</p>
+
+          <div class="answers-comparison">
+            <div class="answer-block your-answer">
+              <div class="answer-label">Your Answer</div>
+              <div class="answer-content">
+                <span *ngIf="getStudentAnswer(question.id) as answer">
+                  <span *ngIf="question.questionType === 'MULTIPLE_CHOICE'">
+                    {{getSelectedOptionLabel(question, answer.answerData)}}
+                  </span>
+                  <span *ngIf="question.questionType === 'TRUE_FALSE'">
+                    {{getTrueFalseDisplay(answer.answerData)}}
+                  </span>
+                  <span *ngIf="question.questionType === 'FILL_IN_GAP' || question.questionType === 'OPEN_WRITING' || question.questionType === 'WORD_ORDERING'">
+                    {{parseAnswerData(answer.answerData)}}
+                  </span>
+                  <span *ngIf="!answer.answerData" class="no-answer">Not answered</span>
+                </span>
+                <span *ngIf="!getStudentAnswer(question.id)" class="no-answer">Not answered</span>
+              </div>
+            </div>
+
+            <div class="answer-block correct-answer">
+              <div class="answer-label">Correct Answer</div>
+              <div class="answer-content">
+                <span *ngIf="question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'TRUE_FALSE'">
+                  {{getCorrectOptionLabel(question)}}
+                </span>
+                <span *ngIf="question.questionType === 'FILL_IN_GAP' || question.questionType === 'WORD_ORDERING'">
+                  {{getCorrectAnswer(question)}}
+                </span>
+                <span *ngIf="question.questionType === 'OPEN_WRITING' || question.questionType === 'AUDIO_RESPONSE'" class="manual-note">
+                  Manually graded
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="getStudentAnswer(question.id)?.feedback" class="tutor-feedback">
+            <i class="bi bi-chat-left-text"></i>
+            <strong>Tutor Feedback:</strong> {{getStudentAnswer(question.id).feedback}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

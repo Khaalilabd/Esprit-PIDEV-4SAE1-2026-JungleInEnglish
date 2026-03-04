@@ -308,13 +308,62 @@ spring:
             - StripPrefix=1
           order: 23
             
+        # Exam Service routes
+        - id: exam-service-exams
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exams/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-service-parts
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-parts/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-service-questions
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/questions/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-service-attempts
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-attempts/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-service-results
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-results/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
+        - id: exam-service-grading
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/grading/**
+          filters:
+            - StripPrefix=1
+          order: 24
+            
         - id: notification-service
           uri: lb://notification-service
           predicates:
             - Path=/api/notifications/**
           filters:
             - StripPrefix=1
-          order: 24
+          order: 25
       globalcors:
         cors-configurations:
           '[/**]':

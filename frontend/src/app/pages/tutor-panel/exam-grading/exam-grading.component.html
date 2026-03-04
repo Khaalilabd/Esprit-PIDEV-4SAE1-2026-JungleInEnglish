@@ -1,0 +1,251 @@
+<div class="exam-grading-container">
+  <!-- Toast Notification -->
+  <div class="toast-notification" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+    <i class="bi" [class.bi-check-circle]="toastType === 'success'" [class.bi-exclamation-circle]="toastType === 'error'"></i>
+    <span>{{toastMessage}}</span>
+  </div>
+
+  <div class="page-header">
+    <h1>📝 Exam Grading</h1>
+    <p>Review and grade student exam submissions</p>
+  </div>
+
+  <!-- Attempts List -->
+  <div *ngIf="!selectedAttempt" class="attempts-list">
+    <div class="controls-bar">
+      <div class="filter-section">
+        <label><i class="bi bi-funnel"></i> Filter:</label>
+        <select [(ngModel)]="filterStatus" (change)="loadAttempts()" class="filter-select">
+          <option value="ALL">All Exams</option>
+          <option value="SUBMITTED">⏳ Pending Grading</option>
+          <option value="GRADED">✓ Graded</option>
+        </select>
+      </div>
+      <div class="stats-summary">
+        <span class="stat-item">
+          <i class="bi bi-file-earmark-text"></i>
+          {{attempts.length}} Total
+        </span>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading exam submissions...</p>
+    </div>
+
+    <div *ngIf="!loading && attempts.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No Exams Found</h3>
+      <p>There are no exam submissions matching your filter</p>
+    </div>
+
+    <div class="attempts-grid">
+      <div *ngFor="let attempt of attempts" class="exam-card" (click)="viewAttempt(attempt)">
+        <div class="card-header">
+          <div class="student-section">
+            <div class="avatar">
+              <img *ngIf="getProfilePicture(attempt)" 
+                   [src]="getProfilePicture(attempt)" 
+                   [alt]="getUserFullName(attempt)"
+                   (error)="attempt.imageError = true">
+              <div class="initials" *ngIf="!getProfilePicture(attempt) || attempt.imageError">
+                {{getUserInitials(attempt)}}
+              </div>
+            </div>
+            <div class="student-details">
+              <h3>{{getUserFullName(attempt)}}</h3>
+              <span class="user-id">Student ID: {{attempt.userId}}</span>
+            </div>
+          </div>
+          <div class="status-indicator" [ngClass]="{
+            'pending': attempt.status === 'SUBMITTED',
+            'graded': attempt.status === 'GRADED'
+          }">
+            <i class="bi" [ngClass]="{
+              'bi-hourglass-split': attempt.status === 'SUBMITTED',
+              'bi-check-circle-fill': attempt.status === 'GRADED'
+            }"></i>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="exam-meta">
+            <div class="meta-item">
+              <i class="bi bi-calendar3"></i>
+              <span>{{getTimeAgo(attempt.submittedAt)}}</span>
+            </div>
+            <div class="meta-item">
+              <i class="bi bi-stopwatch"></i>
+              <span>{{attempt.timeSpent}} minutes</span>
+            </div>
+          </div>
+
+          <div class="result-section" *ngIf="attempt.status === 'GRADED'">
+            <div class="score-display">
+              <span class="percentage">{{Math.floor(attempt.percentageScore)}}%</span>
+              <span class="result-label" [class.pass]="attempt.passed" [class.fail]="!attempt.passed">
+                {{attempt.passed ? 'PASSED' : 'FAILED'}}
+              </span>
+            </div>
+          </div>
+
+          <div class="pending-section" *ngIf="attempt.status === 'SUBMITTED'">
+            <i class="bi bi-exclamation-circle"></i>
+            <span>Awaiting grading</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button class="action-btn" [class.view-mode]="attempt.status === 'GRADED'">
+            <i class="bi" [ngClass]="attempt.status === 'GRADED' ? 'bi-eye' : 'bi-pencil-square'"></i>
+            {{attempt.status === 'GRADED' ? 'View Details' : 'Grade Exam'}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grading Interface -->
+  <div *ngIf="selectedAttempt && attemptDetails" class="grading-interface">
+    <div class="grading-header">
+      <button class="btn-back" (click)="backToList()">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to List</span>
+      </button>
+      <div class="header-title">
+        <h2>{{isReadOnly ? 'Viewing' : 'Grading'}} Exam for {{getUserFullName(selectedAttempt)}}</h2>
+      </div>
+      <button *ngIf="!isReadOnly" class="btn-finalize" (click)="finalizeGrading()" [disabled]="grading">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>Finalize Grading</span>
+      </button>
+      <span *ngIf="isReadOnly" class="readonly-badge">
+        <i class="bi bi-eye"></i>
+        <span>Read-Only View</span>
+      </span>
+    </div>
+
+    <div class="exam-details">
+      <div class="exam-header-info">
+        <div>
+          <h3>{{attemptDetails.exam.title}}</h3>
+          <p>Level: {{attemptDetails.exam.level}} | Duration: {{attemptDetails.exam.totalDuration}} minutes</p>
+        </div>
+        <div *ngIf="isReadOnly && selectedAttempt.totalScore" class="final-score-display">
+          <div class="score-badge" [class.passed]="selectedAttempt.passed" [class.failed]="!selectedAttempt.passed">
+            <span class="score-value">{{Math.floor(selectedAttempt.percentageScore)}}%</span>
+            <span class="score-label">{{selectedAttempt.passed ? 'PASSED' : 'FAILED'}}</span>
+            <span class="score-points">{{selectedAttempt.totalScore}} points</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="parts-container">
+      <div *ngFor="let part of attemptDetails.exam.parts" class="part-section">
+        <h4>{{part.title}}</h4>
+        <p class="part-instructions">{{part.instructions}}</p>
+
+        <div *ngFor="let question of part.questions" class="question-card compact">
+          <div class="question-row">
+            <div class="question-info">
+              <div class="question-header-inline">
+                <span class="question-type-badge">{{question.questionType}}</span>
+                <span class="question-points-badge">{{question.points}}pts</span>
+              </div>
+              <p class="question-prompt">{{question.prompt}}</p>
+            </div>
+
+            <div class="answers-section">
+              <div class="answer-comparison">
+                <!-- Student Answer -->
+                <div class="answer-box student-answer-box">
+                  <label>👤 Student</label>
+                  <div *ngIf="getStudentAnswer(question.id) as answer">
+                    <div *ngIf="answer.answerData" class="answer-value">
+                      <span *ngIf="question.questionType === 'FILL_IN_GAP' || question.questionType === 'OPEN_WRITING' || question.questionType === 'WORD_ORDERING'">
+                        {{parseAnswerData(answer.answerData)}}
+                      </span>
+                      <span *ngIf="question.questionType === 'MULTIPLE_CHOICE'">
+                        {{getSelectedOptionLabel(question, answer.answerData)}}
+                      </span>
+                      <span *ngIf="question.questionType === 'TRUE_FALSE'">
+                        {{getTrueFalseDisplay(answer.answerData)}}
+                      </span>
+                      <pre *ngIf="question.questionType === 'MATCHING'" class="matching-answer">{{parseAnswerData(answer.answerData)}}</pre>
+                      <audio *ngIf="question.questionType === 'AUDIO_RESPONSE'" controls [src]="parseAnswerData(answer.answerData)"></audio>
+                    </div>
+                    <span *ngIf="!answer.answerData" class="no-answer">No answer</span>
+                  </div>
+                  <span *ngIf="!getStudentAnswer(question.id)" class="no-answer">Not found</span>
+                </div>
+
+                <!-- Correct Answer -->
+                <div class="answer-box correct-answer-box">
+                  <label>✓ Expected</label>
+                  <div class="answer-value">
+                    <span *ngIf="question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'TRUE_FALSE'">
+                      {{getCorrectOptionLabel(question)}}
+                    </span>
+                    <span *ngIf="question.questionType === 'FILL_IN_GAP' || question.questionType === 'WORD_ORDERING'">
+                      {{getCorrectAnswer(question)}}
+                    </span>
+                    <span *ngIf="question.questionType === 'OPEN_WRITING' || question.questionType === 'AUDIO_RESPONSE'" class="manual-note">
+                      Manual grading
+                    </span>
+                    <span *ngIf="question.questionType === 'MATCHING'">
+                      {{getCorrectAnswer(question)}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Compact Grading Form -->
+              <div *ngIf="!isReadOnly" class="grading-form-compact">
+                <div *ngIf="getStudentAnswer(question.id)?.isGraded" class="regrade-indicator">
+                  <i class="bi bi-pencil-square"></i> Previously: {{getStudentAnswer(question.id).score}}pts
+                </div>
+                <div class="grading-inputs">
+                  <input type="number" 
+                         class="score-input" 
+                         [max]="question.points" 
+                         min="0" 
+                         step="0.5" 
+                         [value]="getStudentAnswer(question.id)?.score || ''"
+                         placeholder="Score"
+                         #scoreInput>
+                  <input type="text" 
+                         class="feedback-input" 
+                         [value]="getStudentAnswer(question.id)?.feedback || ''"
+                         placeholder="Feedback (optional)"
+                         #feedbackInput>
+                  <button class="btn-grade" 
+                          (click)="gradeAnswer(getStudentAnswer(question.id)?.id, +scoreInput.value, feedbackInput.value)" 
+                          [disabled]="grading || !getStudentAnswer(question.id)"
+                          [title]="getStudentAnswer(question.id)?.isGraded ? 'Update Grade' : 'Submit Grade'">
+                    <i class="bi bi-check2"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Read-Only Grade Display -->
+              <div *ngIf="isReadOnly && getStudentAnswer(question.id)?.isGraded" class="grade-display-readonly">
+                <div class="grade-info">
+                  <span class="grade-score">
+                    <i class="bi bi-star-fill"></i>
+                    {{getStudentAnswer(question.id).score}} / {{question.points}} pts
+                  </span>
+                  <span class="grade-feedback" *ngIf="getStudentAnswer(question.id).feedback">
+                    <i class="bi bi-chat-left-text"></i>
+                    {{getStudentAnswer(question.id).feedback}}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

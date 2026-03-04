@@ -103,6 +103,27 @@ export class StudentSidebarComponent {
       ]
     },
     {
+      id: 'exams',
+      title: 'EXAMS',
+      icon: '📝',
+      items: [
+        {
+          icon: 'fas fa-certificate',
+          name: "Browse Exams",
+          path: "/user-panel/exams",
+          badge: "New",
+          badgeColor: "bg-blue-500"
+        },
+        {
+          icon: 'fas fa-trophy',
+          name: "My Exam Results",
+          path: "/user-panel/my-exam-results",
+          badge: "New",
+          badgeColor: "bg-green-500"
+        }
+      ]
+    },
+    {
       id: 'community',
       title: 'COMMUNITY',
       icon: '👥',
