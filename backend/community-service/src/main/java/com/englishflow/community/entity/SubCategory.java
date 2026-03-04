@@ -25,6 +25,21 @@ public class SubCategory {
     @Column(columnDefinition = "TEXT")
     private String description;
     
+    @Column(name = "requires_club_membership")
+    private Boolean requiresClubMembership = false;
+    
+    @Column(name = "requires_admin_role")
+    private Boolean requiresAdminRole = false;
+    
+    @Column(name = "is_locked")
+    private Boolean isLocked = false;
+    
+    @Column(name = "locked_by")
+    private Long lockedBy;
+    
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -32,8 +32,10 @@ interface TopicParticipant {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ForumModerationComponent implements OnInit {
+  @Input() hideHeader: boolean = false;
+  
   // Active Tab
-  activeTab: 'categories' | 'subcategories' | 'topics' = 'categories';
+  activeTab: 'categories' | 'subcategories' | 'topics' = 'topics';
   
   // Categories
   categories: Category[] = [];
@@ -56,6 +58,10 @@ export class ForumModerationComponent implements OnInit {
   selectedSubCategoryId: number | null = null;
   selectedStatus: string = 'all';
   searchQuery: string = '';
+  private searchTimeout: any = null;
+  
+  // Image carousel for Event Highlights
+  currentImageIndex: number = 0;
   
   // Pagination
   currentPage = 0;
@@ -92,7 +98,14 @@ export class ForumModerationComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
+    // Always load categories for the filter dropdown
     this.loadCategories();
+    
+    // When hideHeader is true, set activeTab to 'topics' by default
+    if (this.hideHeader) {
+      this.activeTab = 'topics';
+    }
+    
     this.loadStats();
     this.loadTopics();
   }
@@ -331,6 +344,7 @@ export class ForumModerationComponent implements OnInit {
     
     this.moderationService.getAllTopics(
       categoryId,
+      subCategoryId,
       status,
       search,
       this.currentPage,
@@ -366,6 +380,19 @@ export class ForumModerationComponent implements OnInit {
     this.loadTopics();
   }
 
+  onSearchChange(searchValue: string): void {
+    // Clear previous timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
+    // Set new timeout for debounce (wait 500ms after user stops typing)
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 0;
+      this.loadTopics();
+    }, 500);
+  }
+
   onCategoryFilterChange(): void {
     this.selectedSubCategoryId = null;
     this.applyFilters();
@@ -381,6 +408,7 @@ export class ForumModerationComponent implements OnInit {
   viewTopicDetails(topic: Topic): void {
     this.selectedTopic = topic;
     this.showTopicDetailsPanel = true;
+    this.currentImageIndex = 0; // Reset image index
     this.loadTopicParticipants(topic.id);
     this.cdr.markForCheck();
   }
@@ -390,6 +418,91 @@ export class ForumModerationComponent implements OnInit {
     this.selectedTopic = null;
     this.topicParticipants = [];
     this.topicPosts = [];
+    this.currentImageIndex = 0;
+  }
+
+  // Event Highlights image carousel methods
+  isEventHighlight(topic: Topic): boolean {
+    try {
+      if (!topic.content) return false;
+      
+      // Check if content starts with [EVENT_HIGHLIGHT_MEDIA]
+      return topic.content.trim().startsWith('[EVENT_HIGHLIGHT_MEDIA]');
+    } catch (e) {
+      console.error('Error checking if event highlight:', e);
+      return false;
+    }
+  }
+
+  getResourceUrl(resourceLink: string): string {
+    if (!resourceLink) return '';
+    
+    // If it's already a full URL, return as is
+    if (resourceLink.startsWith('http')) {
+      return resourceLink;
+    }
+    
+    // Otherwise, prepend the backend URL
+    return `http://localhost:8082${resourceLink}`;
+  }
+
+  getEventImages(topic: Topic): string[] {
+    try {
+      if (!topic.content) return [];
+      
+      const images: string[] = [];
+      
+      // Split by [MEDIA_SEPARATOR] to get individual media items
+      const segments = topic.content.split('[MEDIA_SEPARATOR]');
+      
+      for (let segment of segments) {
+        // Remove [EVENT_HIGHLIGHT_MEDIA] prefix if present
+        segment = segment.replace('[EVENT_HIGHLIGHT_MEDIA]', '').trim();
+        
+        if (!segment) continue;
+        
+        try {
+          const parsed = JSON.parse(segment);
+          if (parsed.type === 'image' && parsed.data) {
+            // data is a string (single image URL), not an array
+            const url = parsed.data;
+            if (url.startsWith('http')) {
+              images.push(url);
+            } else {
+              // Prepend base URL for relative paths
+              images.push(`http://localhost:8082${url}`);
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing segment:', segment, e);
+        }
+      }
+      
+      return images;
+    } catch (e) {
+      console.error('Error parsing event images:', e);
+      return [];
+    }
+  }
+
+  nextImage(): void {
+    if (this.selectedTopic) {
+      const images = this.getEventImages(this.selectedTopic);
+      if (images.length > 0) {
+        this.currentImageIndex = (this.currentImageIndex + 1) % images.length;
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  previousImage(): void {
+    if (this.selectedTopic) {
+      const images = this.getEventImages(this.selectedTopic);
+      if (images.length > 0) {
+        this.currentImageIndex = (this.currentImageIndex - 1 + images.length) % images.length;
+        this.cdr.markForCheck();
+      }
+    }
   }
 
   loadTopicParticipants(topicId: number): void {

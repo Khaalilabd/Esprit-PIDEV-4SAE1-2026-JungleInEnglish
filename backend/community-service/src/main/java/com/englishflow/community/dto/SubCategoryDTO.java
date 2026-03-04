@@ -14,6 +14,10 @@ public class SubCategoryDTO {
     private String description;
     private Long categoryId;
     private String categoryName;
+    private Boolean requiresClubMembership;
+    private Boolean isLocked;
+    private Long lockedBy;
+    private LocalDateTime lockedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

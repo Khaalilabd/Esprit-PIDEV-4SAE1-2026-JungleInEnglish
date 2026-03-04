@@ -10,14 +10,50 @@
     
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ subCategoryName }}</h1>
-        <p class="text-gray-600">{{ totalElements }} topic(s)</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          {{ isReviewCategory ? 'Reviews' : subCategoryName }}
+        </h1>
+        <p class="text-gray-600">
+          {{ totalElements }} {{ isReviewCategory ? 'review(s)' : isAnnouncementCategory ? 'announcement(s)' : 'topic(s)' }}
+        </p>
       </div>
       <button 
+        *ngIf="canCreateTopic"
         (click)="openNewTopicModal()"
         class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-all shadow-theme-sm hover:shadow-theme-md flex items-center gap-2">
-        <i class="fas fa-plus"></i>
-        <span>New Topic</span>
+        <i [class]="isReviewCategory ? 'fas fa-star' : isEventHighlightsCategory ? 'fas fa-images' : 'fas fa-plus'"></i>
+        <span>{{ isReviewCategory ? 'Add Review' : isEventHighlightsCategory ? 'New Highlight' : 'New Topic' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sorting Filters -->
+  <div *ngIf="!loading && !error" class="mb-6 flex items-center gap-3 bg-white rounded-xl p-4 shadow-theme-sm border border-gray-100">
+    <span class="text-sm font-medium text-gray-700">Sort by:</span>
+    <div class="flex gap-2">
+      <button 
+        (click)="changeSortBy('helpful')"
+        [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-all ' + 
+                 (sortBy === 'helpful' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+        <i class="fas fa-fire mr-2"></i>Most Helpful
+      </button>
+      <button 
+        (click)="changeSortBy('trending')"
+        [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-all ' + 
+                 (sortBy === 'trending' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+        <i class="fas fa-chart-line mr-2"></i>Trending
+      </button>
+      <button 
+        (click)="changeSortBy('recent')"
+        [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-all ' + 
+                 (sortBy === 'recent' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+        <i class="fas fa-clock mr-2"></i>Recent
+      </button>
+      <button 
+        (click)="changeSortBy('views')"
+        [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-all ' + 
+                 (sortBy === 'views' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+        <i class="fas fa-eye mr-2"></i>Most Viewed
       </button>
     </div>
   </div>
@@ -26,7 +62,9 @@
   <div *ngIf="loading" class="flex items-center justify-center py-20">
     <div class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-      <p class="text-gray-600">Loading topics...</p>
+      <p class="text-gray-600">
+        {{ isReviewCategory ? 'Loading reviews...' : isAnnouncementCategory ? 'Loading announcements...' : 'Loading topics...' }}
+      </p>
     </div>
   </div>
 
@@ -41,37 +79,53 @@
   <!-- Empty State -->
   <div *ngIf="!loading && !error && topics.length === 0" class="bg-white rounded-2xl shadow-theme-sm border border-gray-100 p-12 text-center">
     <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-      <i class="fas fa-comments text-gray-400 text-3xl"></i>
+      <i [class]="sortBy === 'trending' ? 'fas fa-fire text-gray-400 text-3xl' : 
+                  isReviewCategory ? 'fas fa-star text-gray-400 text-3xl' : 
+                  isAnnouncementCategory ? 'fas fa-bullhorn text-gray-400 text-3xl' : 
+                  'fas fa-comments text-gray-400 text-3xl'"></i>
     </div>
-    <h3 class="text-xl font-bold text-gray-900 mb-2">No topics yet</h3>
-    <p class="text-gray-600 mb-6">Be the first to create a topic in this category!</p>
+    <h3 class="text-xl font-bold text-gray-900 mb-2">
+      {{ getEmptyStateTitle() }}
+    </h3>
+    <p class="text-gray-600 mb-6">
+      {{ getEmptyStateMessage() }}
+    </p>
     <button 
+      *ngIf="canCreateTopic && sortBy !== 'trending' && sortBy !== 'helpful'"
       (click)="openNewTopicModal()"
       class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-all">
-      Create Topic
+      {{ isReviewCategory ? 'Add Review' : 'Create Topic' }}
     </button>
   </div>
 
   <!-- Topics List -->
   <div *ngIf="!loading && !error && topics.length > 0" class="space-y-4">
     <div 
-      *ngFor="let topic of topics"
-      [class]="'rounded-xl shadow-theme-sm border p-6 hover:shadow-theme-md transition-all group ' + 
-               (topic.isPinned ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300 shadow-amber-100' : 
-                topic.isLocked ? 'bg-gray-50 border-gray-300 opacity-75' : 
-                'bg-white border-gray-100')">
+      *ngFor="let topic of topics; trackBy: trackByTopicId"
+      [class]="'rounded-2xl shadow-sm border p-5 transition-all duration-300 group hover:shadow-lg ' + 
+               (topic.isPinned ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 border-amber-200 ring-2 ring-amber-100' : 
+                topic.isLocked ? 'bg-gray-50 border-gray-200 opacity-80' : 
+                'bg-white border-gray-100 hover:border-primary-200')">
       
       <!-- Pinned Badge -->
       <div *ngIf="topic.isPinned" class="mb-3 flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full shadow-sm">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-bold rounded-full shadow-md">
           <i class="fas fa-thumbtack"></i>
           PINNED
         </span>
       </div>
 
+      <!-- Trending Badge -->
+      <div *ngIf="topic.isTrending && !topic.isPinned" class="mb-3 flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full shadow-md animate-pulse">
+          <i class="fas fa-fire"></i>
+          TRENDING
+        </span>
+      </div>
+
       <!-- Locked Badge -->
       <div *ngIf="topic.isLocked && !topic.isPinned" class="mb-3 flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded-full shadow-sm">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white text-xs font-bold rounded-full shadow-md">
           <i class="fas fa-lock"></i>
           LOCKED
         </span>
@@ -79,52 +133,101 @@
       
       <div class="flex items-start gap-4">
         <!-- Avatar -->
-        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent-navy flex items-center justify-center text-white font-semibold flex-shrink-0">
+        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary via-primary-600 to-accent-navy flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md ring-2 ring-white">
           {{ topic.userName.charAt(0).toUpperCase() }}
         </div>
 
         <!-- Content -->
-        <div class="flex-1 min-w-0 cursor-pointer" (click)="goToTopic(topic.id)">
+        <div class="flex-1 min-w-0" [class.cursor-pointer]="!isReviewCategory" (click)="!isReviewCategory && goToTopic(topic.id)">
           <div class="flex items-start justify-between gap-4 mb-2">
             <div class="flex-1">
-              <h3 [class]="'text-lg font-semibold mb-1 transition-colors ' + 
+              <!-- For reviews: show user name as title, for topics: show topic title -->
+              <h3 [class]="'text-xl font-bold mb-1.5 transition-colors leading-tight ' + 
                           (topic.isPinned ? 'text-amber-900 group-hover:text-amber-700' : 
                            topic.isLocked ? 'text-gray-600' : 
-                           'text-gray-900 group-hover:text-primary')">
-                {{ topic.title }}
+                           'text-gray-900 group-hover:text-primary-600')">
+                {{ isReviewCategory ? topic.userName : topic.title }}
               </h3>
-              <div class="flex items-center gap-3 text-sm text-gray-600">
-                <span class="font-medium">{{ topic.userName }}</span>
-                <span>•</span>
-                <span>{{ getTimeAgo(topic.createdAt) }}</span>
+              <!-- Show stars if it's a review -->
+              <div *ngIf="isReviewCategory && topic.title.includes('Star')" class="flex items-center gap-2 mb-2">
+                <i *ngFor="let star of getStarsFromTitle(topic.title)" class="fas fa-star text-yellow-400 text-base"></i>
+                <span class="text-xs text-gray-500 ml-1">{{ getTimeAgo(topic.createdAt) }}</span>
+              </div>
+              <!-- For non-review topics, show user name and date -->
+              <div *ngIf="!isReviewCategory" class="flex items-center gap-2 text-sm text-gray-600">
+                <span class="font-semibold text-gray-700">{{ topic.userName }}</span>
+                <span class="text-gray-400">•</span>
+                <span class="text-gray-500">{{ getTimeAgo(topic.createdAt) }}</span>
               </div>
             </div>
           </div>
 
           <!-- Preview -->
-          <p class="text-gray-600 text-sm line-clamp-2 mb-3">
-            {{ topic.content }}
+          <p *ngIf="topic.content && !topic.content.startsWith('Rating:') && !topic.content.startsWith('[EVENT_HIGHLIGHT_MEDIA]')" class="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed" [innerHTML]="sanitizeHtml(topic.content)">
           </p>
-
-          <!-- Stats -->
-          <div class="flex items-center gap-6 text-sm mb-3">
-            <div class="flex items-center gap-2 text-gray-500">
-              <i class="fas fa-eye"></i>
-              <span>{{ topic.viewsCount }} views</span>
-            </div>
-            <div class="flex items-center gap-2 text-gray-500">
-              <i class="fas fa-comment"></i>
-              <span>{{ topic.postsCount }} replies</span>
+          
+          <!-- Resource Preview -->
+          <div *ngIf="topic.resourceType && topic.resourceLink" 
+               class="mb-4 p-3.5 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:border-primary-300 hover:shadow-sm transition-all cursor-pointer">
+            <div class="flex items-center gap-3 text-sm">
+              <div [class]="'w-8 h-8 rounded-lg flex items-center justify-center ' + 
+                           (topic.resourceType === 'PDF' ? 'bg-red-100 text-red-600' : 
+                            topic.resourceType === 'IMAGE' ? 'bg-blue-100 text-blue-600' : 
+                            topic.resourceType === 'VIDEO' ? 'bg-purple-100 text-purple-600' : 
+                            'bg-green-100 text-green-600')">
+                <i [class]="(topic.resourceType === 'PDF' ? 'fas fa-file-pdf' : 
+                            topic.resourceType === 'IMAGE' ? 'fas fa-image' : 
+                            topic.resourceType === 'VIDEO' ? 'fas fa-video' : 
+                            'fas fa-link')"></i>
+              </div>
+              <span class="font-semibold text-gray-800">
+                {{ topic.resourceType === 'LINK' ? 'External Link' : 
+                   topic.resourceType === 'PDF' ? 'PDF Document' : 
+                   topic.resourceType === 'IMAGE' ? 'Image Attachment' : 
+                   'Video File' }}
+              </span>
             </div>
           </div>
+          
+          <!-- Event Highlight Media Preview -->
+          <div *ngIf="isEventHighlightsCategory && topic.content.startsWith('[EVENT_HIGHLIGHT_MEDIA]')" class="mb-4">
+            <div class="grid grid-cols-3 gap-2">
+              <div *ngFor="let media of parseEventHighlightMedia(topic.content).slice(0, 3); let i = index" class="relative">
+                <img 
+                  *ngIf="media.type === 'image'" 
+                  [src]="'http://localhost:8080' + media.data" 
+                  [alt]="media.name"
+                  class="w-full h-32 object-cover rounded-lg">
+                <video 
+                  *ngIf="media.type === 'video'" 
+                  [src]="'http://localhost:8080' + media.data"
+                  class="w-full h-32 object-cover rounded-lg">
+                </video>
+                <!-- Show count overlay on third image if more than 3 -->
+                <div *ngIf="i === 2 && parseEventHighlightMedia(topic.content).length > 3" 
+                     class="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center">
+                  <span class="text-white text-2xl font-bold">+{{ parseEventHighlightMedia(topic.content).length - 3 }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Description if exists -->
+            <p *ngIf="getEventHighlightDescription(topic.content)" 
+               class="text-gray-600 text-sm mt-3 line-clamp-2" 
+               [innerHTML]="sanitizeHtml(getEventHighlightDescription(topic.content))">
+            </p>
+          </div>
 
-          <!-- Reactions -->
-          <app-reaction-bar 
-            [targetId]="topic.id" 
-            targetType="topic" 
-            size="small"
-            (click)="$event.stopPropagation()">
-          </app-reaction-bar>
+          <!-- Stats (hidden for reviews) -->
+          <div *ngIf="!isReviewCategory" class="flex items-center gap-6 text-sm mb-4">
+            <div class="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors">
+              <i class="fas fa-eye text-base"></i>
+              <span class="font-medium">{{ topic.viewsCount }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors">
+              <i class="fas fa-comment text-base"></i>
+              <span class="font-medium">{{ topic.postsCount }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Actions -->
@@ -204,10 +307,12 @@
     <div class="p-6 border-b border-gray-200 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
-          <i class="fas fa-plus text-primary-600"></i>
+          <i [class]="isReviewCategory ? 'fas fa-star text-primary-600' : isEventHighlightsCategory ? 'fas fa-images text-primary-600' : 'fas fa-plus text-primary-600'"></i>
         </div>
         <div>
-          <h2 class="text-xl font-bold text-gray-900">Create a New Topic</h2>
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ isReviewCategory ? 'Write a Review' : isEventHighlightsCategory ? 'New Event Highlight' : 'Create a New Topic' }}
+          </h2>
           <p class="text-sm text-gray-600">in {{ subCategoryName }}</p>
         </div>
       </div>
@@ -220,32 +325,295 @@
 
     <!-- Modal Body -->
     <div class="flex-1 overflow-y-auto p-6 space-y-5">
-      <!-- Title -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-900 mb-2">
-          Topic Title <span class="text-error-500">*</span>
-        </label>
-        <input 
-          type="text"
-          [(ngModel)]="newTopic.title"
-          placeholder="E.g.: How to improve my pronunciation?"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-          maxlength="150">
-        <p class="text-xs text-gray-500 mt-1">{{ newTopic.title.length }}/150 characters</p>
+      <!-- Event Highlights Form -->
+      <div *ngIf="isEventHighlightsCategory">
+        <!-- Title -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Title <span class="text-error-500">*</span>
+          </label>
+          <input 
+            type="text"
+            [(ngModel)]="newTopic.title"
+            placeholder="E.g.: Annual English Day 2024"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            maxlength="150">
+          <p class="text-xs text-gray-500 mt-1">{{ newTopic.title.length }}/150 characters</p>
+        </div>
+
+        <!-- Media (Photos & Videos) -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Photos & Videos <span class="text-error-500">*</span>
+          </label>
+          <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary transition-colors">
+            <input 
+              type="file" 
+              id="mediaInput"
+              accept="image/jpeg,image/png,image/jpg"
+              multiple
+              (change)="onPhotosSelected($event)"
+              class="hidden">
+            <label for="mediaInput" class="cursor-pointer">
+              <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+              <p class="text-gray-600 mb-1">Click to upload photos (up to 10)</p>
+              <p class="text-xs text-gray-500">Max 2MB per photo (JPG, PNG only)</p>
+            </label>
+          </div>
+          
+          <!-- Media Previews -->
+          <div *ngIf="photoPreviewUrls.length > 0" class="grid grid-cols-3 gap-3 mt-4">
+            <div *ngFor="let url of photoPreviewUrls; let i = index" class="relative group">
+              <img *ngIf="!selectedPhotos[i].type.startsWith('video')" [src]="url" class="w-full h-32 object-cover rounded-lg">
+              <video *ngIf="selectedPhotos[i].type.startsWith('video')" [src]="url" class="w-full h-32 object-cover rounded-lg"></video>
+              <div *ngIf="selectedPhotos[i].type.startsWith('video')" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
+                <i class="fas fa-play-circle text-white text-3xl"></i>
+              </div>
+              <button 
+                type="button"
+                (click)="removePhoto(i)"
+                class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <i class="fas fa-times text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">{{ selectedPhotos.length }} file(s) selected</p>
+        </div>
+        
+        <!-- Description (Optional) -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Description <span class="text-gray-500 text-xs">(Optional)</span>
+          </label>
+          <div class="w-full">
+            <quill-editor 
+              [(ngModel)]="newTopic.content"
+              [modules]="quillModules"
+              placeholder="Add a description about this event, share details, memories, or highlights..."
+              class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+            </quill-editor>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
+        </div>
       </div>
 
-      <!-- Content -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-900 mb-2">
-          Content <span class="text-error-500">*</span>
-        </label>
-        <textarea 
-          [(ngModel)]="newTopic.content"
-          placeholder="Describe your question or topic in detail..."
-          rows="8"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-          maxlength="5000"></textarea>
-        <p class="text-xs text-gray-500 mt-1">{{ newTopic.content.length }}/5000 characters</p>
+      <!-- Resource Sharing Form (for all categories except Event Feedback & Reviews) -->
+      <div *ngIf="!isReviewCategory && !isEventHighlightsCategory">
+        <!-- Title -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Title <span class="text-error-500">*</span>
+          </label>
+          <input 
+            type="text"
+            [(ngModel)]="newTopic.title"
+            placeholder="E.g.: How to improve English speaking skills?"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            maxlength="150">
+          <p class="text-xs text-gray-500 mt-1">{{ newTopic.title.length }}/150 characters</p>
+        </div>
+
+        <!-- Content (Required) -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Content <span class="text-error-500">*</span>
+          </label>
+          <div class="w-full">
+            <quill-editor 
+              [(ngModel)]="newTopic.content"
+              [modules]="quillModules"
+              placeholder="Describe your question, share your thoughts, or provide details..."
+              class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+            </quill-editor>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
+        </div>
+
+        <!-- Resource Type Selection (Optional) -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Attach a Resource <span class="text-gray-500 text-xs">(Optional)</span>
+          </label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              type="button"
+              (click)="setResourceType('LINK')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'LINK' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-link text-2xl mb-2" [class.text-primary]="resourceType === 'LINK'"></i>
+              <p class="font-semibold text-sm">Link</p>
+              <p class="text-xs text-gray-500">YouTube, etc.</p>
+            </button>
+            <button
+              type="button"
+              (click)="setResourceType('PDF')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'PDF' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-file-pdf text-2xl mb-2" [class.text-primary]="resourceType === 'PDF'"></i>
+              <p class="font-semibold text-sm">PDF</p>
+              <p class="text-xs text-gray-500">Document</p>
+            </button>
+            <button
+              type="button"
+              (click)="setResourceType('IMAGE')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'IMAGE' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-image text-2xl mb-2" [class.text-primary]="resourceType === 'IMAGE'"></i>
+              <p class="font-semibold text-sm">Image</p>
+              <p class="text-xs text-gray-500">JPG, PNG</p>
+            </button>
+            <button
+              type="button"
+              (click)="setResourceType('VIDEO')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'VIDEO' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-video text-2xl mb-2" [class.text-primary]="resourceType === 'VIDEO'"></i>
+              <p class="font-semibold text-sm">Video</p>
+              <p class="text-xs text-gray-500">MP4, etc.</p>
+            </button>
+          </div>
+          <button
+            *ngIf="resourceType"
+            type="button"
+            (click)="setResourceType('')"
+            class="mt-2 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1">
+            <i class="fas fa-times"></i>
+            <span>Remove resource</span>
+          </button>
+        </div>
+
+        <!-- Link Input -->
+        <div *ngIf="resourceType === 'LINK'" class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Resource Link <span class="text-error-500">*</span>
+          </label>
+          <input 
+            type="url"
+            [(ngModel)]="resourceLink"
+            placeholder="https://example.com or https://youtube.com/watch?v=..."
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+          <p class="text-xs text-gray-500 mt-1">Enter a valid URL (YouTube videos will be embedded)</p>
+        </div>
+
+        <!-- File Upload -->
+        <div *ngIf="resourceType === 'PDF' || resourceType === 'IMAGE' || resourceType === 'VIDEO'" class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Upload File <span class="text-error-500">*</span>
+          </label>
+          <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary transition-colors">
+            <input 
+              type="file" 
+              id="resourceFileInput"
+              [accept]="resourceType === 'PDF' ? 'application/pdf' : 
+                       resourceType === 'IMAGE' ? 'image/jpeg,image/png,image/jpg' : 
+                       'video/mp4,video/webm,video/ogg'"
+              (change)="onResourceFileSelected($event)"
+              class="hidden">
+            <label for="resourceFileInput" class="cursor-pointer">
+              <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+              <p class="text-gray-600 mb-1">Click to upload {{ resourceType === 'PDF' ? 'a PDF' : resourceType === 'IMAGE' ? 'an image' : 'a video' }}</p>
+              <p class="text-xs text-gray-500">Max 50MB</p>
+            </label>
+          </div>
+          
+          <!-- File Preview -->
+          <div *ngIf="selectedFile" class="mt-4 p-4 bg-gray-50 rounded-xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <i [class]="'text-primary-600 ' + 
+                           (resourceType === 'PDF' ? 'fas fa-file-pdf' : 
+                            resourceType === 'IMAGE' ? 'fas fa-image' : 
+                            'fas fa-video')"></i>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900 text-sm">{{ selectedFile.name }}</p>
+                <p class="text-xs text-gray-500">{{ (selectedFile.size / 1024).toFixed(1) }} KB</p>
+              </div>
+            </div>
+            <button 
+              type="button"
+              (click)="removeResourceFile()"
+              class="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <!-- Image Preview -->
+          <div *ngIf="filePreviewUrl && resourceType === 'IMAGE'" class="mt-4">
+            <img [src]="filePreviewUrl" class="w-full max-h-64 object-contain rounded-xl border border-gray-200">
+          </div>
+        </div>
+      </div>
+
+      <!-- Review Form (for Event Feedback & Reviews) -->
+      <div *ngIf="isReviewCategory && !isEventHighlightsCategory">
+        <!-- Rating -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-3">
+            Your Rating <span class="text-error-500">*</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              *ngFor="let star of [1, 2, 3, 4, 5]"
+              type="button"
+              (click)="setRating(star)"
+              (mouseenter)="setHoveredRating(star)"
+              (mouseleave)="clearHoveredRating()"
+              class="text-4xl transition-all duration-200 hover:scale-110 focus:outline-none">
+              <i [class]="getStarClass(star)"></i>
+            </button>
+            <span *ngIf="rating > 0" class="ml-3 text-gray-600 font-medium">
+              {{ rating }} / 5
+            </span>
+          </div>
+        </div>
+
+        <!-- Comment (Optional) -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Comment <span class="text-gray-500 text-xs">(Optional)</span>
+          </label>
+          <div class="w-full">
+            <quill-editor 
+              [(ngModel)]="newTopic.content"
+              [modules]="quillModules"
+              placeholder="Share your thoughts about the event..."
+              class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+            </quill-editor>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
+        </div>
+      </div>
+
+      <!-- This section is no longer needed as all categories use the resource form above -->
+      <div *ngIf="false">
+        <!-- Title -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Topic Title <span class="text-error-500">*</span>
+          </label>
+          <input 
+            type="text"
+            [(ngModel)]="newTopic.title"
+            placeholder="E.g.: How to improve my pronunciation?"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            maxlength="150">
+          <p class="text-xs text-gray-500 mt-1">{{ newTopic.title.length }}/150 characters</p>
+        </div>
+
+        <!-- Content -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Content <span class="text-error-500">*</span>
+          </label>
+          <textarea 
+            [(ngModel)]="newTopic.content"
+            placeholder="Describe your question or topic in detail..."
+            rows="8"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+            maxlength="5000"></textarea>
+          <p class="text-xs text-gray-500 mt-1">{{ newTopic.content.length }}/5000 characters</p>
+        </div>
       </div>
 
       <!-- Tips -->
@@ -253,11 +621,22 @@
         <div class="flex gap-3">
           <i class="fas fa-lightbulb text-primary-600 mt-0.5"></i>
           <div>
-            <h4 class="font-semibold text-gray-900 text-sm mb-1">Tips for a Good Topic</h4>
+            <h4 class="font-semibold text-gray-900 text-sm mb-1">
+              {{ isReviewCategory ? 'Tips for a Good Review' : 
+                 isResourceSharingCategory ? 'Tips for Sharing Resources' : 
+                 'Tips for a Good Topic' }}
+            </h4>
             <ul class="text-xs text-gray-600 space-y-1">
-              <li>• Choose a clear and descriptive title</li>
-              <li>• Explain your question in detail</li>
-              <li>• Be respectful and courteous</li>
+              <li *ngIf="isReviewCategory">• Rate honestly based on your experience</li>
+              <li *ngIf="isReviewCategory">• Share specific details about what you liked or didn't like</li>
+              <li *ngIf="isReviewCategory">• Be constructive and respectful</li>
+              <li *ngIf="isResourceSharingCategory">• Choose the right type of resource (Link, PDF, Image, Video)</li>
+              <li *ngIf="isResourceSharingCategory">• Give a clear and descriptive title</li>
+              <li *ngIf="isResourceSharingCategory">• For YouTube videos, paste the full URL</li>
+              <li *ngIf="isResourceSharingCategory">• Make sure your file is under 5MB</li>
+              <li *ngIf="!isReviewCategory && !isResourceSharingCategory">• Choose a clear and descriptive title</li>
+              <li *ngIf="!isReviewCategory && !isResourceSharingCategory">• Explain your question in detail</li>
+              <li *ngIf="!isReviewCategory && !isResourceSharingCategory">• Be respectful and courteous</li>
             </ul>
           </div>
         </div>
@@ -273,12 +652,20 @@
       </button>
       <button 
         (click)="submitNewTopic()"
-        [disabled]="!isFormValid()"
-        [class.opacity-50]="!isFormValid()"
-        [class.cursor-not-allowed]="!isFormValid()"
+        [disabled]="!isFormValid() || uploadingFile"
+        [class.opacity-50]="!isFormValid() || uploadingFile"
+        [class.cursor-not-allowed]="!isFormValid() || uploadingFile"
         class="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-600 transition-all font-medium shadow-theme-sm hover:shadow-theme-md disabled:hover:bg-primary disabled:hover:shadow-theme-sm">
-        <i class="fas fa-paper-plane mr-2"></i>
-        Post Topic
+        <i *ngIf="!uploadingFile" [class]="isReviewCategory ? 'fas fa-star mr-2' : 
+                                           isEventHighlightsCategory ? 'fas fa-images mr-2' : 
+                                           isResourceSharingCategory ? 'fas fa-share-alt mr-2' : 
+                                           'fas fa-paper-plane mr-2'"></i>
+        <i *ngIf="uploadingFile" class="fas fa-spinner fa-spin mr-2"></i>
+        {{ uploadingFile ? (isEventHighlightsCategory ? 'Uploading photos...' : 'Uploading...') : 
+           isReviewCategory ? 'Submit Review' : 
+           isEventHighlightsCategory ? 'Post Highlight' : 
+           isResourceSharingCategory ? 'Share Resource' :
+           'Post Topic' }}
       </button>
     </div>
   </div>
@@ -292,10 +679,12 @@
     <div class="p-6 border-b border-gray-200 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
-          <i class="fas fa-edit text-primary-600"></i>
+          <i [class]="isReviewCategory ? 'fas fa-star text-primary-600' : 'fas fa-edit text-primary-600'"></i>
         </div>
         <div>
-          <h2 class="text-xl font-bold text-gray-900">Edit Topic</h2>
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ isReviewCategory ? 'Edit Review' : 'Edit Topic' }}
+          </h2>
           <p class="text-sm text-gray-600">in {{ subCategoryName }}</p>
         </div>
       </div>
@@ -308,32 +697,267 @@
 
     <!-- Modal Body -->
     <div class="flex-1 overflow-y-auto p-6 space-y-5">
-      <!-- Title -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-900 mb-2">
-          Titre du sujet <span class="text-error-500">*</span>
-        </label>
-        <input 
-          type="text"
-          [(ngModel)]="newTopic.title"
-          placeholder="Ex: Comment améliorer ma prononciation ?"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-          maxlength="150">
-        <p class="text-xs text-gray-500 mt-1">{{ newTopic.title.length }}/150 caractères</p>
+      <!-- Review Form (for Event Feedback & Reviews) -->
+      <div *ngIf="isReviewCategory">
+        <!-- Rating -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-3">
+            Your Rating <span class="text-error-500">*</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              *ngFor="let star of [1, 2, 3, 4, 5]"
+              type="button"
+              (click)="setRating(star)"
+              (mouseenter)="setHoveredRating(star)"
+              (mouseleave)="clearHoveredRating()"
+              class="text-4xl transition-all duration-200 hover:scale-110 focus:outline-none">
+              <i [class]="getStarClass(star)"></i>
+            </button>
+            <span *ngIf="rating > 0" class="ml-3 text-gray-600 font-medium">
+              {{ rating }} / 5
+            </span>
+          </div>
+        </div>
+
+        <!-- Comment (Optional) -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Comment <span class="text-gray-500 text-xs">(Optional)</span>
+          </label>
+          <div class="w-full">
+            <quill-editor 
+              [(ngModel)]="newTopic.content"
+              [modules]="quillModules"
+              placeholder="Share your thoughts about the event..."
+              class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+            </quill-editor>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
+        </div>
       </div>
 
-      <!-- Content -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-900 mb-2">
-          Contenu <span class="text-error-500">*</span>
-        </label>
-        <textarea 
-          [(ngModel)]="newTopic.content"
-          placeholder="Décrivez votre question ou sujet en détail..."
-          rows="8"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-          maxlength="5000"></textarea>
-        <p class="text-xs text-gray-500 mt-1">{{ newTopic.content.length }}/5000 caractères</p>
+      <!-- Standard Topic Form (for other categories) -->
+      <div *ngIf="!isReviewCategory && !isEventHighlightsCategory">
+        <!-- Title -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Topic Title <span class="text-error-500">*</span>
+          </label>
+          <input 
+            type="text"
+            [(ngModel)]="newTopic.title"
+            placeholder="E.g.: How to improve my pronunciation?"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            maxlength="150">
+          <p class="text-xs text-gray-500 mt-1">{{ newTopic.title.length }}/150 characters</p>
+        </div>
+
+        <!-- Content -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Content <span class="text-error-500">*</span>
+          </label>
+          <div class="w-full">
+            <quill-editor 
+              [(ngModel)]="newTopic.content"
+              [modules]="quillModules"
+              placeholder="Describe your question, share your thoughts, or provide details..."
+              class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+            </quill-editor>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
+        </div>
+
+        <!-- Current Resource Display -->
+        <div *ngIf="editingTopic && editingTopic.resourceType && editingTopic.resourceLink && !resourceType" class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Current Resource
+          </label>
+          <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <i [class]="'text-primary-600 ' + 
+                             (editingTopic.resourceType === 'PDF' ? 'fas fa-file-pdf' : 
+                              editingTopic.resourceType === 'IMAGE' ? 'fas fa-image' : 
+                              editingTopic.resourceType === 'VIDEO' ? 'fas fa-video' : 
+                              'fas fa-link')"></i>
+                </div>
+                <div>
+                  <p class="font-medium text-gray-900 text-sm">{{ editingTopic.resourceType }}</p>
+                  <p class="text-xs text-gray-500 truncate max-w-xs">{{ editingTopic.resourceLink }}</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                (click)="resourceType = editingTopic.resourceType || ''; resourceLink = editingTopic.resourceLink || ''; filePreviewUrl = ''"
+                class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                Change Resource
+              </button>
+            </div>
+            
+            <!-- Image Preview for existing resource -->
+            <div *ngIf="editingTopic.resourceType === 'IMAGE'" class="mt-3">
+              <img [src]="'http://localhost:8080' + editingTopic.resourceLink" 
+                   class="w-full max-h-64 object-contain rounded-xl border border-gray-200"
+                   alt="Current resource">
+            </div>
+            
+            <!-- Video Preview for existing resource -->
+            <div *ngIf="editingTopic.resourceType === 'VIDEO'" class="mt-3">
+              <video [src]="'http://localhost:8080' + editingTopic.resourceLink" 
+                     controls 
+                     class="w-full max-h-64 rounded-xl border border-gray-200">
+              </video>
+            </div>
+            
+            <!-- Link Preview for existing resource -->
+            <div *ngIf="editingTopic.resourceType === 'LINK'" class="mt-3">
+              <a [href]="editingTopic.resourceLink" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 class="text-sm text-primary-600 hover:text-primary-700 hover:underline break-all">
+                {{ editingTopic.resourceLink }}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resource Type Selection (Optional) -->
+        <div *ngIf="!editingTopic || !editingTopic.resourceType || resourceType" class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Attach a Resource <span class="text-gray-500 text-xs">(Optional)</span>
+          </label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              type="button"
+              (click)="setResourceType('LINK')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'LINK' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-link text-2xl mb-2" [class.text-primary]="resourceType === 'LINK'"></i>
+              <p class="font-semibold text-sm">Link</p>
+              <p class="text-xs text-gray-500">YouTube, etc.</p>
+            </button>
+            <button
+              type="button"
+              (click)="setResourceType('PDF')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'PDF' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-file-pdf text-2xl mb-2" [class.text-primary]="resourceType === 'PDF'"></i>
+              <p class="font-semibold text-sm">PDF</p>
+              <p class="text-xs text-gray-500">Document</p>
+            </button>
+            <button
+              type="button"
+              (click)="setResourceType('IMAGE')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'IMAGE' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-image text-2xl mb-2" [class.text-primary]="resourceType === 'IMAGE'"></i>
+              <p class="font-semibold text-sm">Image</p>
+              <p class="text-xs text-gray-500">JPG, PNG</p>
+            </button>
+            <button
+              type="button"
+              (click)="setResourceType('VIDEO')"
+              [class]="'p-4 border-2 rounded-xl transition-all ' + 
+                      (resourceType === 'VIDEO' ? 'border-primary bg-primary-50' : 'border-gray-300 hover:border-primary-300')">
+              <i class="fas fa-video text-2xl mb-2" [class.text-primary]="resourceType === 'VIDEO'"></i>
+              <p class="font-semibold text-sm">Video</p>
+              <p class="text-xs text-gray-500">MP4, etc.</p>
+            </button>
+          </div>
+          <button
+            *ngIf="resourceType"
+            type="button"
+            (click)="setResourceType('')"
+            class="mt-2 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1">
+            <i class="fas fa-times"></i>
+            <span>Remove resource</span>
+          </button>
+        </div>
+
+        <!-- Link Input -->
+        <div *ngIf="resourceType === 'LINK'" class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Resource Link <span class="text-error-500">*</span>
+          </label>
+          <input 
+            type="url"
+            [(ngModel)]="resourceLink"
+            placeholder="https://example.com or https://youtube.com/watch?v=..."
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+          <p class="text-xs text-gray-500 mt-1">Enter a valid URL (YouTube videos will be embedded)</p>
+        </div>
+
+        <!-- File Upload -->
+        <div *ngIf="resourceType === 'PDF' || resourceType === 'IMAGE' || resourceType === 'VIDEO'" class="mb-4">
+          <label class="block text-sm font-semibold text-gray-900 mb-2">
+            Upload File <span class="text-error-500">*</span>
+          </label>
+          <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary transition-colors">
+            <input 
+              type="file" 
+              id="editResourceFileInput"
+              [accept]="resourceType === 'PDF' ? 'application/pdf' : 
+                       resourceType === 'IMAGE' ? 'image/jpeg,image/png,image/jpg' : 
+                       'video/mp4,video/webm,video/ogg'"
+              (change)="onResourceFileSelected($event)"
+              class="hidden">
+            <label for="editResourceFileInput" class="cursor-pointer">
+              <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+              <p class="text-gray-600 mb-1">Click to upload {{ resourceType === 'PDF' ? 'a PDF' : resourceType === 'IMAGE' ? 'an image' : 'a video' }}</p>
+              <p class="text-xs text-gray-500">Max 50MB</p>
+            </label>
+          </div>
+          
+          <!-- File Preview -->
+          <div *ngIf="selectedFile" class="mt-4 p-4 bg-gray-50 rounded-xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <i [class]="'text-primary-600 ' + 
+                           (resourceType === 'PDF' ? 'fas fa-file-pdf' : 
+                            resourceType === 'IMAGE' ? 'fas fa-image' : 
+                            'fas fa-video')"></i>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900 text-sm">{{ selectedFile.name }}</p>
+                <p class="text-xs text-gray-500">{{ (selectedFile.size / 1024).toFixed(1) }} KB</p>
+              </div>
+            </div>
+            <button 
+              type="button"
+              (click)="removeResourceFile()"
+              class="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <!-- Image Preview -->
+          <div *ngIf="filePreviewUrl && resourceType === 'IMAGE'" class="mt-4">
+            <img [src]="filePreviewUrl" class="w-full max-h-64 object-contain rounded-xl border border-gray-200">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="bg-primary-50 border border-primary-200 rounded-xl p-4">
+        <div class="flex gap-3">
+          <i class="fas fa-lightbulb text-primary-600 mt-0.5"></i>
+          <div>
+            <h4 class="font-semibold text-gray-900 text-sm mb-1">
+              {{ isReviewCategory ? 'Tips for a Good Review' : 'Tips for a Good Topic' }}
+            </h4>
+            <ul class="text-xs text-gray-600 space-y-1">
+              <li *ngIf="isReviewCategory">• Rate honestly based on your experience</li>
+              <li *ngIf="isReviewCategory">• Share specific details about what you liked or didn't like</li>
+              <li *ngIf="isReviewCategory">• Be constructive and respectful</li>
+              <li *ngIf="!isReviewCategory">• Choose a clear and descriptive title</li>
+              <li *ngIf="!isReviewCategory">• Explain your question in detail</li>
+              <li *ngIf="!isReviewCategory">• Be respectful and courteous</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -350,8 +974,8 @@
         [class.opacity-50]="!isFormValid()"
         [class.cursor-not-allowed]="!isFormValid()"
         class="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-600 transition-all font-medium shadow-theme-sm hover:shadow-theme-md disabled:hover:bg-primary disabled:hover:shadow-theme-sm">
-        <i class="fas fa-save mr-2"></i>
-        Save
+        <i [class]="isReviewCategory ? 'fas fa-star mr-2' : 'fas fa-save mr-2'"></i>
+        {{ isReviewCategory ? 'Update Review' : 'Save Changes' }}
       </button>
     </div>
   </div>
@@ -396,3 +1020,5 @@
     </div>
   </div>
 </div>
+
+

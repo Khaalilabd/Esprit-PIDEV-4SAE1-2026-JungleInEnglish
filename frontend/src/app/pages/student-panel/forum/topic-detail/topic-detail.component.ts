@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { QuillEditorComponent } from 'ngx-quill';
 import { ForumService, Topic, Post, CreatePostRequest } from '../../../../services/forum.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ReactionBarComponent } from '../../../../components/reaction-bar/reaction-bar.component';
@@ -11,24 +12,33 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-topic-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ReactionBarComponent],
-  providers: [ForumService],
+  imports: [CommonModule, RouterModule, FormsModule, ReactionBarComponent, QuillEditorComponent],
   templateUrl: './topic-detail.component.html',
-  styleUrl: './topic-detail.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './topic-detail.component.scss'
 })
-export class TopicDetailComponent implements OnInit {
+export class TopicDetailComponent implements OnInit, OnDestroy {
   topic: Topic | null = null;
   posts: Post[] = [];
   topicId!: number;
   loading = true;
   loadingPosts = true;
   error: string | null = null;
+  canReply = false;
+  
+  // Event Highlights
+  isEventHighlight = false;
+  eventMedia: Array<{type: string, data: string, name: string}> = [];
+  eventDescription: string = '';
+  currentMediaIndex = 0;
+  
+  // Recruitment
+  isRecruitmentTopic = false;
   
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
   totalElements = 0;
+  sortBy = 'helpful'; // Default sort: most helpful
 
   // Modal state
   showReplyModal = false;
@@ -41,62 +51,211 @@ export class TopicDetailComponent implements OnInit {
 
   editingPost: Post | null = null;
 
+  // Quill configuration
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link'],
+      ['clean']
+    ]
+  };
+
   private authService = inject(AuthService);
-  private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private forumService: ForumService
-  ) {
-    // Fix memory leak: use takeUntilDestroyed
-    this.route.params
-      .pipe(takeUntilDestroyed())
-      .subscribe(params => {
-        this.topicId = +params['topicId'];
-        this.loadTopic();
-        this.loadPosts();
-      });
-  }
+  ) {}
 
   ngOnInit(): void {
-    // Initialization moved to constructor with takeUntilDestroyed
+    this.route.params.subscribe(params => {
+      this.topicId = +params['topicId'];
+      this.loadTopic();
+      this.loadPosts();
+    });
+    
+    // Add keyboard navigation for carousel
+    document.addEventListener('keydown', this.handleKeyboardNavigation.bind(this));
+  }
+  
+  ngOnDestroy(): void {
+    // Clean up keyboard event listener
+    document.removeEventListener('keydown', this.handleKeyboardNavigation.bind(this));
+  }
+  
+  handleKeyboardNavigation(event: KeyboardEvent): void {
+    if (!this.isEventHighlight || this.eventMedia.length <= 1) return;
+    
+    if (event.key === 'ArrowLeft') {
+      this.previousMedia();
+    } else if (event.key === 'ArrowRight') {
+      this.nextMedia();
+    }
   }
 
   loadTopic(): void {
     this.loading = true;
     this.error = null;
     
+    console.log('=== LOADING TOPIC ===');
+    console.log('Topic ID:', this.topicId);
+    
     this.forumService.getTopicById(this.topicId).subscribe({
       next: (data) => {
+        console.log('=== TOPIC LOADED ===');
+        console.log('Topic data:', data);
+        
         this.topic = data;
+        
+        // Check permissions
+        this.checkReplyPermission(data.subCategoryId);
+        
+        // Check if this is a Recruitment topic
+        this.forumService.getSubCategoryById(data.subCategoryId).subscribe({
+          next: (subCategory) => {
+            this.isRecruitmentTopic = subCategory.name === 'Recruitment & Applications';
+          }
+        });
+        
+        // Check if this is an Event Highlight and parse media
+        if (data.content && data.content.startsWith('[EVENT_HIGHLIGHT_MEDIA]')) {
+          this.isEventHighlight = true;
+          const result = this.parseEventHighlightMedia(data.content);
+          this.eventMedia = result.media;
+          this.eventDescription = result.description;
+        }
+        
         this.loading = false;
-        this.cdr.markForCheck();
+        console.log('Topic loaded successfully');
       },
       error: (err) => {
         console.error('Error loading topic:', err);
         this.error = 'Error loading topic';
         this.loading = false;
-        this.cdr.markForCheck();
       }
     });
+  }
+  
+  checkReplyPermission(subCategoryId: number): void {
+    const currentUser = this.authService.currentUserValue;
+    
+    if (!currentUser) {
+      this.canReply = false;
+      return;
+    }
+    
+    this.forumService.getPermissions(subCategoryId, currentUser.role).subscribe({
+      next: (permissions) => {
+        // If topic itself is locked, nobody can reply (override permission check)
+        if (this.topic?.isLocked) {
+          this.canReply = false;
+        } else {
+          this.canReply = permissions.canReply;
+        }
+      },
+      error: (err) => {
+        console.error('Error checking reply permissions:', err);
+        this.canReply = false;
+      }
+    });
+  }
+  
+  parseEventHighlightMedia(content: string): {media: Array<{type: string, data: string, name: string}>, description: string} {
+    if (!content.startsWith('[EVENT_HIGHLIGHT_MEDIA]')) {
+      return {media: [], description: ''};
+    }
+    
+    // Extract description if present
+    let description = '';
+    let mediaContent = content;
+    
+    if (content.includes('[DESCRIPTION]')) {
+      const parts = content.split('[DESCRIPTION]');
+      mediaContent = parts[0];
+      description = parts[1] || '';
+    }
+    
+    const mediaString = mediaContent.replace('[EVENT_HIGHLIGHT_MEDIA]', '');
+    const mediaItems = mediaString.split('[MEDIA_SEPARATOR]');
+    
+    const media = mediaItems.map(item => {
+      try {
+        const parsed = JSON.parse(item);
+        // Convert file path to full URL if it's a relative path
+        if (parsed.data && !parsed.data.startsWith('http') && !parsed.data.startsWith('data:')) {
+          // Remove leading slash if present
+          const cleanPath = parsed.data.startsWith('/') ? parsed.data.substring(1) : parsed.data;
+          parsed.data = `http://localhost:8080/${cleanPath}`;
+        }
+        return parsed;
+      } catch {
+        return null;
+      }
+    }).filter(item => item !== null);
+    
+    return {media, description};
+  }
+  
+  nextMedia(): void {
+    if (this.currentMediaIndex < this.eventMedia.length - 1) {
+      this.currentMediaIndex++;
+
+    }
+  }
+  
+  previousMedia(): void {
+    if (this.currentMediaIndex > 0) {
+      this.currentMediaIndex--;
+
+    }
+  }
+  
+  goToMedia(index: number): void {
+    this.currentMediaIndex = index;
+
+  }
+  
+  getYouTubeEmbedUrl(url: string): SafeResourceUrl {
+    // Extract video ID from YouTube URL
+    let videoId = '';
+    if (url.includes('youtube.com/watch?v=')) {
+      videoId = url.split('v=')[1].split('&')[0];
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1].split('?')[0];
+    }
+    
+    if (videoId) {
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+  
+  getSafeUrl(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
   loadPosts(): void {
     this.loadingPosts = true;
     
-    this.forumService.getPostsByTopic(this.topicId, this.currentPage, this.pageSize).subscribe({
+    this.forumService.getPostsByTopic(this.topicId, this.currentPage, this.pageSize, this.sortBy).subscribe({
       next: (response) => {
         this.posts = response.content;
         this.totalPages = response.totalPages;
         this.totalElements = response.totalElements;
         this.loadingPosts = false;
-        this.cdr.markForCheck();
+
       },
       error: (err) => {
         console.error('Error loading posts:', err);
         this.loadingPosts = false;
-        this.cdr.markForCheck();
+
       }
     });
   }
@@ -169,7 +328,7 @@ export class TopicDetailComponent implements OnInit {
           this.closeReplyModal();
           this.loadPosts();
           this.loadTopic();
-          this.cdr.markForCheck();
+
         },
         error: (err) => {
           console.error('Error creating post:', err);
@@ -268,6 +427,16 @@ export class TopicDetailComponent implements OnInit {
            currentUser.role === 'ADMIN' || 
            currentUser.role === 'MODERATOR';
   }
+  
+  isPostEdited(post: Post): boolean {
+    if (!post.updatedAt || !post.createdAt) return false;
+    
+    // Convert to timestamps and check if difference is more than 1 second
+    const createdTime = new Date(post.createdAt).getTime();
+    const updatedTime = new Date(post.updatedAt).getTime();
+    
+    return Math.abs(updatedTime - createdTime) > 1000; // More than 1 second difference
+  }
 
   isFormValid(): boolean {
     return !!(this.newPost.content.trim());
@@ -281,15 +450,42 @@ export class TopicDetailComponent implements OnInit {
 
   goBack(): void {
     const currentUrl = this.router.url;
+    
+    // Get subcategory name from topic if available
+    let subCategoryName = 'Topics';
+    if (this.topic) {
+      // Fetch subcategory to get its name
+      this.forumService.getSubCategoryById(this.topic.subCategoryId).subscribe({
+        next: (subCategory) => {
+          subCategoryName = subCategory.name;
+          this.navigateToTopicList(currentUrl, subCategoryName);
+        },
+        error: () => {
+          // Fallback to default name if fetch fails
+          this.navigateToTopicList(currentUrl, subCategoryName);
+        }
+      });
+    } else {
+      this.navigateToTopicList(currentUrl, subCategoryName);
+    }
+  }
+  
+  private navigateToTopicList(currentUrl: string, subCategoryName: string): void {
     if (currentUrl.includes('/dashboard/')) {
       if (this.topic) {
-        this.router.navigate(['/dashboard/forum/topics', this.topic.subCategoryId, 'Topics']);
+        this.router.navigate(['/dashboard/forum/topics', this.topic.subCategoryId, subCategoryName]);
       } else {
         this.router.navigate(['/dashboard/forum']);
       }
+    } else if (currentUrl.includes('/tutor-panel/')) {
+      if (this.topic) {
+        this.router.navigate(['/tutor-panel/forum/topics', this.topic.subCategoryId, subCategoryName]);
+      } else {
+        this.router.navigate(['/tutor-panel/forum']);
+      }
     } else {
       if (this.topic) {
-        this.router.navigate(['/user-panel/forum/topics', this.topic.subCategoryId, 'Topics']);
+        this.router.navigate(['/user-panel/forum/topics', this.topic.subCategoryId, subCategoryName]);
       } else {
         this.router.navigate(['/user-panel/forum']);
       }
@@ -326,4 +522,15 @@ export class TopicDetailComponent implements OnInit {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
+
+  changeSortBy(sortBy: string): void {
+    this.sortBy = sortBy;
+    this.currentPage = 0; // Reset to first page
+    this.loadPosts();
+  }
+
+  sanitizeHtml(html: string) {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
 }

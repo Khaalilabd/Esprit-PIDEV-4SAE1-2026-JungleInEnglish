@@ -29,6 +29,7 @@ public class ModerationController {
     @Operation(summary = "Get all topics for moderation", description = "Get paginated list of all topics with filters")
     public ResponseEntity<Page<TopicDTO>> getAllTopicsForModeration(
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long subCategoryId,
             @RequestParam(required = false) String status, // "pinned", "locked", "normal"
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
@@ -41,7 +42,7 @@ public class ModerationController {
                 : Sort.by(sortBy).descending();
         
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<TopicDTO> topics = topicService.getAllTopicsForModeration(categoryId, status, search, pageable);
+        Page<TopicDTO> topics = topicService.getAllTopicsForModeration(categoryId, subCategoryId, status, search, pageable);
         return ResponseEntity.ok(topics);
     }
     
@@ -86,9 +87,8 @@ public class ModerationController {
     @Operation(summary = "Lock category", description = "Lock a category to prevent new topics/posts")
     public ResponseEntity<Map<String, Object>> lockCategory(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestParam(required = false) String reason) {
-        categoryService.lockCategory(id, userId, reason);
+            @RequestHeader("X-User-Id") Long userId) {
+        categoryService.lockCategory(id, userId);
         return ResponseEntity.ok(Map.of("success", true, "message", "Category locked"));
     }
     

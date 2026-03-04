@@ -15,6 +15,9 @@ public class CategoryDTO {
     private String description;
     private String icon;
     private String color;
+    private Boolean isLocked;
+    private Long lockedBy;
+    private LocalDateTime lockedAt;
     private List<SubCategoryDTO> subCategories;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

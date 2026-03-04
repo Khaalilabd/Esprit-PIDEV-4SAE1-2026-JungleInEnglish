@@ -17,9 +17,16 @@ public class TopicDTO {
     private Long subCategoryId;
     private Integer viewsCount;
     private Integer reactionsCount;
+    private Integer likeCount;
+    private Integer insightfulCount;
+    private Integer helpfulCount;
+    private Integer weightedScore;
+    private Boolean isTrending;
     private Boolean isPinned;
     private Boolean isLocked;
     private Integer postsCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String resourceType;
+    private String resourceLink;
 }

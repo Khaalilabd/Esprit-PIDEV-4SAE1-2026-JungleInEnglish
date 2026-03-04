@@ -40,9 +40,6 @@ public class Category {
     @Column(name = "locked_at")
     private LocalDateTime lockedAt;
     
-    @Column(name = "lock_reason")
-    private String lockReason;
-    
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubCategory> subCategories = new ArrayList<>();
     

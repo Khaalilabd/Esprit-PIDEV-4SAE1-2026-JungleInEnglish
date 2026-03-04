@@ -19,12 +19,15 @@ public class CreateTopicRequest {
     @Size(max = 150, message = "Title must not exceed 150 characters")
     private String title;
     
-    @NotBlank(message = "Content is required")
     @Size(max = 5000, message = "Content must not exceed 5000 characters")
-    private String content;
+    private String content; // Optional for Resource Sharing
     
     @NotNull(message = "User ID is required")
     private Long userId;
     
     private String userName;
+    
+    private String resourceType; // "LINK", "PDF", "IMAGE", "VIDEO", null
+    
+    private String resourceLink; // URL or file path
 }

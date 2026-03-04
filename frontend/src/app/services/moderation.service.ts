@@ -27,6 +27,7 @@ export class ModerationService {
   // Get all topics for moderation with filters
   getAllTopics(
     categoryId?: number,
+    subCategoryId?: number,
     status?: string,
     search?: string,
     page: number = 0,
@@ -42,6 +43,9 @@ export class ModerationService {
 
     if (categoryId) {
       params = params.set('categoryId', categoryId.toString());
+    }
+    if (subCategoryId) {
+      params = params.set('subCategoryId', subCategoryId.toString());
     }
     if (status) {
       params = params.set('status', status);

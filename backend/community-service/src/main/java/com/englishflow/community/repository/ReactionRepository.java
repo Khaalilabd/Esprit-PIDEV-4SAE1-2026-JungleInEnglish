@@ -20,6 +20,12 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
     @Query("SELECT COUNT(r) FROM Reaction r WHERE r.topic.id = :topicId")
     Long countByTopicId(Long topicId);
     
+    @Query("SELECT COUNT(r) FROM Reaction r WHERE r.post.id = :postId AND r.type = :type")
+    Long countByPostIdAndType(Long postId, Reaction.ReactionType type);
+    
+    @Query("SELECT COUNT(r) FROM Reaction r WHERE r.topic.id = :topicId AND r.type = :type")
+    Long countByTopicIdAndType(Long topicId, Reaction.ReactionType type);
+    
     void deleteByUserIdAndPostId(Long userId, Long postId);
     
     void deleteByUserIdAndTopicId(Long userId, Long topicId);

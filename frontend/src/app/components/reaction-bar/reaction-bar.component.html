@@ -1,19 +1,45 @@
 <div class="reaction-bar" [class.size-small]="size === 'small'" [class.size-medium]="size === 'medium'" [class.size-large]="size === 'large'">
-  <button 
-    *ngFor="let reaction of reactionTypes"
-    (click)="toggleReaction(reaction.type)"
-    [class.active]="hasReacted(reaction.type)"
-    [class.loading]="loading"
-    [disabled]="loading"
-    [title]="reaction.label"
-    class="reaction-button">
-    <span class="reaction-icon">{{ reaction.icon }}</span>
-    <span class="reaction-count" *ngIf="getReactionCount(reaction.type) > 0">
-      {{ getReactionCount(reaction.type) }}
-    </span>
-  </button>
+  <!-- Reaction Buttons -->
+  <div class="reaction-buttons">
+    <button 
+      *ngFor="let reaction of reactionTypes"
+      (click)="toggleReaction(reaction.type)"
+      [class.active]="hasReacted(reaction.type)"
+      [class.loading]="loading"
+      [class.reaction-like]="reaction.type === 'LIKE'"
+      [class.reaction-helpful]="reaction.type === 'HELPFUL'"
+      [class.reaction-insightful]="reaction.type === 'INSIGHTFUL'"
+      [disabled]="loading"
+      [title]="reaction.label"
+      class="reaction-button">
+      <i [class]="reaction.icon + ' reaction-icon'"></i>
+      <span class="reaction-label" *ngIf="size !== 'small'">{{ reaction.label }}</span>
+    </button>
+  </div>
   
-  <div class="total-reactions" *ngIf="getTotalReactions() > 0">
-    <span class="total-count">{{ getTotalReactions() }} reaction{{ getTotalReactions() > 1 ? 's' : '' }}</span>
+  <!-- Reaction Summary (Facebook-style) -->
+  <div class="reaction-summary" *ngIf="getTotalReactions() > 0">
+    <div class="reaction-icons">
+      <ng-container *ngFor="let reactionType of reactionTypes">
+        <span 
+          *ngIf="getReactionCount(reactionType.type) > 0"
+          class="reaction-icon-badge"
+          [class.reaction-like-badge]="reactionType.type === 'LIKE'"
+          [class.reaction-helpful-badge]="reactionType.type === 'HELPFUL'"
+          [class.reaction-insightful-badge]="reactionType.type === 'INSIGHTFUL'"
+          [title]="getReactionCount(reactionType.type) + ' ' + reactionType.label">
+          <i [class]="reactionType.icon"></i>
+        </span>
+      </ng-container>
+    </div>
+    <div class="reaction-counts">
+      <ng-container *ngFor="let reactionType of reactionTypes; let last = last">
+        <span 
+          *ngIf="getReactionCount(reactionType.type) > 0"
+          class="reaction-count-item">
+          {{ getReactionCount(reactionType.type) }} {{ reactionType.label }}<span *ngIf="!last && hasMoreReactions(reactionType.type)">, </span>
+        </span>
+      </ng-container>
+    </div>
   </div>
 </div>

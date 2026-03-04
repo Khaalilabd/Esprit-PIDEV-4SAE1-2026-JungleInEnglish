@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -60,9 +62,23 @@ public class PostService {
 
     
     @Transactional(readOnly = true)
-    public Page<PostDTO> getPostsByTopic(Long topicId, Pageable pageable) {
-        return postRepository.findByTopicId(topicId, pageable)
-                .map(this::convertToDTO);
+    public Page<PostDTO> getPostsByTopic(Long topicId, String sortBy, Pageable pageable) {
+        Page<Post> posts;
+        
+        if ("helpful".equalsIgnoreCase(sortBy)) {
+            posts = postRepository.findByTopicIdOrderByWeightedScore(topicId, pageable);
+        } else if ("trending".equalsIgnoreCase(sortBy)) {
+            // Trending: created in last 7 days with score >= 5
+            LocalDateTime since = LocalDateTime.now().minusDays(7);
+            posts = postRepository.findByTopicIdOrderByTrending(topicId, since, pageable);
+        } else if ("recent".equalsIgnoreCase(sortBy)) {
+            posts = postRepository.findByTopicIdOrderByRecent(topicId, pageable);
+        } else {
+            // Default: sort by accepted first, then weighted score
+            posts = postRepository.findByTopicIdOrderByWeightedScore(topicId, pageable);
+        }
+        
+        return posts.map(this::convertToDTO);
     }
     
     @Transactional
@@ -91,6 +107,12 @@ public class PostService {
         dto.setUserName(post.getUserName());
         dto.setTopicId(post.getTopic().getId());
         dto.setReactionsCount(post.getReactionsCount());
+        dto.setLikeCount(post.getLikeCount());
+        dto.setInsightfulCount(post.getInsightfulCount());
+        dto.setHelpfulCount(post.getHelpfulCount());
+        dto.setWeightedScore(post.getWeightedScore());
+        dto.setIsTrending(post.getIsTrending());
+        dto.setIsAccepted(post.getIsAccepted());
         dto.setCreatedAt(post.getCreatedAt());
         dto.setUpdatedAt(post.getUpdatedAt());
         return dto;

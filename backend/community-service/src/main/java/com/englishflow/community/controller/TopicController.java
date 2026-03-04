@@ -2,6 +2,7 @@ package com.englishflow.community.controller;
 
 import com.englishflow.community.dto.CreateTopicRequest;
 import com.englishflow.community.dto.TopicDTO;
+import com.englishflow.community.service.PermissionService;
 import com.englishflow.community.service.TopicService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,36 +23,42 @@ import org.springframework.web.bind.annotation.*;
 public class TopicController {
     
     private final TopicService topicService;
+    private final PermissionService permissionService;
     
     @PostMapping
     @Operation(summary = "Create topic", description = "Create a new discussion topic")
-    public ResponseEntity<TopicDTO> createTopic(@Valid @RequestBody CreateTopicRequest request) {
+    public ResponseEntity<TopicDTO> createTopic(
+            @Valid @RequestBody CreateTopicRequest request,
+            @RequestHeader(value = "X-User-Role", required = false, defaultValue = "STUDENT") String userRole) {
+        
+        // Check if user has permission to create topic
+        if (!permissionService.canCreateTopic(request.getSubCategoryId(), userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         TopicDTO topic = topicService.createTopic(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(topic);
     }
     
     @GetMapping("/subcategory/{subCategoryId}")
-    @Operation(summary = "Get topics by subcategory", description = "Retrieve all topics for a specific subcategory with pagination")
+    @Operation(summary = "Get topics by subcategory", description = "Retrieve all topics for a specific subcategory with pagination and sorting")
     public ResponseEntity<Page<TopicDTO>> getTopicsBySubCategory(
             @PathVariable Long subCategoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir) {
+            @RequestParam(defaultValue = "recent") String sortBy) {
         
-        Sort sort = sortDir.equalsIgnoreCase("ASC") 
-                ? Sort.by(sortBy).ascending() 
-                : Sort.by(sortBy).descending();
-        
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<TopicDTO> topics = topicService.getTopicsBySubCategory(subCategoryId, pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TopicDTO> topics = topicService.getTopicsBySubCategory(subCategoryId, sortBy, pageable);
         return ResponseEntity.ok(topics);
     }
     
     @GetMapping("/{id}")
     @Operation(summary = "Get topic by ID", description = "Retrieve a specific topic and increment view count")
-    public ResponseEntity<TopicDTO> getTopicById(@PathVariable Long id) {
-        TopicDTO topic = topicService.getTopicById(id);
+    public ResponseEntity<TopicDTO> getTopicById(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+        TopicDTO topic = topicService.getTopicById(id, currentUserId);
         return ResponseEntity.ok(topic);
     }
     

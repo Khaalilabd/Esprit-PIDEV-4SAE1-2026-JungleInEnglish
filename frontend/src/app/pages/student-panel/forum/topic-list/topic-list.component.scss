@@ -4,3 +4,38 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+// Quill editor custom styles
+::ng-deep {
+  quill-editor {
+    display: block;
+    width: 100%;
+  }
+  
+  .ql-toolbar {
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+  }
+  
+  .ql-container {
+    border-bottom-left-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+    border-color: #d1d5db;
+    font-family: inherit;
+    font-size: 0.875rem;
+    width: 100%;
+  }
+  
+  .ql-editor {
+    min-height: 150px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .ql-editor.ql-blank::before {
+    color: #9ca3af;
+    font-style: normal;
+  }
+}

@@ -20,6 +20,15 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# File Upload Configuration
+file:
+  upload-dir: uploads
 
 eureka:
   client:
@@ -31,6 +40,17 @@ eureka:
   instance:
     prefer-ip-address: true
 
+# Feign Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+  circuitbreaker:
+    enabled: true
+
 management:
   endpoints:
     web:
@@ -40,6 +60,9 @@ management:
     export:
       prometheus:
         enabled: true
+  health:
+    redis:
+      enabled: false
 
 # Redis Cache Configuration (désactivé par défaut - décommenter pour activer)
 #  cache:

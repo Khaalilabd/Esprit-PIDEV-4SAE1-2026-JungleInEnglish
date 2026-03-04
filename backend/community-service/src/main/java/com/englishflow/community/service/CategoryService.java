@@ -45,6 +45,14 @@ public class CategoryService {
         return convertToDTO(category);
     }
     
+    @Transactional(readOnly = true)
+    public SubCategoryDTO getSubCategoryById(Long id) {
+        log.info("Fetching subcategory {} from database", id);
+        SubCategory subCategory = subCategoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("SubCategory", id));
+        return convertSubCategoryToDTO(subCategory);
+    }
+    
     private CategoryDTO convertToDTO(Category category) {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
@@ -52,6 +60,9 @@ public class CategoryService {
         dto.setDescription(category.getDescription());
         dto.setIcon(category.getIcon());
         dto.setColor(category.getColor());
+        dto.setIsLocked(category.getIsLocked());
+        dto.setLockedBy(category.getLockedBy());
+        dto.setLockedAt(category.getLockedAt());
         
         List<SubCategoryDTO> subCategoryDTOs = category.getSubCategories().stream()
                 .map(sub -> {
@@ -60,6 +71,9 @@ public class CategoryService {
                     subDto.setName(sub.getName());
                     subDto.setDescription(sub.getDescription());
                     subDto.setCategoryId(category.getId());
+                    subDto.setIsLocked(sub.getIsLocked());
+                    subDto.setLockedBy(sub.getLockedBy());
+                    subDto.setLockedAt(sub.getLockedAt());
                     return subDto;
                 })
                 .collect(Collectors.toList());
@@ -159,6 +173,10 @@ public class CategoryService {
         dto.setDescription(subCategory.getDescription());
         dto.setCategoryId(subCategory.getCategory().getId());
         dto.setCategoryName(subCategory.getCategory().getName());
+        dto.setRequiresClubMembership(subCategory.getRequiresClubMembership());
+        dto.setIsLocked(subCategory.getIsLocked());
+        dto.setLockedBy(subCategory.getLockedBy());
+        dto.setLockedAt(subCategory.getLockedAt());
         dto.setCreatedAt(subCategory.getCreatedAt());
         dto.setUpdatedAt(subCategory.getUpdatedAt());
         return dto;
@@ -167,17 +185,16 @@ public class CategoryService {
     // Category locking methods
     @Transactional
     // @CacheEvict(value = "categories", allEntries = true)
-    public void lockCategory(Long id, Long userId, String reason) {
+    public void lockCategory(Long id, Long userId) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id));
         
         category.setIsLocked(true);
         category.setLockedBy(userId);
         category.setLockedAt(java.time.LocalDateTime.now());
-        category.setLockReason(reason);
         
         categoryRepository.save(category);
-        log.info("Locked category {} by user {} with reason: {}", id, userId, reason);
+        log.info("Locked category {} by user {}", id, userId);
     }
     
     @Transactional
@@ -189,7 +206,6 @@ public class CategoryService {
         category.setIsLocked(false);
         category.setLockedBy(null);
         category.setLockedAt(null);
-        category.setLockReason(null);
         
         categoryRepository.save(category);
         log.info("Unlocked category {}", id);

@@ -2,6 +2,10 @@ package com.englishflow.community.controller;
 
 import com.englishflow.community.dto.CreatePostRequest;
 import com.englishflow.community.dto.PostDTO;
+import com.englishflow.community.entity.Topic;
+import com.englishflow.community.exception.ResourceNotFoundException;
+import com.englishflow.community.repository.TopicRepository;
+import com.englishflow.community.service.PermissionService;
 import com.englishflow.community.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,23 +26,38 @@ import org.springframework.web.bind.annotation.*;
 public class PostController {
     
     private final PostService postService;
+    private final PermissionService permissionService;
+    private final TopicRepository topicRepository;
     
     @PostMapping
     @Operation(summary = "Create post", description = "Create a new post in a topic")
-    public ResponseEntity<PostDTO> createPost(@Valid @RequestBody CreatePostRequest request) {
+    public ResponseEntity<PostDTO> createPost(
+            @Valid @RequestBody CreatePostRequest request,
+            @RequestHeader(value = "X-User-Role", required = false, defaultValue = "STUDENT") String userRole) {
+        
+        // Get topic to find subcategory
+        Topic topic = topicRepository.findById(request.getTopicId())
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + request.getTopicId()));
+        
+        // Check if user has permission to reply
+        if (!permissionService.canReplyToTopic(topic.getSubCategory().getId(), userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         PostDTO post = postService.createPost(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(post);
     }
     
     @GetMapping("/topic/{topicId}")
-    @Operation(summary = "Get posts by topic", description = "Retrieve all posts for a specific topic with pagination")
+    @Operation(summary = "Get posts by topic", description = "Retrieve all posts for a specific topic with pagination and sorting")
     public ResponseEntity<Page<PostDTO>> getPostsByTopic(
             @PathVariable Long topicId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "helpful") String sortBy) {
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-        Page<PostDTO> posts = postService.getPostsByTopic(topicId, pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PostDTO> posts = postService.getPostsByTopic(topicId, sortBy, pageable);
         return ResponseEntity.ok(posts);
     }
     

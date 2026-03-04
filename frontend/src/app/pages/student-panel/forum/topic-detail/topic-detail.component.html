@@ -28,44 +28,50 @@
   <!-- Topic Content -->
   <div *ngIf="!loading && !error && topic" class="space-y-6">
     <!-- Topic Card -->
-    <div [class]="'rounded-2xl shadow-theme-sm border overflow-hidden ' + 
-                 (topic.isPinned ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300' : 
-                  topic.isLocked ? 'bg-gray-50 border-gray-300' : 
+    <div [class]="'rounded-2xl shadow-lg border overflow-hidden transition-all duration-300 ' + 
+                 (topic.isPinned ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 border-amber-200 ring-2 ring-amber-100' : 
+                  topic.isLocked ? 'bg-gray-50 border-gray-200' : 
                   'bg-white border-gray-100')">
       
       <!-- Pinned/Locked Badge -->
-      <div *ngIf="topic.isPinned || topic.isLocked" class="px-6 pt-4">
-        <span *ngIf="topic.isPinned" class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full shadow-sm">
+      <div *ngIf="topic.isPinned || topic.isLocked" class="px-6 pt-5">
+        <span *ngIf="topic.isPinned" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-sm font-bold rounded-full shadow-md">
           <i class="fas fa-thumbtack"></i>
           PINNED TOPIC
         </span>
-        <span *ngIf="topic.isLocked && !topic.isPinned" class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded-full shadow-sm">
+        <span *ngIf="topic.isLocked && !topic.isPinned" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-500 text-white text-sm font-bold rounded-full shadow-md">
           <i class="fas fa-lock"></i>
           LOCKED - No new replies allowed
         </span>
       </div>
       
       <!-- Topic Header -->
-      <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-[#F7EDE2] to-white">
-        <div class="flex items-start gap-4">
-          <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent-navy flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+      <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-[#F7EDE2] via-[#FAF8F3] to-white">
+        <div class="flex items-start gap-5">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary-600 to-accent-navy flex items-center justify-center text-white font-bold text-2xl flex-shrink-0 shadow-lg ring-4 ring-white">
             {{ topic.userName.charAt(0).toUpperCase() }}
           </div>
           <div class="flex-1">
-            <h1 [class]="'text-2xl font-bold mb-2 ' + 
+            <h1 [class]="'text-3xl font-bold mb-3 leading-tight ' + 
                         (topic.isPinned ? 'text-amber-900' : 
                          topic.isLocked ? 'text-gray-600' : 
                          'text-gray-900')">
               {{ topic.title }}
             </h1>
-            <div class="flex items-center gap-4 text-sm text-gray-600">
-              <span class="font-medium">{{ topic.userName }}</span>
-              <span>•</span>
-              <span>{{ getTimeAgo(topic.createdAt) }}</span>
-              <span>•</span>
-              <div class="flex items-center gap-1">
-                <i class="fas fa-eye"></i>
-                <span>{{ topic.viewsCount }} views</span>
+            <div class="flex items-center gap-4 text-sm">
+              <div class="flex items-center gap-2 text-gray-700">
+                <i class="fas fa-user text-primary"></i>
+                <span class="font-semibold">{{ topic.userName }}</span>
+              </div>
+              <span class="text-gray-400">•</span>
+              <div class="flex items-center gap-2 text-gray-600">
+                <i class="fas fa-clock text-primary"></i>
+                <span>{{ getTimeAgo(topic.createdAt) }}</span>
+              </div>
+              <span class="text-gray-400">•</span>
+              <div class="flex items-center gap-2 text-gray-600">
+                <i class="fas fa-eye text-primary"></i>
+                <span class="font-medium">{{ topic.viewsCount }} views</span>
               </div>
             </div>
           </div>
@@ -74,7 +80,188 @@
 
       <!-- Topic Content -->
       <div class="p-6">
-        <div class="prose max-w-none text-gray-700 whitespace-pre-wrap">{{ topic.content }}</div>
+        <!-- Event Highlight Media Carousel -->
+        <div *ngIf="isEventHighlight && eventMedia.length > 0" class="mb-6">
+          <div class="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl" style="height: 500px;">
+            <!-- Current Media -->
+            <div class="w-full h-full flex items-center justify-center">
+              <img 
+                *ngIf="eventMedia[currentMediaIndex].type === 'image'" 
+                [src]="eventMedia[currentMediaIndex].data" 
+                [alt]="eventMedia[currentMediaIndex].name"
+                class="max-w-full max-h-full object-contain">
+              <video 
+                *ngIf="eventMedia[currentMediaIndex].type === 'video'" 
+                [src]="eventMedia[currentMediaIndex].data" 
+                controls
+                class="max-w-full max-h-full">
+              </video>
+            </div>
+            
+            <!-- Navigation Arrows -->
+            <button 
+              *ngIf="eventMedia.length > 1 && currentMediaIndex > 0"
+              (click)="previousMedia()"
+              class="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full flex items-center justify-center transition-all shadow-xl hover:scale-110 group">
+              <i class="fas fa-chevron-left text-gray-800 text-2xl group-hover:text-primary"></i>
+            </button>
+            <button 
+              *ngIf="eventMedia.length > 1 && currentMediaIndex < eventMedia.length - 1"
+              (click)="nextMedia()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full flex items-center justify-center transition-all shadow-xl hover:scale-110 group">
+              <i class="fas fa-chevron-right text-gray-800 text-2xl group-hover:text-primary"></i>
+            </button>
+            
+            <!-- Indicators (dots) -->
+            <div *ngIf="eventMedia.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5">
+              <button
+                *ngFor="let media of eventMedia; let i = index"
+                (click)="goToMedia(i)"
+                [class]="'h-2.5 rounded-full transition-all ' + 
+                        (i === currentMediaIndex ? 'bg-white w-10' : 'bg-white bg-opacity-50 hover:bg-opacity-75 w-2.5')"
+                [attr.aria-label]="'Go to slide ' + (i + 1)">
+              </button>
+            </div>
+            
+            <!-- Counter Badge -->
+            <div class="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm">
+              <i class="fas fa-images mr-2"></i>
+              {{ currentMediaIndex + 1 }} / {{ eventMedia.length }}
+            </div>
+            
+            <!-- Image Title Overlay -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-6 pt-16">
+              <p class="text-white text-sm font-medium">
+                {{ eventMedia[currentMediaIndex].name }}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Thumbnails -->
+          <div class="flex gap-3 mt-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <button
+              *ngFor="let media of eventMedia; let i = index"
+              (click)="goToMedia(i)"
+              [class]="'flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-3 transition-all hover:scale-105 ' + 
+                       (i === currentMediaIndex ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-gray-300 opacity-70 hover:opacity-100 hover:border-primary-300')">
+              <img 
+                *ngIf="media.type === 'image'" 
+                [src]="media.data" 
+                [alt]="'Thumbnail ' + (i + 1)"
+                class="w-full h-full object-cover">
+              <div *ngIf="media.type === 'video'" class="w-full h-full bg-gray-800 flex items-center justify-center">
+                <i class="fas fa-play-circle text-white text-2xl"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Event Description -->
+        <div *ngIf="isEventHighlight && eventDescription" class="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+          <div class="flex items-start gap-3 mb-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-align-left text-white"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Description</h3>
+          </div>
+          <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ eventDescription }}</p>
+        </div>
+        
+        <!-- Resource Display -->
+        <div *ngIf="topic.resourceType && topic.resourceLink" class="mb-6">
+          <!-- YouTube Video Embed -->
+          <div *ngIf="topic.resourceType === 'LINK' && topic.resourceLink.includes('youtube.com')" class="aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white ring-2 ring-gray-100">
+            <iframe 
+              [src]="getYouTubeEmbedUrl(topic.resourceLink)" 
+              class="w-full h-full"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+          
+          <!-- Regular Link -->
+          <div *ngIf="topic.resourceType === 'LINK' && !topic.resourceLink.includes('youtube.com')" class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl shadow-md hover:shadow-lg transition-all">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <i class="fas fa-link text-white text-2xl"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 mb-1">External Link</p>
+                <a [href]="topic.resourceLink" target="_blank" rel="noopener noreferrer" 
+                   class="text-sm text-green-700 hover:text-green-800 hover:underline break-all font-medium">
+                  {{ topic.resourceLink }}
+                </a>
+              </div>
+              <a [href]="topic.resourceLink" target="_blank" rel="noopener noreferrer"
+                 class="px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-bold shadow-md hover:shadow-lg flex-shrink-0">
+                Open <i class="fas fa-external-link-alt ml-2"></i>
+              </a>
+            </div>
+          </div>
+          
+          <!-- PDF Document -->
+          <div *ngIf="topic.resourceType === 'PDF'" class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white ring-2 ring-gray-100">
+            <div class="bg-gradient-to-r from-red-50 to-pink-50 p-5 flex items-center justify-between border-b-2 border-red-100">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md">
+                  <i class="fas fa-file-pdf text-white text-2xl"></i>
+                </div>
+                <div>
+                  <p class="font-bold text-gray-900 text-lg">PDF Document</p>
+                  <p class="text-sm text-gray-600">Click to view or download</p>
+                </div>
+              </div>
+              <a [href]="'http://localhost:8080' + topic.resourceLink" target="_blank" download
+                 class="px-5 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all text-sm font-bold shadow-md hover:shadow-lg">
+                <i class="fas fa-download mr-2"></i> Download
+              </a>
+            </div>
+            <iframe [src]="getSafeUrl('http://localhost:8080' + topic.resourceLink)" class="w-full bg-gray-50" style="height: 700px;"></iframe>
+          </div>
+          
+          <!-- Image -->
+          <div *ngIf="topic.resourceType === 'IMAGE'" class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white ring-2 ring-gray-100">
+            <img [src]="'http://localhost:8080' + topic.resourceLink" [alt]="topic.title" class="w-full h-auto">
+          </div>
+          
+          <!-- Video -->
+          <div *ngIf="topic.resourceType === 'VIDEO'" class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white ring-2 ring-gray-100 bg-black">
+            <video [src]="'http://localhost:8080' + topic.resourceLink" controls class="w-full h-auto">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+        
+        <!-- Regular Content -->
+        <div *ngIf="!isEventHighlight && !isRecruitmentTopic && topic.content && topic.content.trim()" class="ql-editor text-gray-700" [innerHTML]="sanitizeHtml(topic.content)"></div>
+        
+        <!-- Recruitment Topic Display -->
+        <div *ngIf="isRecruitmentTopic && topic.content && topic.content.trim()">
+          <div class="bg-secondary-100 rounded-lg p-6 border border-secondary-300 mb-4">
+            <h4 class="text-lg font-semibold text-primary mb-4">Application Requirements</h4>
+            <div class="ql-editor text-gray-700" [innerHTML]="sanitizeHtml(topic.content)"></div>
+          </div>
+          
+         
+        </div>
+        
+
+        <!-- Old Event Highlight Format (Legacy) -->
+        <div *ngIf="isEventHighlight && eventMedia.length === 0 && topic.content" class="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-info-circle text-white text-xl"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-amber-900 mb-2">Legacy Event Highlight</h4>
+              <p class="text-sm text-amber-800">This event highlight was created before the media upload feature was implemented. Please create a new event highlight to use the photo carousel.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg p-4 border border-amber-200">
+            <p class="text-gray-700 whitespace-pre-wrap text-sm">{{ topic.content }}</p>
+          </div>
+        </div>
       </div>
 
       <!-- Reactions for Topic -->
@@ -86,36 +273,59 @@
         </app-reaction-bar>
       </div>
 
-      <!-- Topic Footer -->
-      <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+      <!-- Topic Footer - Only show if user can reply -->
+      <div *ngIf="canReply" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
         <div class="flex items-center gap-4 text-sm text-gray-600">
           <div class="flex items-center gap-2">
             <i class="fas fa-comment"></i>
             <span>{{ topic.postsCount }} {{ topic.postsCount === 1 ? 'reply' : 'replies' }}</span>
           </div>
         </div>
+        
         <button 
           (click)="openReplyModal()"
-          *ngIf="!topic.isLocked"
           class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all shadow-theme-sm hover:shadow-theme-md flex items-center gap-2 text-sm font-medium">
           <i class="fas fa-reply"></i>
           <span>Reply</span>
         </button>
-        <div *ngIf="topic.isLocked" class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm font-medium">
-          <i class="fas fa-lock"></i>
-          <span>Topic locked - No replies allowed</span>
-        </div>
       </div>
     </div>
 
-    <!-- Replies Section -->
-    <div class="bg-white rounded-2xl shadow-theme-sm border border-gray-100 overflow-hidden">
+    <!-- Replies Section - Only show if user can reply -->
+    <div *ngIf="canReply" class="bg-white rounded-2xl shadow-theme-sm border border-gray-100 overflow-hidden">
       <!-- Replies Header -->
       <div class="p-6 border-b border-gray-100">
-        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <i class="fas fa-comments text-primary-600"></i>
-          <span>Replies ({{ totalElements }})</span>
-        </h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <i class="fas fa-comments text-primary-600"></i>
+            <span>Replies ({{ totalElements }})</span>
+          </h2>
+        </div>
+        
+        <!-- Sorting Filters -->
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-gray-700">Sort by:</span>
+          <div class="flex gap-2">
+            <button 
+              (click)="changeSortBy('helpful')"
+              [class]="'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + 
+                       (sortBy === 'helpful' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+              <i class="fas fa-fire mr-1"></i>Most Helpful
+            </button>
+            <button 
+              (click)="changeSortBy('trending')"
+              [class]="'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + 
+                       (sortBy === 'trending' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+              <i class="fas fa-chart-line mr-1"></i>Trending
+            </button>
+            <button 
+              (click)="changeSortBy('recent')"
+              [class]="'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + 
+                       (sortBy === 'recent' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+              <i class="fas fa-clock mr-1"></i>Recent
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Loading Posts -->
@@ -124,20 +334,15 @@
         <p class="text-gray-600 text-sm">Loading replies...</p>
       </div>
 
-      <!-- Empty State -->
-      <div *ngIf="!loadingPosts && posts.length === 0" class="p-12 text-center">
+      <!-- Empty State - Only show if user can reply -->
+      <div *ngIf="!loadingPosts && posts.length === 0 && canReply" class="p-12 text-center">
         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <i class="fas fa-comment-slash text-gray-400 text-2xl"></i>
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">No replies yet</h3>
-        <p *ngIf="!topic.isLocked" class="text-gray-600 mb-6">Be the first to reply to this topic!</p>
-        <p *ngIf="topic.isLocked" class="text-gray-500 mb-6 flex items-center justify-center gap-2">
-          <i class="fas fa-lock"></i>
-          <span>This topic is locked and no longer accepts replies</span>
-        </p>
+        <p class="text-gray-600 mb-6">Be the first to reply to this topic!</p>
         <button 
           (click)="openReplyModal()"
-          *ngIf="!topic.isLocked"
           class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-all">
           Write a Reply
         </button>
@@ -145,10 +350,37 @@
 
       <!-- Posts List -->
       <div *ngIf="!loadingPosts && posts.length > 0" class="divide-y divide-gray-100">
-        <div *ngFor="let post of posts; let i = index" class="p-6 hover:bg-gray-50 transition-colors">
+        <div *ngFor="let post of posts; let i = index" [class]="'p-6 transition-colors ' + 
+                                                                 (post.isAccepted ? 'bg-green-50 border-l-4 border-green-500' : 
+                                                                  post.isTrending ? 'bg-orange-50' : 
+                                                                  'hover:bg-gray-50')">
+          <!-- Top Post Badge -->
+          <div *ngIf="i < 3 && sortBy === 'helpful' && post.weightedScore && post.weightedScore >= 5" class="mb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-md">
+              <i class="fas fa-trophy"></i>
+              TOP POST #{{ i + 1 }}
+            </span>
+          </div>
+          
+          <!-- Accepted Answer Badge -->
+          <div *ngIf="post.isAccepted" class="mb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold rounded-full shadow-md">
+              <i class="fas fa-check-circle"></i>
+              ACCEPTED ANSWER
+            </span>
+          </div>
+          
+          <!-- Trending Badge -->
+          <div *ngIf="post.isTrending && !post.isAccepted" class="mb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full shadow-md">
+              <i class="fas fa-fire"></i>
+              TRENDING
+            </span>
+          </div>
+          
           <div class="flex items-start gap-4">
             <!-- Avatar -->
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#F6BD60] to-[#C84630] flex items-center justify-center text-white font-semibold flex-shrink-0">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent-orange to-accent-red flex items-center justify-center text-white font-semibold flex-shrink-0">
               {{ post.userName.charAt(0).toUpperCase() }}
             </div>
 
@@ -159,12 +391,9 @@
                   <div class="flex items-center gap-3 mb-1">
                     <span class="font-semibold text-gray-900">{{ post.userName }}</span>
                     <span class="text-xs text-gray-500">{{ getTimeAgo(post.createdAt) }}</span>
-                    <span *ngIf="post.updatedAt !== post.createdAt" class="text-xs text-gray-400 italic">
+                    <span *ngIf="isPostEdited(post)" class="text-xs text-gray-400 italic">
                       (edited)
                     </span>
-                  </div>
-                  <div class="flex items-center gap-2 text-xs text-gray-500">
-                    <span>#{{ i + 1 + (currentPage * pageSize) }}</span>
                   </div>
                 </div>
 
@@ -172,10 +401,10 @@
                 <div *ngIf="canEditOrDelete(post)" class="flex items-center gap-2">
                   <button 
                     (click)="openEditPostModal($event, post)"
-                    class="p-2 text-[#1a1a1a] hover:text-[#1a1a1a] hover:bg-[#faf8f3] rounded-lg transition-all duration-200 group"
+                    class="p-2 text-gray-600 hover:text-primary hover:bg-secondary-100 rounded-lg transition-all duration-200"
                     title="Edit">
                     <svg 
-                      class="w-4 h-4 group-hover:scale-110 transition-transform duration-200"
+                      class="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24">
@@ -193,10 +422,10 @@
                   </button>
                   <button 
                     (click)="deletePost($event, post.id)"
-                    class="p-2 text-[#1a1a1a] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 group"
+                    class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                     title="Delete">
                     <svg 
-                      class="w-4 h-4 group-hover:scale-110 transition-transform duration-200"
+                      class="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24">
@@ -211,7 +440,7 @@
               </div>
 
               <!-- Post Text -->
-              <div class="prose max-w-none text-gray-700 whitespace-pre-wrap mb-3">{{ post.content }}</div>
+              <div class="ql-editor text-gray-700 mb-3" [innerHTML]="sanitizeHtml(post.content)"></div>
 
               <!-- Reactions for Post -->
               <app-reaction-bar 
@@ -256,15 +485,10 @@
 <div *ngIf="showReplyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 animate-fade-in">
   <div class="bg-white rounded-2xl shadow-theme-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
     <!-- Modal Header -->
-    <div class="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-[#F7EDE2] to-white">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-[#F59E0B] to-[#C84630] rounded-lg flex items-center justify-center">
-          <i class="fas fa-reply text-white"></i>
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-gray-900">Write a Reply</h2>
-          <p class="text-sm text-gray-600">Share your thoughts on this topic</p>
-        </div>
+    <div class="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-secondary to-white">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Write a Reply</h2>
+        <p class="text-sm text-gray-600">Share your thoughts on this topic</p>
       </div>
       <button 
         (click)="closeReplyModal()"
@@ -279,13 +503,15 @@
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           Your Reply <span class="text-error-500">*</span>
         </label>
-        <textarea 
-          [(ngModel)]="newPost.content"
-          placeholder="Write your reply here..."
-          rows="10"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-          maxlength="5000"></textarea>
-        <p class="text-xs text-gray-500 mt-1">{{ newPost.content.length }}/5000 characters</p>
+        <div class="w-full">
+          <quill-editor 
+            [(ngModel)]="newPost.content"
+            [modules]="quillModules"
+            placeholder="Write your reply here..."
+            class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+          </quill-editor>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
       </div>
     </div>
 
@@ -301,8 +527,7 @@
         [disabled]="!isFormValid()"
         [class.opacity-50]="!isFormValid()"
         [class.cursor-not-allowed]="!isFormValid()"
-        class="px-6 py-2.5 bg-gradient-to-r from-[#F59E0B] to-[#C84630] text-white rounded-xl hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-        <i class="fas fa-paper-plane mr-2"></i>
+        class="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed">
         Post Reply
       </button>
     </div>
@@ -336,13 +561,15 @@
         <label class="block text-sm font-semibold text-gray-900 mb-2">
           Content <span class="text-error-500">*</span>
         </label>
-        <textarea 
-          [(ngModel)]="newPost.content"
-          placeholder="Write your reply here..."
-          rows="10"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-          maxlength="5000"></textarea>
-        <p class="text-xs text-gray-500 mt-1">{{ newPost.content.length }}/5000 characters</p>
+        <div class="w-full">
+          <quill-editor 
+            [(ngModel)]="newPost.content"
+            [modules]="quillModules"
+            placeholder="Write your reply here..."
+            class="bg-white rounded-xl border border-gray-300 focus-within:ring-2 focus-within:ring-primary">
+          </quill-editor>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Rich text editor - Format your content with bold, lists, colors, and more</p>
       </div>
     </div>
 

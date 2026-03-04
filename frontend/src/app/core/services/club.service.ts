@@ -52,6 +52,9 @@ export class ClubService {
   getClubMembers(clubId: number): Observable<Member[]> {
     return this.http.get<Member[]>(`${environment.apiUrl}/members/club/${clubId}`);
   }
+    getUserMemberships(userId: number): Observable<Member[]> {
+    return this.http.get<Member[]>(`${environment.apiUrl}/members/user/${userId}`);
+  }
 
   joinClub(clubId: number, request: JoinClubRequest): Observable<Member> {
     return this.http.post<Member>(`${this.apiUrl}/${clubId}/join`, request);

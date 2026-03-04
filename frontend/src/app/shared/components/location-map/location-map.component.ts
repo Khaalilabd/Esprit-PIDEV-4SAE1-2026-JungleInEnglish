@@ -88,7 +88,7 @@ export class LocationMapComponent implements OnInit, AfterViewInit, OnDestroy {
         keepBuffer: 2
       });
 
-      tileLayer.on('tileerror', (error) => {
+      tileLayer.on('tileerror', (error: any) => {
         console.warn('⚠️ Tile loading error:', error);
       });
 

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, retry, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../core/services/auth.service';
 
@@ -14,7 +14,6 @@ export interface Category {
   isLocked?: boolean;
   lockedBy?: number;
   lockedAt?: string;
-  lockReason?: string;
 }
 
 export interface SubCategory {
@@ -22,6 +21,11 @@ export interface SubCategory {
   name: string;
   description: string;
   categoryId: number;
+  requiresClubMembership?: boolean;
+  requiresAdminRole?: boolean;
+  isLocked?: boolean;
+  lockedBy?: number;
+  lockedAt?: string;
 }
 
 export interface Topic {
@@ -32,11 +36,19 @@ export interface Topic {
   userName: string;
   subCategoryId: number;
   viewsCount: number;
+  reactionsCount?: number;
+  likeCount?: number;
+  insightfulCount?: number;
+  helpfulCount?: number;
+  weightedScore?: number;
+  isTrending?: boolean;
   isPinned: boolean;
   isLocked: boolean;
   postsCount: number;
   createdAt: string;
   updatedAt: string;
+  resourceType?: string;
+  resourceLink?: string;
 }
 
 export interface Post {
@@ -45,6 +57,13 @@ export interface Post {
   userId: number;
   userName: string;
   topicId: number;
+  reactionsCount?: number;
+  likeCount?: number;
+  insightfulCount?: number;
+  helpfulCount?: number;
+  weightedScore?: number;
+  isTrending?: boolean;
+  isAccepted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,9 +71,11 @@ export interface Post {
 export interface CreateTopicRequest {
   subCategoryId: number;
   title: string;
-  content: string;
+  content?: string; // Optional for Resource Sharing
   userId: number;
   userName: string;
+  resourceType?: string;
+  resourceLink?: string;
 }
 
 export interface CreatePostRequest {
@@ -96,11 +117,18 @@ export class ForumService {
 
   // Categories
   getAllCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.apiUrl}/categories`);
+    return this.http.get<Category[]>(`${this.apiUrl}/categories`).pipe(
+      timeout(10000), // 10 seconds timeout
+      retry(2) // Retry 2 times on failure
+    );
   }
 
   getCategoryById(id: number): Observable<Category> {
     return this.http.get<Category>(`${this.apiUrl}/categories/${id}`);
+  }
+
+  getSubCategoryById(id: number): Observable<SubCategory> {
+    return this.http.get<SubCategory>(`${this.apiUrl}/categories/subcategories/${id}`);
   }
 
   initializeCategories(): Observable<string> {
@@ -133,18 +161,23 @@ export class ForumService {
 
   // Topics
   createTopic(request: CreateTopicRequest): Observable<Topic> {
-    return this.http.post<Topic>(`${this.apiUrl}/topics`, request);
+    const currentUser = this.authService.currentUserValue;
+    const headers = currentUser ? new HttpHeaders({ 'X-User-Role': currentUser.role }) : undefined;
+    return this.http.post<Topic>(`${this.apiUrl}/topics`, request, { headers });
   }
 
-  getTopicsBySubCategory(subCategoryId: number, page: number = 0, size: number = 20): Observable<PageResponse<Topic>> {
+  getTopicsBySubCategory(subCategoryId: number, page: number = 0, size: number = 20, sortBy: string = 'recent'): Observable<PageResponse<Topic>> {
     const params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('sortBy', sortBy);
     return this.http.get<PageResponse<Topic>>(`${this.apiUrl}/topics/subcategory/${subCategoryId}`, { params });
   }
 
   getTopicById(id: number): Observable<Topic> {
-    return this.http.get<Topic>(`${this.apiUrl}/topics/${id}`);
+    const userId = this.authService.currentUserValue?.id;
+    const headers = userId ? new HttpHeaders({ 'X-User-Id': userId.toString() }) : undefined;
+    return this.http.get<Topic>(`${this.apiUrl}/topics/${id}`, { headers });
   }
 
   updateTopic(id: number, request: CreateTopicRequest): Observable<Topic> {
@@ -161,13 +194,16 @@ export class ForumService {
 
   // Posts
   createPost(request: CreatePostRequest): Observable<Post> {
-    return this.http.post<Post>(`${this.apiUrl}/posts`, request);
+    const currentUser = this.authService.currentUserValue;
+    const headers = currentUser ? new HttpHeaders({ 'X-User-Role': currentUser.role }) : undefined;
+    return this.http.post<Post>(`${this.apiUrl}/posts`, request, { headers });
   }
 
-  getPostsByTopic(topicId: number, page: number = 0, size: number = 20): Observable<PageResponse<Post>> {
+  getPostsByTopic(topicId: number, page: number = 0, size: number = 20, sortBy: string = 'helpful'): Observable<PageResponse<Post>> {
     const params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('sortBy', sortBy);
     return this.http.get<PageResponse<Post>>(`${this.apiUrl}/posts/topic/${topicId}`, { params });
   }
 
@@ -199,4 +235,45 @@ export class ForumService {
   unlockTopic(id: number): Observable<Topic> {
     return this.http.put<Topic>(`${this.apiUrl}/topics/${id}/unlock`, {});
   }
+
+  // File Upload
+  uploadFile(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.apiUrl}/files/upload`, formData);
+  }
+
+  // Lock/Unlock Categories and SubCategories
+  lockCategory(categoryId: number, userId: number): Observable<void> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.post<void>(`${this.apiUrl}/lock/category/${categoryId}`, {}, { params });
+  }
+
+  unlockCategory(categoryId: number, userId: number): Observable<void> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.delete<void>(`${this.apiUrl}/lock/category/${categoryId}`, { params });
+  }
+
+  lockSubCategory(subCategoryId: number, userId: number): Observable<void> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.post<void>(`${this.apiUrl}/lock/subcategory/${subCategoryId}`, {}, { params });
+  }
+
+  unlockSubCategory(subCategoryId: number, userId: number): Observable<void> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.delete<void>(`${this.apiUrl}/lock/subcategory/${subCategoryId}`, { params });
+  }
+
+  // Permissions
+  getPermissions(subCategoryId: number, userRole: string): Observable<PermissionInfo> {
+    const params = new HttpParams().set('userRole', userRole);
+    return this.http.get<PermissionInfo>(`${this.apiUrl}/permissions/subcategory/${subCategoryId}`, { params });
+  }
+}
+
+export interface PermissionInfo {
+  canCreateTopic: boolean;
+  canReply: boolean;
+  categoryLocked: boolean;
+  subCategoryLocked: boolean;
 }

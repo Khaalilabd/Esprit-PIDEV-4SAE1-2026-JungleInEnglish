@@ -27,30 +27,36 @@ export class ReactionService {
   constructor(private http: HttpClient) {}
 
   // Topic reactions
-  addReactionToTopic(topicId: number, type: ReactionType): Observable<void> {
-    const request: ReactionRequest = { type };
-    return this.http.post<void>(`${this.apiUrl}/topic/${topicId}`, request);
+  addReactionToTopic(topicId: number, type: ReactionType, userId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/topics/${topicId}?userId=${userId}&type=${type}`, {});
   }
 
-  removeReactionFromTopic(topicId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/topic/${topicId}`);
+  removeReactionFromTopic(topicId: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/topics/${topicId}?userId=${userId}`);
   }
 
   getTopicReactions(topicId: number): Observable<ReactionCount[]> {
-    return this.http.get<ReactionCount[]>(`${this.apiUrl}/topic/${topicId}/count`);
+    return this.http.get<ReactionCount[]>(`${this.apiUrl}/topics/${topicId}/count`);
   }
 
   // Post reactions
-  addReactionToPost(postId: number, type: ReactionType): Observable<void> {
-    const request: ReactionRequest = { type };
-    return this.http.post<void>(`${this.apiUrl}/post/${postId}`, request);
+  addReactionToPost(postId: number, type: ReactionType, userId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/posts/${postId}?userId=${userId}&type=${type}`, {});
   }
 
-  removeReactionFromPost(postId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/post/${postId}`);
+  removeReactionFromPost(postId: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/posts/${postId}?userId=${userId}`);
   }
 
   getPostReactions(postId: number): Observable<ReactionCount[]> {
-    return this.http.get<ReactionCount[]>(`${this.apiUrl}/post/${postId}/count`);
+    return this.http.get<ReactionCount[]>(`${this.apiUrl}/posts/${postId}/count`);
+  }
+  
+  getUserReactionForPost(postId: number, userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/posts/${postId}/user/${userId}`);
+  }
+  
+  getUserReactionForTopic(topicId: number, userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/topics/${topicId}/user/${userId}`);
   }
 }

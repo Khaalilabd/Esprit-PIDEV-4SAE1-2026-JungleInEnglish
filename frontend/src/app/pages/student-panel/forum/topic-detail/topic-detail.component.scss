@@ -19,6 +19,28 @@
   }
 }
 
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
@@ -36,6 +58,29 @@
     
     &:last-child {
       margin-bottom: 0;
+    }
+  }
+}
+
+// Carousel custom scrollbar
+.scrollbar-thin {
+  scrollbar-width: thin;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+    
+    &:hover {
+      background: #a0aec0;
     }
   }
 }

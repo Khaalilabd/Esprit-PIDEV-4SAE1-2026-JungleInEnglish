@@ -72,6 +72,13 @@ public class CommunityController {
     }
     
     // SubCategory endpoints
+    @GetMapping("/subcategories/{id}")
+    @Operation(summary = "Get subcategory by ID", description = "Retrieve a specific subcategory by its ID")
+    public ResponseEntity<SubCategoryDTO> getSubCategoryById(@PathVariable Long id) {
+        SubCategoryDTO subCategory = categoryService.getSubCategoryById(id);
+        return ResponseEntity.ok(subCategory);
+    }
+    
     @PostMapping("/subcategories")
     public ResponseEntity<SubCategoryDTO> createSubCategory(@Valid @RequestBody CreateSubCategoryRequest request) {
         SubCategoryDTO subCategory = categoryService.createSubCategory(request);

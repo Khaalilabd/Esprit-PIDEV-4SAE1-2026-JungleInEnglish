@@ -15,6 +15,12 @@ public class PostDTO {
     private String userName;
     private Long topicId;
     private Integer reactionsCount;
+    private Integer likeCount;
+    private Integer insightfulCount;
+    private Integer helpfulCount;
+    private Integer weightedScore;
+    private Boolean isTrending;
+    private Boolean isAccepted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
