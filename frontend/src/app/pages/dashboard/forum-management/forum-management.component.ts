@@ -54,6 +54,8 @@ export class ForumManagementComponent implements OnInit {
   // Modals
   showNewCategoryModal = false;
   showNewSubCategoryModal = false;
+  showEditCategoryModal = false;
+  showEditSubCategoryModal = false;
 
   // Forms
   newCategory: NewCategoryForm = {
@@ -68,6 +70,10 @@ export class ForumManagementComponent implements OnInit {
     name: '',
     description: ''
   };
+
+  // Edit forms
+  editingCategory: Category | null = null;
+  editingSubCategory: any = null;
 
   constructor(private forumService: ForumService) {}
 
@@ -596,6 +602,112 @@ export class ForumManagementComponent implements OnInit {
               confirmButtonColor: '#dc2626'
             });
           }
+        });
+      }
+    });
+  }
+
+  // Edit Category
+  editCategory(category: Category): void {
+    this.editingCategory = { ...category };
+    this.newCategory = {
+      name: category.name,
+      description: category.description,
+      icon: category.icon,
+      color: 'primary'
+    };
+    this.showEditCategoryModal = true;
+  }
+
+  closeEditCategoryModal(): void {
+    this.showEditCategoryModal = false;
+    this.editingCategory = null;
+    this.resetCategoryForm();
+  }
+
+  submitEditCategory(): void {
+    if (!this.editingCategory || !this.isCategoryFormValid()) {
+      return;
+    }
+
+    const updateData = {
+      name: this.newCategory.name.trim(),
+      description: this.newCategory.description.trim(),
+      icon: this.newCategory.icon.trim(),
+      color: this.newCategory.color
+    };
+
+    this.forumService.updateCategory(this.editingCategory.id, updateData).subscribe({
+      next: () => {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Category updated successfully',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        this.closeEditCategoryModal();
+        this.loadCategories();
+      },
+      error: (err) => {
+        console.error('Error updating category:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to update category',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
+        });
+      }
+    });
+  }
+
+  // Edit SubCategory
+  editSubCategory(subCategory: any): void {
+    this.editingSubCategory = { ...subCategory };
+    this.newSubCategory = {
+      categoryId: subCategory.categoryId || 0,
+      name: subCategory.name,
+      description: subCategory.description
+    };
+    this.showEditSubCategoryModal = true;
+  }
+
+  closeEditSubCategoryModal(): void {
+    this.showEditSubCategoryModal = false;
+    this.editingSubCategory = null;
+    this.resetSubCategoryForm();
+  }
+
+  submitEditSubCategory(): void {
+    if (!this.editingSubCategory || !this.isSubCategoryFormValid()) {
+      return;
+    }
+
+    const updateData = {
+      categoryId: this.newSubCategory.categoryId,
+      name: this.newSubCategory.name.trim(),
+      description: this.newSubCategory.description.trim()
+    };
+
+    this.forumService.updateSubCategory(this.editingSubCategory.id, updateData).subscribe({
+      next: () => {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Subcategory updated successfully',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        this.closeEditSubCategoryModal();
+        this.loadCategories();
+      },
+      error: (err) => {
+        console.error('Error updating subcategory:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to update subcategory',
+          icon: 'error',
+          confirmButtonColor: '#dc2626'
         });
       }
     });
