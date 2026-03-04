@@ -4,7 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ComplaintService } from '../../../core/services/complaint.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ClubService } from '../../../core/services/club.service';
+import { MemberService } from '../../../core/services/member.service';
 import Swal from 'sweetalert2';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-complaints',
@@ -25,7 +28,9 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
     issueType: '',
     sessionCount: null as number | null,
     subject: '',
-    description: ''
+    description: '',
+    clubId: null as number | null,
+    clubName: ''
   };
   
   // Categories
@@ -53,6 +58,15 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
       icon: 'fa-calendar-times',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
+    },
+    { 
+      value: 'CLUB_SUSPENSION', 
+      label: 'Club Suspension Appeal',
+      description: 'Contest club suspension decision',
+      icon: 'fa-users-slash',
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50',
+      isClubSuspension: true
     },
     { 
       value: 'TECHNICAL', 
@@ -99,6 +113,19 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
     'Payment error'
   ];
   
+  // Club suspension reasons
+  clubSuspensionReasons = [
+    'Unjustified suspension',
+    'Misunderstanding of club activities',
+    'Violation not committed by our club',
+    'Excessive penalty for minor infraction',
+    'Lack of prior warning',
+    'Other reason'
+  ];
+  
+  // User's suspended clubs (for CLUB_SUSPENSION category)
+  suspendedClubs: any[] = [];
+  
   // Complaints list
   complaints: any[] = [];
   isLoading = false;
@@ -113,11 +140,14 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
   constructor(
     private complaintService: ComplaintService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private clubService: ClubService,
+    private memberService: MemberService
   ) {}
 
   ngOnInit(): void {
     this.loadComplaints();
+    this.loadSuspendedClubs();
     this.startPolling();
   }
 
@@ -237,7 +267,68 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
 
   selectCategory(category: string): void {
     this.complaintForm.category = category;
+    
+    // Find the selected category object
+    const selectedCategory = this.categories.find(c => c.value === category);
+    
+    // If CLUB_SUSPENSION, check if user has suspended clubs
+    if (category === 'CLUB_SUSPENSION' && selectedCategory?.isClubSuspension) {
+      if (this.suspendedClubs.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'No Suspended Clubs',
+          text: 'You don\'t have any suspended clubs to appeal for.',
+          confirmButtonColor: '#F59E0B'
+        });
+        this.complaintForm.category = '';
+        return;
+      }
+    }
+    
     this.nextStep();
+  }
+  
+  onClubSelected(clubId: number): void {
+    const selectedClub = this.suspendedClubs.find(c => c.id === clubId);
+    if (selectedClub) {
+      this.complaintForm.clubName = selectedClub.name;
+    }
+  }
+
+  loadSuspendedClubs(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser || !currentUser.id) return;
+
+    // Get user's memberships
+    this.memberService.getMembersByUser(currentUser.id).subscribe({
+      next: (members) => {
+        // Filter for President, Vice President, or Secretary roles
+        const eligibleMembers = members.filter(m => 
+          m.rank === 'PRESIDENT' || m.rank === 'VICE_PRESIDENT' || m.rank === 'SECRETARY'
+        );
+        
+        if (eligibleMembers.length === 0) {
+          return;
+        }
+        
+        // Get club details for eligible memberships
+        const clubRequests = eligibleMembers.map(m => this.clubService.getClubById(m.clubId));
+        
+        forkJoin(clubRequests).subscribe({
+          next: (clubs) => {
+            // Filter for suspended clubs
+            this.suspendedClubs = clubs.filter(club => club.status === 'SUSPENDED');
+            console.log('Suspended clubs:', this.suspendedClubs);
+          },
+          error: (error) => {
+            console.error('Error loading clubs:', error);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading memberships:', error);
+      }
+    });
   }
 
   // Load suggested solutions for pedagogical issues
@@ -286,8 +377,15 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
 
     this.isSubmitting = true;
 
-    const complaintData = {
+    // Determine targetRole based on category
+    let targetRole = 'ACADEMIC_OFFICE_AFFAIR'; // Default to Academic Office Affair
+    if (this.complaintForm.category === 'PEDAGOGICAL') {
+      targetRole = 'TUTOR';
+    }
+
+    const complaintData: any = {
       userId: currentUser.id,
+      targetRole: targetRole,
       category: this.complaintForm.category,
       subject: this.complaintForm.subject,
       description: this.complaintForm.description,
@@ -296,6 +394,11 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
       issueType: this.complaintForm.issueType,
       sessionCount: this.complaintForm.sessionCount
     };
+    
+    // Add clubId for CLUB_SUSPENSION category
+    if (this.complaintForm.category === 'CLUB_SUSPENSION' && this.complaintForm.clubId) {
+      complaintData.clubId = this.complaintForm.clubId;
+    }
 
     this.complaintService.createComplaint(complaintData).subscribe({
       next: (response: any) => {
@@ -336,7 +439,9 @@ export class ComplaintsComponent implements OnInit, OnDestroy {
       issueType: '',
       sessionCount: null,
       subject: '',
-      description: ''
+      description: '',
+      clubId: null,
+      clubName: ''
     };
     this.suggestedSolutions = [];
   }

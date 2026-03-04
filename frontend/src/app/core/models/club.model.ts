@@ -8,19 +8,24 @@ export interface Club {
   image?: string; // Base64 encoded image
   status?: ClubStatus;
   createdBy?: number;
+  creatorName?: string; // Nom du créateur
+  currentMembersCount?: number; // Nombre actuel de membres
   reviewedBy?: number;
   reviewComment?: string;
+  suspendedBy?: number; // ID du manager qui a suspendu
+  suspensionReason?: string; // Raison de la suspension
+  suspendedAt?: string; // Date de suspension
   members?: Member[];
   createdAt?: string;
   updatedAt?: string;
-  currentMembersCount?: number;
   isFull?: boolean;
 }
 
 export enum ClubStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED'
+  REJECTED = 'REJECTED',
+  SUSPENDED = 'SUSPENDED'
 }
 
 export enum ClubCategory {
@@ -42,6 +47,7 @@ export interface Member {
   id?: number;
   rank: RankType;
   userId: number;
+  userName?: string; // Nom de l'utilisateur
   clubId?: number;
   joinedAt?: string;
   updatedAt?: string;

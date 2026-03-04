@@ -1,0 +1,46 @@
+<!-- Notification Container -->
+<div class="fixed top-4 right-4 z-[9999] space-y-3 max-w-md">
+  @for (notification of notifications; track notification.id) {
+    <div 
+      @slideIn
+      [ngClass]="getColorClasses(notification.type)"
+      class="rounded-2xl shadow-2xl border-l-4 overflow-hidden backdrop-blur-sm"
+    >
+      <div class="p-4">
+        <div class="flex items-start gap-3">
+          <!-- Icon -->
+          <div 
+            [ngClass]="getIconBgClasses(notification.type)"
+            class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+          >
+            <span class="text-2xl">{{ getIcon(notification.type) }}</span>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base font-bold mb-1">{{ notification.title }}</h4>
+            <p class="text-sm opacity-90">{{ notification.message }}</p>
+          </div>
+
+          <!-- Close Button -->
+          <button
+            (click)="removeNotification(notification.id)"
+            class="w-8 h-8 rounded-lg hover:bg-black/10 flex items-center justify-center transition-all flex-shrink-0"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="h-1 bg-black/10">
+        <div 
+          class="h-full bg-black/20 animate-progress"
+          [style.animation-duration]="(notification.duration || 5000) + 'ms'"
+        ></div>
+      </div>
+    </div>
+  }
+</div>

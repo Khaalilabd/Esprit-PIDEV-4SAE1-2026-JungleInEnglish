@@ -104,6 +104,8 @@ public class ComplaintPriorityService {
                 return com.englishflow.complaints.enums.TargetRole.ACADEMIC_OFFICE_AFFAIR;
             case SCHEDULE:
                 return com.englishflow.complaints.enums.TargetRole.ACADEMIC_OFFICE_AFFAIR;
+            case CLUB_SUSPENSION:
+                return com.englishflow.complaints.enums.TargetRole.ACADEMIC_OFFICE_AFFAIR;
             case TECHNICAL:
                 return com.englishflow.complaints.enums.TargetRole.SUPPORT;
             case ADMINISTRATIVE:
@@ -140,6 +142,9 @@ public class ComplaintPriorityService {
                 break;
             case SCHEDULE:
                 score += 30;
+                break;
+            case CLUB_SUSPENSION:
+                score += 35;
                 break;
             case OTHER:
                 score += 15;
@@ -217,6 +222,8 @@ public class ComplaintPriorityService {
             case PEDAGOGICAL:
                 return 6;
             case SCHEDULE:
+                return 6;
+            case CLUB_SUSPENSION:
                 return 6;
             case ADMINISTRATIVE:
                 return 5;

@@ -35,6 +35,53 @@
   }
 }
 
+@keyframes star-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+@keyframes star-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes star-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-15deg) scale(1.2);
+  }
+  50% {
+    transform: rotate(0deg) scale(1.3);
+  }
+  75% {
+    transform: rotate(15deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes star-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(246, 189, 96, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(246, 189, 96, 0.8));
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.5s ease-out;
 }
@@ -45,4 +92,78 @@
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
+}
+
+// Star rating styles
+.star-rating {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.star-button {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  background: none;
+  border: none;
+  padding: 0;
+  outline: none;
+  
+  &:hover {
+    transform: scale(1.2) rotate(-5deg);
+    filter: drop-shadow(0 4px 8px rgba(246, 189, 96, 0.4));
+  }
+  
+  &:active {
+    animation: star-bounce 0.4s ease-in-out;
+  }
+  
+  &.star-selected {
+    animation: star-rotate 0.5s ease-in-out;
+    filter: drop-shadow(0 0 8px rgba(246, 189, 96, 0.6));
+  }
+  
+  &.star-filled {
+    animation: star-pulse 2s ease-in-out infinite;
+  }
+  
+  // Add a subtle glow effect
+  &.text-\[\#F6BD60\] {
+    text-shadow: 0 0 10px rgba(246, 189, 96, 0.5);
+  }
+}
+
+// Hover effect for unselected stars
+.star-button:not(.star-selected):hover {
+  animation: star-glow 1s ease-in-out infinite;
+}
+
+// Rating display (read-only stars)
+.rating-display {
+  .star-icon {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    
+    &:hover {
+      transform: scale(1.15);
+    }
+    
+    &.text-\[\#F6BD60\] {
+      animation: star-pulse 3s ease-in-out infinite;
+      animation-delay: calc(var(--star-index, 0) * 0.2s);
+    }
+  }
+}
+
+// Feedback form container
+.feedback-form-container {
+  .star-rating {
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(246, 189, 96, 0.05) 0%, rgba(45, 87, 87, 0.05) 100%);
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+  }
 }

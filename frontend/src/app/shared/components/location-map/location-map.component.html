@@ -1,0 +1,20 @@
+<div class="location-map-container" [style.height.px]="height">
+  <div *ngIf="!latitude || !longitude" class="bg-gray-100 dark:bg-gray-700 rounded-lg p-8 text-center h-full flex flex-col items-center justify-center">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    <p class="mt-2 text-gray-600 dark:text-gray-400">{{ address || 'Aucun emplacement disponible' }}</p>
+  </div>
+  
+  <div *ngIf="latitude && longitude" class="map-wrapper">
+    <div #mapContainer class="map-container"></div>
+    <div *ngIf="address" class="address-info-overlay">
+      <svg class="address-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <p class="address-text">{{ address }}</p>
+    </div>
+  </div>
+</div>

@@ -3,13 +3,50 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Club Requests</h1>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Review and approve club creation requests</p>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Review and manage club creation requests</p>
     </div>
-    <div class="flex items-center gap-2">
-      <span class="px-4 py-2 bg-amber-100 text-amber-800 rounded-lg font-semibold">
-        {{ pendingClubs.length }} Pending
-      </span>
-    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b border-gray-200 dark:border-gray-700">
+    <nav class="-mb-px flex space-x-8">
+      <button
+        (click)="selectedTab = 'pending'"
+        [class.border-blue-500]="selectedTab === 'pending'"
+        [class.text-blue-600]="selectedTab === 'pending'"
+        [class.border-transparent]="selectedTab !== 'pending'"
+        [class.text-gray-500]="selectedTab !== 'pending'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 transition-colors">
+        Pending Requests
+        <span class="ml-2 bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300 py-0.5 px-2.5 rounded-full text-xs font-medium">
+          {{ pendingClubs.length }}
+        </span>
+      </button>
+      <button
+        (click)="selectedTab = 'approved'"
+        [class.border-green-500]="selectedTab === 'approved'"
+        [class.text-green-600]="selectedTab === 'approved'"
+        [class.border-transparent]="selectedTab !== 'approved'"
+        [class.text-gray-500]="selectedTab !== 'approved'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 transition-colors">
+        Approved Clubs
+        <span class="ml-2 bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 py-0.5 px-2.5 rounded-full text-xs font-medium">
+          {{ approvedClubs.length }}
+        </span>
+      </button>
+      <button
+        (click)="selectedTab = 'rejected'"
+        [class.border-red-500]="selectedTab === 'rejected'"
+        [class.text-red-600]="selectedTab === 'rejected'"
+        [class.border-transparent]="selectedTab !== 'rejected'"
+        [class.text-gray-500]="selectedTab !== 'rejected'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 transition-colors">
+        Rejected Clubs
+        <span class="ml-2 bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300 py-0.5 px-2.5 rounded-full text-xs font-medium">
+          {{ rejectedClubs.length }}
+        </span>
+      </button>
+    </nav>
   </div>
 
   <!-- Loading State -->
@@ -27,7 +64,7 @@
         <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       </div>
       <button
-        (click)="loadPendingClubs()"
+        (click)="loadClubs()"
         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
       >
         Retry
@@ -35,95 +72,216 @@
     </div>
   </div>
 
-  <!-- Pending Clubs List -->
+  <!-- Clubs List -->
   <div *ngIf="!loading && !error" class="space-y-4">
-    @for (club of pendingClubs; track club.id) {
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div class="flex flex-col lg:flex-row gap-6">
-          <!-- Club Image -->
-          <div class="flex-shrink-0">
-            @if (club.image) {
-              <img [src]="club.image" [alt]="club.name" class="w-full lg:w-48 h-48 object-cover rounded-lg">
-            } @else {
-              <div class="w-full lg:w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-            }
-          </div>
+    <!-- Pending Clubs -->
+    <div *ngIf="selectedTab === 'pending'">
+      @for (club of pendingClubs; track club.id) {
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Club Image -->
+            <div class="flex-shrink-0">
+              @if (club.image) {
+                <img [src]="club.image" [alt]="club.name" class="w-full lg:w-48 h-48 object-cover rounded-lg">
+              } @else {
+                <div class="w-full lg:w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                  <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+              }
+            </div>
 
-          <!-- Club Details -->
-          <div class="flex-1">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ club.name }}</h3>
-                <span [class]="'px-3 py-1 text-sm font-semibold rounded-full ' + getCategoryBadgeClass(club.category)">
-                  {{ club.category }}
+            <!-- Club Details -->
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ club.name }}</h3>
+                  <span [class]="'px-3 py-1 text-sm font-semibold rounded-full ' + getCategoryBadgeClass(club.category)">
+                    {{ club.category }}
+                  </span>
+                </div>
+                <span class="px-3 py-1 text-sm font-semibold text-amber-800 bg-amber-100 rounded-full">
+                  PENDING
                 </span>
               </div>
-              <span class="px-3 py-1 text-sm font-semibold text-amber-800 bg-amber-100 rounded-full">
-                PENDING
-              </span>
-            </div>
 
-            <p class="text-gray-600 dark:text-gray-400 mb-4">{{ club.description }}</p>
+              <p class="text-gray-600 dark:text-gray-400 mb-4">{{ club.description }}</p>
 
-            @if (club.objective) {
-              <div class="mb-4">
-                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Objective:</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ club.objective }}</p>
+              @if (club.objective) {
+                <div class="mb-4">
+                  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Objective:</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ club.objective }}</p>
+                </div>
+              }
+
+              <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  <span>Max Members: <strong>{{ club.maxMembers }}</strong></span>
+                </div>
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>Requested: <strong>{{ formatDate(club.createdAt) }}</strong></span>
+                </div>
               </div>
-            }
 
-            <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-              <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <span>Max Members: <strong>{{ club.maxMembers }}</strong></span>
+              <!-- Actions -->
+              <div class="flex gap-3">
+                <button
+                  (click)="openReviewModal(club, 'approve')"
+                  class="flex-1 sm:flex-none px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Approve
+                </button>
+                <button
+                  (click)="openReviewModal(club, 'reject')"
+                  class="flex-1 sm:flex-none px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                  Reject
+                </button>
               </div>
-              <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <span>Requested: <strong>{{ formatDate(club.createdAt) }}</strong></span>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex gap-3">
-              <button
-                (click)="openReviewModal(club, 'approve')"
-                class="flex-1 sm:flex-none px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-              >
-                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                Approve
-              </button>
-              <button
-                (click)="openReviewModal(club, 'reject')"
-                class="flex-1 sm:flex-none px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-              >
-                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Reject
-              </button>
             </div>
           </div>
         </div>
-      </div>
-    } @empty {
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-12 text-center">
-        <svg class="mx-auto h-12 w-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No pending requests</h3>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">All club requests have been reviewed!</p>
-      </div>
-    }
+      } @empty {
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No pending requests</h3>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">All club requests have been reviewed!</p>
+        </div>
+      }
+    </div>
+
+    <!-- Approved Clubs -->
+    <div *ngIf="selectedTab === 'approved'">
+      @for (club of approvedClubs; track club.id) {
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-green-200 dark:border-green-700 p-6">
+          <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex-shrink-0">
+              @if (club.image) {
+                <img [src]="club.image" [alt]="club.name" class="w-full lg:w-48 h-48 object-cover rounded-lg">
+              } @else {
+                <div class="w-full lg:w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                  <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ club.name }}</h3>
+                  <span [class]="'px-3 py-1 text-sm font-semibold rounded-full ' + getCategoryBadgeClass(club.category)">
+                    {{ club.category }}
+                  </span>
+                </div>
+                <span class="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full">
+                  APPROVED
+                </span>
+              </div>
+
+              <p class="text-gray-600 dark:text-gray-400 mb-4">{{ club.description }}</p>
+
+              <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  <span>Max Members: <strong>{{ club.maxMembers }}</strong></span>
+                </div>
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>Approved: <strong>{{ formatDate(club.updatedAt) }}</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No approved clubs</h3>
+        </div>
+      }
+    </div>
+
+    <!-- Rejected Clubs -->
+    <div *ngIf="selectedTab === 'rejected'">
+      @for (club of rejectedClubs; track club.id) {
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-200 dark:border-red-700 p-6">
+          <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex-shrink-0">
+              @if (club.image) {
+                <img [src]="club.image" [alt]="club.name" class="w-full lg:w-48 h-48 object-cover rounded-lg">
+              } @else {
+                <div class="w-full lg:w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                  <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ club.name }}</h3>
+                  <span [class]="'px-3 py-1 text-sm font-semibold rounded-full ' + getCategoryBadgeClass(club.category)">
+                    {{ club.category }}
+                  </span>
+                </div>
+                <span class="px-3 py-1 text-sm font-semibold text-red-800 bg-red-100 rounded-full">
+                  REJECTED
+                </span>
+              </div>
+
+              <p class="text-gray-600 dark:text-gray-400 mb-4">{{ club.description }}</p>
+
+              <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  <span>Max Members: <strong>{{ club.maxMembers }}</strong></span>
+                </div>
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>Rejected: <strong>{{ formatDate(club.updatedAt) }}</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No rejected clubs</h3>
+        </div>
+      }
+    </div>
   </div>
 </div>
 

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, ChildrenOutletContexts } from '@angular/router';
 import { ToastComponent } from './shared/components/toast/toast.component';
+import { NotificationToastComponent } from './shared/components/notification-toast/notification-toast.component';
 import { slideAnimation } from './auth/auth-animations';
 
 declare var $: any;
@@ -8,7 +9,7 @@ declare var $: any;
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastComponent],
+  imports: [RouterOutlet, ToastComponent, NotificationToastComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   animations: [slideAnimation]

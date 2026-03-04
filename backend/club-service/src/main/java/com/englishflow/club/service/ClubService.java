@@ -133,9 +133,21 @@ public class ClubService {
     
     @Transactional(readOnly = true)
     public List<ClubDTO> getApprovedClubs() {
-        log.debug("Fetching approved clubs");
-        return clubRepository.findByStatus(com.englishflow.club.enums.ClubStatus.APPROVED).stream()
-                .map(clubMapper::toDTO)
+        log.debug("Fetching approved and suspended clubs");
+        // Récupérer les clubs approuvés ET suspendus pour la gestion
+        List<Club> clubs = clubRepository.findAll().stream()
+                .filter(club -> club.getStatus() == com.englishflow.club.enums.ClubStatus.APPROVED 
+                             || club.getStatus() == com.englishflow.club.enums.ClubStatus.SUSPENDED)
+                .collect(Collectors.toList());
+        
+        return clubs.stream()
+                .map(club -> {
+                    ClubDTO dto = clubMapper.toDTO(club);
+                    // Ajouter le nombre de membres
+                    Long memberCount = memberRepository.countByClubId(club.getId());
+                    dto.setCurrentMembersCount(memberCount != null ? memberCount.intValue() : 0);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
     
@@ -192,6 +204,54 @@ public class ClubService {
         
         Club updatedClub = clubRepository.save(club);
         log.info("Club rejected: {}", id);
+        return clubMapper.toDTO(updatedClub);
+    }
+    
+    @Caching(evict = {
+        @CacheEvict(value = "clubs", key = "'all'"),
+        @CacheEvict(value = "clubById", key = "#id")
+    })
+    @Transactional
+    public ClubDTO suspendClub(Integer id, Integer managerId, String reason) {
+        log.info("Suspending club id: {} by manager: {}", id, managerId);
+        Club club = clubRepository.findById(id)
+                .orElseThrow(() -> new ClubNotFoundException(id));
+        
+        if (club.getStatus() != com.englishflow.club.enums.ClubStatus.APPROVED) {
+            throw new IllegalStateException("Only approved clubs can be suspended");
+        }
+        
+        club.setStatus(com.englishflow.club.enums.ClubStatus.SUSPENDED);
+        club.setSuspendedBy(managerId);
+        club.setSuspensionReason(reason);
+        club.setSuspendedAt(java.time.LocalDateTime.now());
+        
+        Club updatedClub = clubRepository.save(club);
+        log.info("Club suspended successfully: {}", id);
+        return clubMapper.toDTO(updatedClub);
+    }
+    
+    @Caching(evict = {
+        @CacheEvict(value = "clubs", key = "'all'"),
+        @CacheEvict(value = "clubById", key = "#id")
+    })
+    @Transactional
+    public ClubDTO activateClub(Integer id, Integer managerId) {
+        log.info("Activating club id: {} by manager: {}", id, managerId);
+        Club club = clubRepository.findById(id)
+                .orElseThrow(() -> new ClubNotFoundException(id));
+        
+        if (club.getStatus() != com.englishflow.club.enums.ClubStatus.SUSPENDED) {
+            throw new IllegalStateException("Only suspended clubs can be activated");
+        }
+        
+        club.setStatus(com.englishflow.club.enums.ClubStatus.APPROVED);
+        club.setSuspendedBy(null);
+        club.setSuspensionReason(null);
+        club.setSuspendedAt(null);
+        
+        Club updatedClub = clubRepository.save(club);
+        log.info("Club activated successfully: {}", id);
         return clubMapper.toDTO(updatedClub);
     }
 }

@@ -84,9 +84,9 @@ export class ComplaintsComponent implements OnInit {
       const matchStatus = this.filterStatus === 'all' || c.status === this.filterStatus;
       const matchPriority = this.filterPriority === 'all' || c.priority === this.filterPriority;
       const matchSearch = !this.searchTerm || 
-        c.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        c.subject.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        c.userEmail.toLowerCase().includes(this.searchTerm.toLowerCase());
+        (c.username?.toLowerCase().includes(this.searchTerm.toLowerCase()) || false) ||
+        (c.subject?.toLowerCase().includes(this.searchTerm.toLowerCase()) || false) ||
+        (c.userEmail?.toLowerCase().includes(this.searchTerm.toLowerCase()) || false);
       
       return matchStatus && matchPriority && matchSearch;
     });
@@ -111,7 +111,8 @@ export class ComplaintsComponent implements OnInit {
     this.router.navigate(['/tutor-panel/complaints', complaint.id]);
   }
 
-  getSeverityBadge(priority: string): { text: string; class: string } {
+  getSeverityBadge(priority: string | undefined): { text: string; class: string } {
+    if (!priority) return { text: 'Medium', class: 'bg-yellow-500' };
     const badges: any = {
       'MEDIUM': { text: 'Medium', class: 'bg-yellow-500' },
       'HIGH': { text: 'High', class: 'bg-orange-500' },
@@ -120,7 +121,8 @@ export class ComplaintsComponent implements OnInit {
     return badges[priority] || badges['MEDIUM'];
   }
 
-  getDaysOpenBadge(days: number): { text: string; class: string } {
+  getDaysOpenBadge(days: number | undefined): { text: string; class: string } {
+    if (!days) return { text: '0 days waiting', class: 'bg-blue-500' };
     if (days >= 5) {
       return { text: `${days}d - Overdue`, class: 'bg-red-500' };
     } else if (days >= 2) {
@@ -133,7 +135,7 @@ export class ComplaintsComponent implements OnInit {
     this.selectedComplaint = complaint;
     this.isLoading = true;
     
-    this.complaintService.getComplaintHistory(complaint.id).subscribe({
+    this.complaintService.getComplaintHistory(complaint.id!).subscribe({
       next: (history) => {
         this.complaintHistory = history;
         this.showHistoryModal = true;
@@ -150,7 +152,7 @@ export class ComplaintsComponent implements OnInit {
   openResponseModal(complaint: ComplaintWithUser): void {
     this.selectedComplaint = complaint;
     this.responseText = complaint.response || '';
-    this.newStatus = complaint.status;
+    this.newStatus = complaint.status || 'OPEN';
     this.showResponseModal = true;
   }
 
@@ -171,7 +173,7 @@ export class ComplaintsComponent implements OnInit {
       comment: `Response added by ${currentUser.firstName} ${currentUser.lastName}`
     };
 
-    this.complaintService.updateComplaintStatus(this.selectedComplaint.id, data).subscribe({
+    this.complaintService.updateComplaintStatus(this.selectedComplaint.id!, data).subscribe({
       next: () => {
         Swal.fire('Success', 'Response submitted successfully', 'success');
         this.showResponseModal = false;
@@ -185,7 +187,8 @@ export class ComplaintsComponent implements OnInit {
     });
   }
 
-  getPriorityClass(priority: string): string {
+  getPriorityClass(priority: string | undefined): string {
+    if (!priority) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     const classes: any = {
       'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
       'HIGH': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
@@ -195,7 +198,8 @@ export class ComplaintsComponent implements OnInit {
     return classes[priority] || 'bg-gray-100 text-gray-800';
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'bg-gray-100 text-gray-800';
     const classes: any = {
       'OPEN': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       'NOTED': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',

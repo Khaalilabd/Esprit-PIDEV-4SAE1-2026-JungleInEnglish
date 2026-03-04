@@ -26,6 +26,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final ClubRepository clubRepository;
     private final MemberMapper memberMapper;
+    private final ClubHistoryService clubHistoryService;
     
     @Cacheable(value = "members", key = "'club-' + #clubId")
     @Transactional(readOnly = true)
@@ -125,8 +126,30 @@ public class MemberService {
             }
         }
         
+        // Save old rank for history
+        RankType oldRank = member.getRank();
+        
+        // Update rank
         member.setRank(newRank);
         Member updatedMember = memberRepository.save(member);
+        
+        // Create history entry
+        try {
+            clubHistoryService.logHistory(
+                member.getClub().getId().longValue(),
+                member.getUserId(),
+                com.englishflow.club.enums.ClubHistoryType.RANK_CHANGED,
+                "Member role changed",
+                String.format("Role changed from %s to %s", oldRank, newRank),
+                oldRank.toString(),
+                newRank.toString(),
+                requesterId
+            );
+            log.info("History entry created for rank change");
+        } catch (Exception e) {
+            log.error("Failed to create history entry for rank change: {}", e.getMessage(), e);
+            // Don't fail the whole operation if history creation fails
+        }
         
         log.info("Member {} rank updated successfully to {}", memberId, newRank);
         return memberMapper.toDTO(updatedMember);

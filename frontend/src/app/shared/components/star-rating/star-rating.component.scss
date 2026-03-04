@@ -1,0 +1,153 @@
+.star-rating-container {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 50px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  gap: 0.5rem;
+  
+  &.readonly {
+    .star-item {
+      cursor: default;
+      
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+}
+
+.rating-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #2D5757;
+  background: linear-gradient(135deg, #2D5757 0%, #3D3D60 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  min-width: 3.5rem;
+  text-align: center;
+  padding-right: 1rem;
+  border-right: 2px solid rgba(45, 87, 87, 0.1);
+}
+
+.stars-wrapper {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.star-item {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  user-select: none;
+  
+  &:hover {
+    transform: scale(1.15) rotate(-5deg);
+    filter: drop-shadow(0 4px 8px rgba(246, 189, 96, 0.4));
+  }
+  
+  &:active {
+    animation: star-bounce 0.4s ease-in-out;
+  }
+}
+
+.star {
+  display: inline-block;
+  line-height: 1;
+  pointer-events: none; // Prevent star emoji from blocking mouse events
+}
+
+.star-full {
+  color: #F6BD60;
+  text-shadow: 0 0 10px rgba(246, 189, 96, 0.5);
+  animation: star-pulse 3s ease-in-out infinite;
+}
+
+.star-half {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.star-half-container {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.star-half-fill {
+  color: #F6BD60;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  overflow: hidden;
+  width: 50%;
+  text-shadow: 0 0 10px rgba(246, 189, 96, 0.5);
+  z-index: 2;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.star-half-empty {
+  color: #d1d5db;
+  opacity: 0.5;
+  display: inline-block;
+  z-index: 1;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.star-empty {
+  color: #d1d5db;
+  opacity: 0.5;
+}
+
+// Animations
+@keyframes star-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+@keyframes star-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+}
+
+// Size variations
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.text-4xl {
+  font-size: 2.5rem;
+}
+
+.text-6xl {
+  font-size: 4rem;
+}
+
+// Compact version (without value display)
+.star-rating-container:not(:has(.rating-value)) {
+  padding: 0.5rem 1rem;
+  
+  .stars-wrapper {
+    gap: 0.15rem;
+  }
+}

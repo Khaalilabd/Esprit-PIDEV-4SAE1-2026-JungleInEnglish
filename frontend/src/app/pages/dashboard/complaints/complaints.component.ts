@@ -122,9 +122,9 @@ export class ComplaintsComponent implements OnInit {
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(c =>
-        c.username.toLowerCase().includes(term) ||
-        c.subject.toLowerCase().includes(term) ||
-        c.userEmail.toLowerCase().includes(term)
+        (c.username?.toLowerCase().includes(term) || false) ||
+        (c.subject?.toLowerCase().includes(term) || false) ||
+        (c.userEmail?.toLowerCase().includes(term) || false)
       );
     }
 
@@ -132,7 +132,7 @@ export class ComplaintsComponent implements OnInit {
     filtered.sort((a, b) => {
       if (a.isOverdue && !b.isOverdue) return -1;
       if (!a.isOverdue && b.isOverdue) return 1;
-      return b.daysSinceCreation - a.daysSinceCreation;
+      return (b.daysSinceCreation || 0) - (a.daysSinceCreation || 0);
     });
 
     this.filteredComplaints = filtered;
@@ -146,7 +146,7 @@ export class ComplaintsComponent implements OnInit {
   openResponseModal(complaint: ComplaintWithUser): void {
     this.selectedComplaint = complaint;
     this.responseText = complaint.response || '';
-    this.newStatus = complaint.status;
+    this.newStatus = complaint.status || 'OPEN';
     this.showResponseModal = true;
   }
 
@@ -167,7 +167,7 @@ export class ComplaintsComponent implements OnInit {
       comment: `Response added by ${currentUser.firstName} ${currentUser.lastName}`
     };
 
-    this.complaintService.updateComplaintStatus(this.selectedComplaint.id, data).subscribe({
+    this.complaintService.updateComplaintStatus(this.selectedComplaint.id!, data).subscribe({
       next: () => {
         Swal.fire('Success', 'Response submitted successfully', 'success');
         this.showResponseModal = false;
@@ -181,7 +181,8 @@ export class ComplaintsComponent implements OnInit {
     });
   }
 
-  getPriorityClass(priority: string): string {
+  getPriorityClass(priority: string | undefined): string {
+    if (!priority) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     const classes: any = {
       'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
       'HIGH': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
@@ -191,7 +192,8 @@ export class ComplaintsComponent implements OnInit {
     return classes[priority] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'bg-gray-100 text-gray-800';
     const classes: any = {
       'OPEN': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       'NOTED': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
@@ -202,7 +204,8 @@ export class ComplaintsComponent implements OnInit {
     return classes[status] || 'bg-gray-100 text-gray-800';
   }
 
-  getSeverityBadge(priority: string): { text: string; class: string } {
+  getSeverityBadge(priority: string | undefined): { text: string; class: string } {
+    if (!priority) return { text: 'Medium', class: 'bg-yellow-500' };
     const badges: any = {
       'MEDIUM': { text: 'Medium', class: 'bg-yellow-500' },
       'HIGH': { text: 'High', class: 'bg-orange-500' },

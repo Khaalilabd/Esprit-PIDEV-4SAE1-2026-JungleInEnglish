@@ -12,7 +12,10 @@ import { FrontofficeNotificationDropdownComponent } from '../../shared/component
   standalone: true,
   imports: [CommonModule, RouterModule, FrontofficeUserDropdownComponent, FrontofficeNotificationDropdownComponent],
   templateUrl: './public-clubs.component.html',
-  styleUrls: ['./public-clubs.component.scss']
+  styleUrls: ['./public-clubs.component.scss'],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+  }
 })
 export class PublicClubsComponent implements OnInit {
   allClubs: Club[] = [];
@@ -22,6 +25,9 @@ export class PublicClubsComponent implements OnInit {
   categories = Object.values(ClubCategory);
   selectedCategory: ClubCategory | null = null;
   mobileMenuOpen = false;
+  selectedClub: Club | null = null;
+  showDetailsModal = false;
+  dropdownOpen = false;
 
   constructor(
     private clubService: ClubService,
@@ -30,6 +36,17 @@ export class PublicClubsComponent implements OnInit {
 
   toggleMobileMenu() {
     this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.filter-dropdown-container')) {
+      this.dropdownOpen = false;
+    }
   }
 
   ngOnInit() {
@@ -42,6 +59,7 @@ export class PublicClubsComponent implements OnInit {
 
     this.clubService.getAllClubs().subscribe({
       next: (clubs) => {
+        // Ne pas filtrer les clubs suspendus, les afficher tous
         this.allClubs = clubs;
         this.filteredClubs = clubs;
         this.loading = false;
@@ -56,6 +74,7 @@ export class PublicClubsComponent implements OnInit {
 
   filterByCategory(category: ClubCategory | null) {
     this.selectedCategory = category;
+    this.dropdownOpen = false;
     
     if (category === null) {
       this.filteredClubs = this.allClubs;
@@ -89,8 +108,44 @@ export class PublicClubsComponent implements OnInit {
       'CONVERSATION': '💬',
       'BOOK': '📚',
       'DRAMA': '🎭',
-      'WRITING': '✍️'
+      'WRITING': '✍️',
+      'GRAMMAR': '📝',
+      'VOCABULARY': '📖',
+      'READING': '📰',
+      'LISTENING': '🎧',
+      'SPEAKING': '🗣️',
+      'PRONUNCIATION': '🔊',
+      'BUSINESS': '💼',
+      'ACADEMIC': '🎓'
     };
     return icons[category] || '📖';
+  }
+
+  getCategoryLabel(category: string): string {
+    const labels: { [key: string]: string } = {
+      'CONVERSATION': 'Conversation',
+      'BOOK': 'Book Club',
+      'DRAMA': 'Drama',
+      'WRITING': 'Writing',
+      'GRAMMAR': 'Grammar',
+      'VOCABULARY': 'Vocabulary',
+      'READING': 'Reading',
+      'LISTENING': 'Listening',
+      'SPEAKING': 'Speaking',
+      'PRONUNCIATION': 'Pronunciation',
+      'BUSINESS': 'Business English',
+      'ACADEMIC': 'Academic English'
+    };
+    return labels[category] || category;
+  }
+
+  showClubDetails(club: Club) {
+    this.selectedClub = club;
+    this.showDetailsModal = true;
+  }
+
+  closeDetailsModal() {
+    this.showDetailsModal = false;
+    this.selectedClub = null;
   }
 }

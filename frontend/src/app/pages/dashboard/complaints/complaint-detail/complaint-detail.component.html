@@ -255,6 +255,16 @@
           <p class="font-semibold text-gray-900 dark:text-white">Reject Complaint</p>
           <p class="text-xs text-gray-500">Decline the complaint</p>
         </button>
+
+        <button *ngIf="complaint?.category === 'CLUB_SUSPENSION'" 
+                (click)="selectedAction = 'OPEN_CLUB'" 
+                [class.ring-2]="selectedAction === 'OPEN_CLUB'"
+                [class.ring-blue-500]="selectedAction === 'OPEN_CLUB'"
+                class="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 transition-all text-left">
+          <i class="fas fa-door-open text-blue-500 text-xl mb-2"></i>
+          <p class="font-semibold text-gray-900 dark:text-white">Open Club</p>
+          <p class="text-xs text-gray-500">Reactivate suspended club</p>
+        </button>
       </div>
 
       <!-- Action Details -->

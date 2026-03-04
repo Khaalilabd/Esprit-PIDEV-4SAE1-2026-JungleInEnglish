@@ -7,5 +7,6 @@ public enum ComplaintCategory {
     BEHAVIORAL,       // Problème comportemental
     TUTOR_BEHAVIOR,   // Problème de comportement du tuteur
     SCHEDULE,         // Problème d'horaire/absence
+    CLUB_SUSPENSION,  // Réclamation concernant la suspension d'un club
     OTHER             // Autre
 }

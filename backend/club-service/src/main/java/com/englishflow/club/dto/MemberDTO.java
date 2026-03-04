@@ -26,5 +26,7 @@ public class MemberDTO {
     @NotNull(message = "User ID is required")
     private Long userId;
     
+    private String userName; // Nom de l'utilisateur récupéré du service auth
+    
     private LocalDateTime joinedAt;
 }

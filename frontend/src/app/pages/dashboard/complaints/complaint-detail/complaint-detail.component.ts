@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ComplaintService, ComplaintWithUser, ComplaintWorkflow } from '../../../../core/services/complaint.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ClubService } from '../../../../core/services/club.service';
 import Swal from 'sweetalert2';
 
 interface ComplaintMessage {
@@ -42,7 +43,8 @@ export class ComplaintDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private complaintService: ComplaintService,
-    private authService: AuthService
+    private authService: AuthService,
+    private clubService: ClubService
   ) {}
 
   ngOnInit(): void {
@@ -94,7 +96,14 @@ export class ComplaintDetailComponent implements OnInit {
   loadMessages(id: number): void {
     this.complaintService.getMessages(id).subscribe({
       next: (messages) => {
-        this.messages = messages;
+        this.messages = messages.map(m => ({
+          id: m.id,
+          author: m.senderName || 'Unknown',
+          authorRole: m.senderRole,
+          content: m.message,
+          timestamp: m.createdAt ? new Date(m.createdAt) : new Date(),
+          isAdmin: m.senderRole !== 'STUDENT'
+        }));
       },
       error: (error) => {
         console.error('Error loading messages:', error);
@@ -103,7 +112,7 @@ export class ComplaintDetailComponent implements OnInit {
   }
 
   sendMessage(): void {
-    if (!this.newMessage.trim() || !this.complaint) return;
+    if (!this.newMessage.trim() || !this.complaint || !this.complaint.id) return;
 
     const currentUser = this.authService.currentUserValue;
     if (!currentUser) return;
@@ -116,7 +125,14 @@ export class ComplaintDetailComponent implements OnInit {
 
     this.complaintService.sendMessage(this.complaint.id, messageData).subscribe({
       next: (message) => {
-        this.messages.push(message);
+        this.messages.push({
+          id: message.id,
+          author: message.senderName || 'You',
+          authorRole: message.senderRole,
+          content: message.message,
+          timestamp: message.createdAt ? new Date(message.createdAt) : new Date(),
+          isAdmin: true
+        });
         this.newMessage = '';
       },
       error: (error) => {
@@ -181,6 +197,10 @@ export class ComplaintDetailComponent implements OnInit {
         newStatus = 'REJECTED';
         comment = `Rejected: ${this.rejectReason}`;
         break;
+      case 'OPEN_CLUB':
+        // Handle club reactivation
+        this.handleOpenClub();
+        return; // Exit early as this is handled separately
       default:
         console.error('❌ Unknown action:', this.selectedAction);
         Swal.fire('Error', 'Please select an action', 'error');
@@ -199,12 +219,14 @@ export class ComplaintDetailComponent implements OnInit {
 
     console.log('🚀 Sending data:', data);
 
-    this.complaintService.updateComplaintStatus(this.complaint.id, data).subscribe({
+    this.complaintService.updateComplaintStatus(this.complaint.id!, data).subscribe({
       next: () => {
         console.log('✅ Action executed successfully');
         this.showActionModal = false;
         // Reload data first, then show success message
-        this.loadComplaintDetails(this.complaint!.id);
+        if (this.complaint?.id) {
+          this.loadComplaintDetails(this.complaint.id);
+        }
         setTimeout(() => {
           Swal.fire('Success', 'Action executed successfully', 'success');
         }, 300);
@@ -215,7 +237,9 @@ export class ComplaintDetailComponent implements OnInit {
         
         // Even if there's an error, reload the data to check if the action was actually executed
         this.showActionModal = false;
-        this.loadComplaintDetails(this.complaint!.id);
+        if (this.complaint?.id) {
+          this.loadComplaintDetails(this.complaint.id);
+        }
         
         // Wait a bit to see if the data was actually updated
         setTimeout(() => {
@@ -236,7 +260,8 @@ export class ComplaintDetailComponent implements OnInit {
     this.router.navigate(['/dashboard/complaints']);
   }
 
-  getPriorityClass(priority: string): string {
+  getPriorityClass(priority: string | undefined): string {
+    if (!priority) return 'bg-gray-100 text-gray-800';
     const classes: any = {
       'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
       'HIGH': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
@@ -245,7 +270,8 @@ export class ComplaintDetailComponent implements OnInit {
     return classes[priority] || 'bg-gray-100 text-gray-800';
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'bg-gray-100 text-gray-800';
     const classes: any = {
       'OPEN': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       'IN_PROGRESS': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
@@ -256,7 +282,8 @@ export class ComplaintDetailComponent implements OnInit {
     return classes[status] || 'bg-gray-100 text-gray-800';
   }
 
-  getSeverityBadge(priority: string): { text: string; class: string } {
+  getSeverityBadge(priority: string | undefined): { text: string; class: string } {
+    if (!priority) return { text: 'Medium Severity', class: 'bg-yellow-500' };
     const badges: any = {
       'MEDIUM': { text: 'Medium Severity', class: 'bg-yellow-500' },
       'HIGH': { text: 'High Severity', class: 'bg-orange-500' },
@@ -279,5 +306,77 @@ export class ComplaintDetailComponent implements OnInit {
     this.selectedAction = '';
     this.actionComment = '';
     this.rejectReason = '';
+  }
+
+  handleOpenClub(): void {
+    if (!this.complaint || !this.complaint.clubId) {
+      Swal.fire('Error', 'No club associated with this complaint', 'error');
+      return;
+    }
+
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      Swal.fire('Error', 'User not authenticated', 'error');
+      return;
+    }
+
+    // Show confirmation dialog
+    Swal.fire({
+      title: 'Open Club?',
+      text: 'This will reactivate the suspended club and mark the complaint as resolved.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, open club',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed && this.complaint?.clubId) {
+        // First, activate the club
+        this.clubService.activateClub(this.complaint.clubId, currentUser.id).subscribe({
+          next: () => {
+            console.log('✅ Club activated successfully');
+            
+            // Then, mark the complaint as resolved
+            const data = {
+              status: 'RESOLVED',
+              actorId: currentUser.id,
+              actorRole: 'ACADEMIC_OFFICE_AFFAIR',
+              response: this.actionComment,
+              comment: this.actionComment || 'Club suspension appeal approved - Club reactivated'
+            };
+
+            this.complaintService.updateComplaintStatus(this.complaint!.id!, data).subscribe({
+              next: () => {
+                console.log('✅ Complaint resolved successfully');
+                this.showActionModal = false;
+                
+                // Reload data
+                if (this.complaint?.id) {
+                  this.loadComplaintDetails(this.complaint.id);
+                }
+                
+                setTimeout(() => {
+                  Swal.fire('Success', 'Club has been reactivated and complaint resolved', 'success');
+                }, 300);
+              },
+              error: (error) => {
+                console.error('❌ Error resolving complaint:', error);
+                Swal.fire('Warning', 'Club was reactivated but failed to update complaint status', 'warning');
+                
+                // Still reload to show updated data
+                if (this.complaint?.id) {
+                  this.loadComplaintDetails(this.complaint.id);
+                }
+              }
+            });
+          },
+          error: (error) => {
+            console.error('❌ Error activating club:', error);
+            Swal.fire('Error', 'Failed to reactivate the club', 'error');
+          }
+        });
+      }
+    });
   }
 }

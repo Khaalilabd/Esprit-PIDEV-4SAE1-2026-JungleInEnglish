@@ -16,7 +16,7 @@
           <li><a href="/#courses" class="nav-link">Courses</a></li>
           <li><a routerLink="/clubs" class="nav-link active">Clubs</a></li>
           <li><a href="/#team" class="nav-link">Team</a></li>
-          <li><a href="/#events" class="nav-link">Events</a></li>
+          <li><a routerLink="/events" class="nav-link">Events</a></li>
           <li><a href="/#contact" class="nav-link">Contact</a></li>
         </ul>
 
@@ -52,13 +52,78 @@
   <div class="section-container">
     <!-- Hero Header -->
     <div class="clubs-hero">
-      <div class="clubs-hero-content">
-        <span class="section-badge">🎯 English Clubs</span>
-        <h1 class="clubs-hero-title">Join Our English Learning Clubs</h1>
-        <p class="clubs-hero-description">
-          Connect with fellow learners, practice English, and improve your skills in a fun and supportive community.
-        </p>
-        <a routerLink="/register" class="btn-hero-primary">Join a Club Today</a>
+      <div class="clubs-hero-grid">
+        <!-- Left Content -->
+        <div class="hero-content-side">
+          <span class="section-badge">
+            <svg class="badge-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Clubs Anglais
+          </span>
+          
+          <h1 class="clubs-hero-title">
+            Join our learning
+            <span class="title-highlight">clubs</span>
+          </h1>
+          
+          <p class="clubs-hero-description">
+            Connect with other learners, practice English and improve your skills in a friendly community.
+          </p>
+          
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-number">{{ allClubs.length }}+</div>
+              <div class="stat-label">Active Clubs</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number">12</div>
+              <div class="stat-label">Categories</div>
+            </div>
+          </div>
+          
+          <a routerLink="/register" class="btn-hero-primary">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            Commencer maintenant
+          </a>
+        </div>
+
+        <!-- Right Visual Grid -->
+        <div class="hero-visual-side">
+          <div class="visual-grid">
+            <div class="visual-card card-1">
+              <div class="card-icon">💬</div>
+              <div class="card-title">Conversation</div>
+            </div>
+            <div class="visual-card card-2">
+              <div class="card-icon">📚</div>
+              <div class="card-title">Book Club</div>
+            </div>
+            <div class="visual-card card-3">
+              <div class="card-icon">🎭</div>
+              <div class="card-title">Drama</div>
+            </div>
+            <div class="visual-card card-4">
+              <div class="card-icon">✍️</div>
+              <div class="card-title">Writing</div>
+            </div>
+            <div class="visual-card card-5">
+              <div class="card-icon">🎓</div>
+              <div class="card-title">Academic</div>
+            </div>
+            <div class="visual-card card-6">
+              <div class="card-icon">💼</div>
+              <div class="card-title">Business</div>
+            </div>
+          </div>
+          
+          <!-- Decorative Elements -->
+          <div class="floating-shape shape-1"></div>
+          <div class="floating-shape shape-2"></div>
+          <div class="floating-shape shape-3"></div>
+        </div>
       </div>
     </div>
 
@@ -66,26 +131,57 @@
     <div class="clubs-filter-section">
       <div class="filter-header">
         <h2 class="filter-title">Explore Clubs</h2>
-        <span class="clubs-count">{{ filteredClubs.length }} club{{ filteredClubs.length !== 1 ? 's' : '' }} available</span>
-      </div>
-      
-      <div class="filter-buttons">
-        <button
-          (click)="filterByCategory(null)"
-          [class.active]="selectedCategory === null"
-          class="filter-btn"
-        >
-          All Clubs
-        </button>
-        @for (cat of categories; track cat) {
-          <button
-            (click)="filterByCategory(cat)"
-            [class.active]="selectedCategory === cat"
-            class="filter-btn"
-          >
-            {{ cat }}
+        
+        <!-- Dropdown Filter -->
+        <div class="filter-dropdown-container">
+          <button class="filter-dropdown-btn" (click)="toggleDropdown()">
+            <span class="dropdown-label">
+              @if (selectedCategory === null) {
+                <span class="dropdown-icon">🌟</span>
+                <span>All Clubs</span>
+              } @else {
+                <span class="dropdown-icon">{{ getCategoryIcon(selectedCategory) }}</span>
+                <span>{{ getCategoryLabel(selectedCategory) }}</span>
+              }
+            </span>
+            <svg class="dropdown-arrow" [class.rotate]="dropdownOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
           </button>
-        }
+
+          @if (dropdownOpen) {
+            <div class="filter-dropdown-menu">
+              <button
+                class="dropdown-item"
+                [class.active]="selectedCategory === null"
+                (click)="filterByCategory(null)"
+              >
+                <span class="dropdown-icon">🌟</span>
+                <span>All Clubs</span>
+                @if (selectedCategory === null) {
+                  <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                }
+              </button>
+              @for (cat of categories; track cat) {
+                <button
+                  class="dropdown-item"
+                  [class.active]="selectedCategory === cat"
+                  (click)="filterByCategory(cat)"
+                >
+                  <span class="dropdown-icon">{{ getCategoryIcon(cat) }}</span>
+                  <span>{{ getCategoryLabel(cat) }}</span>
+                  @if (selectedCategory === cat) {
+                    <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
 
@@ -108,9 +204,18 @@
       @if (filteredClubs.length > 0) {
         <div class="clubs-grid">
           @for (club of filteredClubs; track club.id) {
-            <div class="club-card">
+            <div class="club-card" [class.opacity-60]="club.status === 'SUSPENDED'" [class.pointer-events-none]="club.status === 'SUSPENDED'">
+              <!-- Suspended Badge -->
+              @if (club.status === 'SUSPENDED') {
+                <div class="absolute top-4 right-4 z-10">
+                  <span class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-lg">
+                    🚫 SUSPENDED
+                  </span>
+                </div>
+              }
+              
               <!-- Club Image Header -->
-              <div class="club-image-header">
+              <div class="club-image-header" [class.grayscale]="club.status === 'SUSPENDED'">
                 @if (club.image) {
                   <div class="club-image-container">
                     <img 
@@ -126,40 +231,36 @@
                     <span class="placeholder-icon-large">{{ getCategoryIcon(club.category) }}</span>
                   </div>
                 }
+                <!-- Category Badge on Image -->
+                <div class="absolute top-4 left-4">
+                  <span class="club-category-badge-overlay">
+                    {{ getCategoryIcon(club.category) }} {{ getCategoryLabel(club.category) }}
+                  </span>
+                </div>
               </div>
 
               <!-- Club Body -->
               <div class="club-body">
                 <h3 class="club-title tracking-tight">{{ club.name }}</h3>
-                <span class="club-category-badge tracking-wide">{{ club.category }}</span>
                 <p class="club-description tracking-tight">{{ club.description }}</p>
-                
-                <!-- Club Stats -->
-                <div class="club-stats">
-                  <div class="stat-item">
-                    <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                    <span class="stat-text">{{ club.currentMembersCount || 0 }}/{{ club.maxMembers }} Members</span>
-                  </div>
-                  @if (club.isFull) {
-                    <span class="club-status-badge full">Full</span>
-                  } @else {
-                    <span class="club-status-badge open">Open</span>
-                  }
-                </div>
 
-                <!-- Social Links / Actions -->
+                <!-- Actions -->
                 <div class="club-actions">
-                  <a routerLink="/register" class="action-btn-primary">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                    </svg>
-                    Join Club
-                  </a>
-                  <a routerLink="/register" class="action-btn-secondary">
-                    Learn More
-                  </a>
+                  @if (club.status === 'SUSPENDED') {
+                    <button disabled class="action-btn-details opacity-50 cursor-not-allowed" style="width: 100%;">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                      </svg>
+                      Unavailable
+                    </button>
+                  } @else {
+                    <button (click)="showClubDetails(club)" class="action-btn-details" style="width: 100%;">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      Voir les détails
+                    </button>
+                  }
                 </div>
               </div>
             </div>
@@ -204,6 +305,84 @@
     </div>
   </div>
 </section>
+
+<!-- Club Details Modal -->
+@if (showDetailsModal && selectedClub) {
+  <div class="modal-overlay" (click)="closeDetailsModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">{{ selectedClub.name }}</h2>
+        <button (click)="closeDetailsModal()" class="modal-close-btn">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Club Image -->
+        @if (selectedClub.image) {
+          <div class="modal-image-container">
+            <img [src]="selectedClub.image" [alt]="selectedClub.name" class="modal-image" />
+          </div>
+        } @else {
+          <div class="modal-image-placeholder">
+            <span class="modal-placeholder-icon">{{ getCategoryIcon(selectedClub.category) }}</span>
+          </div>
+        }
+
+        <!-- Club Info -->
+        <div class="modal-info-section">
+          <div class="modal-info-item">
+            <h3 class="modal-info-label">
+              <svg class="modal-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+              </svg>
+              Category
+            </h3>
+            <p class="modal-info-value">
+              <span class="modal-category-badge">
+                {{ getCategoryIcon(selectedClub.category) }} {{ getCategoryLabel(selectedClub.category) }}
+              </span>
+            </p>
+          </div>
+
+          <div class="modal-info-item">
+            <h3 class="modal-info-label">
+              <svg class="modal-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Description
+            </h3>
+            <p class="modal-info-value">{{ selectedClub.description }}</p>
+          </div>
+
+          @if (selectedClub.objective) {
+            <div class="modal-info-item">
+              <h3 class="modal-info-label">
+                <svg class="modal-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                </svg>
+                Objective
+              </h3>
+              <p class="modal-info-value">{{ selectedClub.objective }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button (click)="closeDetailsModal()" class="modal-btn-primary" style="width: 100%;">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 <!-- ***** Clubs Section End ***** -->
 
 <!-- ***** Footer Start ***** -->
@@ -223,6 +402,7 @@
           <ul>
             <li><a routerLink="/">Home</a></li>
             <li><a routerLink="/clubs">Clubs</a></li>
+            <li><a routerLink="/events">Events</a></li>
             <li><a routerLink="/register">Join Now</a></li>
           </ul>
         </div>

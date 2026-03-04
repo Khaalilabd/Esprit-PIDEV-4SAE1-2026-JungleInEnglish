@@ -1,369 +1,275 @@
-<div class="w-full max-w-7xl mx-auto px-4">
-  <!-- Welcome Header -->
-  <div class="bg-gradient-to-r from-[#2D5757] via-[#356666] to-[#3D3D60] rounded-2xl p-6 mb-6 text-white shadow-xl relative overflow-hidden">
-    <!-- Decorative elements -->
-    <div class="absolute top-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full -mr-24 -mt-24"></div>
-    <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -ml-16 -mb-16"></div>
-    
-    <div class="flex items-center justify-between relative z-10">
-      <div>
-        <h1 class="text-2xl font-bold mb-1 flex items-center gap-2 tracking-tight">
-          <span class="text-3xl">🎯</span>
-          Available English Clubs
-        </h1>
-        <p class="text-gray-100 text-sm leading-relaxed tracking-tight">Discover and join clubs to practice English with other students</p>
-      </div>
-      <button
-        (click)="openCreateModal()"
-        class="inline-flex items-center px-5 py-2.5 bg-[#F6BD60] text-gray-900 rounded-xl hover:bg-[#e5ac4f] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transform tracking-tight text-sm"
-      >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        Create New Club
-      </button>
-    </div>
-  </div>
-
+<div class="w-full max-w-7xl mx-auto px-4 py-6">
   <!-- Loading State -->
   @if (loading) {
     <div class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F6BD60]"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   } @else if (error) {
-    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+    <div class="bg-red-50 border-l-4 border-red-600 rounded-lg p-6 shadow-md">
       <div class="flex items-center justify-between">
         <div class="flex items-center">
-          <svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <p class="text-red-800 dark:text-red-200">{{ error }}</p>
+          <div class="bg-red-100 p-3 rounded-full mr-4">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <p class="text-red-800 font-medium">{{ error }}</p>
         </div>
         <button
           (click)="loadClubs()"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+          class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold shadow-md"
         >
           Retry
         </button>
       </div>
     </div>
   } @else if (showDetailsView && selectedClub) {
-    <!-- Club Details View -->
-    <div class="space-y-6">
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-3">
-        <!-- Back Button -->
-        <button
-          (click)="closeDetailsView()"
-          class="inline-flex items-center px-4 py-2 text-sm font-semibold text-[#2D5757] bg-white border-2 border-[#2D5757] rounded-xl hover:bg-[#2D5757] hover:text-white transition-all duration-300 shadow-md hover:shadow-lg"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-          </svg>
-          Back to Clubs
-        </button>
-
-        <!-- Edit Button - Only for President -->
-        @if (isClubPresident(selectedClub)) {
-          <button
-            (click)="openEditModal(selectedClub)"
-            class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-          >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-            Edit Club
-          </button>
-        }
-      </div>
-
-      <!-- Hero Section with Club Image - More compact -->
-      <div class="relative h-48 rounded-2xl overflow-hidden shadow-xl group">
-        @if (selectedClub.image) {
-          <img 
-            [src]="selectedClub.image" 
-            [alt]="selectedClub.name" 
-            class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-          />
-        } @else {
-          <div class="w-full h-full bg-gradient-to-br from-[#2D5757] via-[#3D3D60] to-[#2D5757]"></div>
-        }
+    <!-- Modern Club Details View -->
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 -m-4 p-6">
+      <div class="max-w-7xl mx-auto space-y-6">
         
-        <!-- Gradient Overlays -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
-        
-        <!-- Club Info Overlay - More compact -->
-        <div class="absolute bottom-0 left-0 right-0 p-6">
-          <div class="flex items-center gap-3">
-            <span class="text-4xl">{{ getCategoryIcon(selectedClub.category) }}</span>
-            <div>
-              <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-2xl">{{ selectedClub.name }}</h1>
-              <p class="text-sm text-gray-200 mt-1 tracking-tight">{{ selectedClub.category }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stats Cards - More compact -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <!-- User Role Card -->
-        <div class="group relative bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
-          <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#F6BD60]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-3xl">{{ getRoleIcon(getUserRole(selectedClub.id!)) }}</span>
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md" [class]="getRoleBadgeClass(getUserRole(selectedClub.id!))">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Your Role</h3>
-            <p class="text-lg font-black text-[#2D5757] tracking-tight">{{ getRoleLabel(getUserRole(selectedClub.id!)) }}</p>
-          </div>
-        </div>
-
-        <!-- Category Card -->
-        <div class="group relative bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
-          <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#2D5757]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-3xl">{{ getCategoryIcon(selectedClub.category) }}</span>
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Category</h3>
-            <p class="text-lg font-black text-[#2D5757] tracking-tight">{{ selectedClub.category }}</p>
-          </div>
-        </div>
-
-        <!-- Status Card -->
-        <div class="group relative bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
-          <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#F6BD60]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-3xl">
-                @if (selectedClub.status === ClubStatus.APPROVED) {
-                  ✅
-                } @else if (selectedClub.status === ClubStatus.PENDING) {
-                  ⏳
-                } @else {
-                  ❌
-                }
-              </span>
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F6BD60] to-[#e5ac4f] flex items-center justify-center shadow-md">
-                <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status</h3>
-            <p class="text-lg font-black text-[#2D5757] tracking-tight">{{ selectedClub.status }}</p>
-          </div>
-        </div>
-
-        <!-- Members Card -->
-        <div 
-          class="group relative bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100"
-          [class.cursor-pointer]="getUserRole(selectedClub.id!) === 'PRESIDENT'"
-          (click)="getUserRole(selectedClub.id!) === 'PRESIDENT' ? openMembersModal(selectedClub.id!) : null"
-        >
-          <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#C84630]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-3xl">👥</span>
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center shadow-md">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Members
-              @if (getUserRole(selectedClub.id!) === 'PRESIDENT') {
-                <span class="text-xs text-[#F6BD60] ml-1">(Manage)</span>
-              }
-            </h3>
-            <p class="text-lg font-black text-[#2D5757] tracking-tight">
-              {{ actualMemberCount }} / {{ selectedClub.maxMembers }}
-            </p>
-            <!-- Progress Bar -->
-            <div class="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                class="h-full bg-gradient-to-r from-[#2D5757] to-[#3D3D60] rounded-full relative overflow-hidden transition-all duration-1000"
-                [style.width.%]="(actualMemberCount / selectedClub.maxMembers) * 100"
-              >
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Update Requests Card (for VP and Secretary) -->
-        @if (getUserRole(selectedClub.id!) === 'VICE_PRESIDENT' || getUserRole(selectedClub.id!) === 'SECRETARY') {
-          <div 
-            class="group relative bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 cursor-pointer"
-            (click)="openUpdateRequestsModal()"
-          >
-            <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-            <div class="relative z-10">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-3xl">📝</span>
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-md">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                  </svg>
-                </div>
-              </div>
-              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                Update Requests
-                <span class="text-xs text-yellow-600 ml-1">(Click to view)</span>
-              </h3>
-              <p class="text-lg font-black text-[#2D5757] tracking-tight">
-                {{ getPendingRequestsForClub(selectedClub.id!).length }} pending
-              </p>
-              @if (getPendingRequestsForClub(selectedClub.id!).length > 0) {
-                <div class="mt-2 flex items-center text-xs text-yellow-600">
-                  <svg class="w-4 h-4 mr-1 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                  </svg>
-                  Requires your approval
-                </div>
-              }
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Description Section - More compact -->
-      <div class="group relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-        <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#2D5757] via-[#F6BD60] to-[#C84630]"></div>
-        <button
-          (click)="toggleDescription()"
-          class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-300"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-              </svg>
-            </div>
-            <div class="text-left">
-              <h2 class="text-lg font-bold text-[#2D5757] tracking-tight">Description</h2>
-              <p class="text-xs text-gray-500 tracking-tight">Learn more about this club</p>
-            </div>
-          </div>
-          <svg 
-            class="w-5 h-5 text-[#2D5757] transition-transform duration-300"
-            [class.rotate-180]="showDescription"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </button>
-        @if (showDescription) {
-          <div class="px-4 pb-4 animate-fadeIn">
-            <div class="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100">
-              <p class="text-gray-700 leading-relaxed text-sm">{{ selectedClub.description }}</p>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Objective Section - More compact -->
-      @if (selectedClub.objective) {
-        <div class="group relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-          <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#F6BD60] via-[#C84630] to-[#2D5757]"></div>
+        <!-- Top Navigation Bar -->
+        <div class="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <button
-            (click)="toggleObjective()"
-            class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-300"
+            (click)="closeDetailsView()"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#2D5757] hover:bg-gray-50 rounded-xl transition-all duration-200"
           >
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F6BD60] to-[#e5ac4f] flex items-center justify-center shadow-md">
-                <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-                </svg>
-              </div>
-              <div class="text-left">
-                <h2 class="text-lg font-bold text-[#2D5757] tracking-tight">Objective</h2>
-                <p class="text-xs text-gray-500 tracking-tight">Our club's mission</p>
-              </div>
-            </div>
-            <svg 
-              class="w-5 h-5 text-[#2D5757] transition-transform duration-300"
-              [class.rotate-180]="showObjective"
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
+            Back to Clubs
           </button>
-          @if (showObjective) {
-            <div class="px-4 pb-4 animate-fadeIn">
-              <div class="p-4 bg-gradient-to-br from-amber-50 to-white rounded-xl border border-amber-100">
-                <p class="text-gray-700 leading-relaxed text-sm">{{ selectedClub.objective }}</p>
-              </div>
-            </div>
-          }
-        </div>
-      }
 
-      <!-- Tasks Section - More compact -->
-      @if (getUserRole(selectedClub.id!) === 'PRESIDENT' || getUserRole(selectedClub.id!) === 'VICE_PRESIDENT' || getUserRole(selectedClub.id!) === 'SECRETARY') {
-        <div class="relative bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-          <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#C84630] via-[#2D5757] to-[#F6BD60]"></div>
-          
-          <div class="relative z-10 p-5">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-xl font-bold text-[#2D5757] tracking-tight">Club Tasks</h2>
-                <p class="text-xs text-gray-500 tracking-tight">Manage and track your club activities</p>
-            </div>
-          </div>
-
-          <!-- Add Task Input - More compact -->
-          <div class="mb-5">
-            <div class="flex gap-2">
-              <input
-                type="text"
-                [(ngModel)]="newTaskText"
-                (keyup.enter)="addTask(selectedClub.id!)"
-                placeholder="Add a new task..."
-                class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2D5757]/20 focus:border-[#2D5757] transition-all duration-300 text-sm shadow-sm hover:shadow-md"
-              />
+          <div class="flex items-center gap-3">
+            @if (isClubPresident(selectedClub)) {
               <button
-                (click)="addTask(selectedClub.id!)"
-                [disabled]="!newTaskText.trim()"
-                class="px-5 py-2.5 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-bold disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 shadow-md"
+                (click)="openEditModal(selectedClub)"
+                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
+                Edit Club
               </button>
+            }
+            
+            @if (canViewHistory(selectedClub.id!)) {
+              <button
+                (click)="openHistoryModal(selectedClub)"
+                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#2D5757] to-[#3D3D60] rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                History
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Suspension Alert -->
+        @if (selectedClub.status === ClubStatus.SUSPENDED && selectedClub.suspensionReason && isClubMember(selectedClub.id!)) {
+          <div class="relative bg-gradient-to-r from-red-50 to-red-100 rounded-2xl p-6 border-l-4 border-red-500 shadow-lg animate-fadeIn">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-xl">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-xl font-bold text-red-900">Club Suspended</h3>
+                  <span class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-sm">Members Only</span>
+                </div>
+                <p class="text-sm text-red-800 font-medium mb-3">This club has been temporarily suspended by the Academic Affairs Office.</p>
+                <div class="bg-white rounded-xl p-4 border border-red-200 shadow-sm">
+                  <p class="text-xs font-bold text-red-900 uppercase tracking-wide mb-2">Suspension Reason:</p>
+                  <p class="text-sm text-red-800 leading-relaxed">{{ selectedClub.suspensionReason }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Hero Card with Image and Title -->
+        <div class="relative bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100">
+          <!-- Cover Image -->
+          <div class="relative h-64 overflow-hidden">
+            @if (selectedClub.image) {
+              <img 
+                [src]="selectedClub.image" 
+                [alt]="selectedClub.name" 
+                class="w-full h-full object-cover"
+              />
+            } @else {
+              <div class="w-full h-full bg-gradient-to-br from-[#2D5757] via-[#3D3D60] to-[#2D5757]"></div>
+            }
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+            
+            <!-- Category Badge -->
+            <div class="absolute top-6 right-6">
+              <div class="flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg">
+                <span class="text-2xl">{{ getCategoryIcon(selectedClub.category) }}</span>
+                <span class="text-sm font-bold text-[#2D5757]">{{ selectedClub.category }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- Tasks Kanban Board with Drag & Drop -->
-          @if (loadingTasks) {
-            <div class="flex items-center justify-center py-8">
-              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2D5757]"></div>
+          <!-- Club Info -->
+          <div class="p-8">
+            <div class="flex items-start justify-between mb-6">
+              <div class="flex-1">
+                <h1 class="text-4xl font-black text-[#2D5757] mb-2 tracking-tight">{{ selectedClub.name }}</h1>
+                <p class="text-gray-600 text-lg">{{ selectedClub.description }}</p>
+              </div>
             </div>
-          } @else {
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- Column 1: TO DO -->
-              <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 border border-gray-200">
+
+            <!-- Quick Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Role -->
+              <div class="bg-white rounded-2xl p-6 border-2 border-gray-100 hover:border-[#F6BD60] hover:shadow-lg transition-all">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#F6BD60] to-[#e5ac4f] flex items-center justify-center shadow-md">
+                    <span class="text-2xl">{{ getRoleIcon(getUserRole(selectedClub.id!)) }}</span>
+                  </div>
+                  <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Your Role</span>
+                </div>
+                <p class="text-xl font-bold text-[#2D5757]">{{ getRoleLabel(getUserRole(selectedClub.id!)) }}</p>
+              </div>
+
+              <!-- Members -->
+              <div 
+                class="bg-white rounded-2xl p-6 border-2 border-gray-100 hover:border-[#C84630] hover:shadow-lg transition-all"
+                [class.cursor-pointer]="getUserRole(selectedClub.id!) === 'PRESIDENT'"
+                (click)="getUserRole(selectedClub.id!) === 'PRESIDENT' ? openMembersModal(selectedClub.id!) : null"
+              >
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center shadow-md">
+                    <span class="text-2xl">👥</span>
+                  </div>
+                  <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Members</span>
+                </div>
+                <p class="text-xl font-bold text-[#2D5757] mb-3">{{ actualMemberCount }}/{{ selectedClub.maxMembers }}</p>
+                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-[#C84630] to-[#a83820] rounded-full transition-all duration-1000"
+                    [style.width.%]="(actualMemberCount / selectedClub.maxMembers) * 100"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div class="bg-white rounded-2xl p-6 border-2 border-gray-100 hover:border-[#2D5757] hover:shadow-lg transition-all">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
+                    <span class="text-2xl">
+                      @if (selectedClub.status === ClubStatus.APPROVED) {
+                        ✅
+                      } @else if (selectedClub.status === ClubStatus.PENDING) {
+                        ⏳
+                      } @else if (selectedClub.status === ClubStatus.SUSPENDED) {
+                        🚫
+                      } @else {
+                        ❌
+                      }
+                    </span>
+                  </div>
+                  <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Status</span>
+                </div>
+                <p class="text-xl font-bold text-[#2D5757]">{{ selectedClub.status }}</p>
+              </div>
+
+              <!-- Update Requests (VP/Secretary) -->
+              @if (getUserRole(selectedClub.id!) === 'VICE_PRESIDENT' || getUserRole(selectedClub.id!) === 'SECRETARY') {
+                <div 
+                  class="bg-white rounded-2xl p-6 border-2 border-gray-100 hover:border-yellow-500 hover:shadow-lg transition-all cursor-pointer"
+                  (click)="openUpdateRequestsModal()"
+                >
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-md">
+                      <span class="text-2xl">📝</span>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Requests</span>
+                  </div>
+                  <p class="text-xl font-bold text-[#2D5757]">{{ getPendingRequestsForClub(selectedClub.id!).length }} pending</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Left Column - Info -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Objective -->
+            @if (selectedClub.objective) {
+              <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#F6BD60] to-[#e5ac4f] flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold text-[#2D5757]">Club Objective</h2>
+                    <p class="text-xs text-gray-500">Our mission and goals</p>
+                  </div>
+                </div>
+                <p class="text-gray-700 leading-relaxed">{{ selectedClub.objective }}</p>
+              </div>
+            }
+
+            <!-- Tasks Section (President/VP/Secretary) -->
+            @if (getUserRole(selectedClub.id!) === 'PRESIDENT' || getUserRole(selectedClub.id!) === 'VICE_PRESIDENT' || getUserRole(selectedClub.id!) === 'SECRETARY') {
+              <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold text-[#2D5757]">Club Tasks</h2>
+                    <p class="text-xs text-gray-500">Manage and track activities</p>
+                  </div>
+                </div>
+
+                <!-- Add Task Input -->
+                <div class="mb-4">
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      [(ngModel)]="newTaskText"
+                      (keyup.enter)="addTask(selectedClub.id!)"
+                      placeholder="Add a new task..."
+                      class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2D5757]/20 focus:border-[#2D5757] transition-all text-sm"
+                    />
+                    <button
+                      (click)="addTask(selectedClub.id!)"
+                      [disabled]="!newTaskText.trim()"
+                      class="px-5 py-2.5 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tasks Kanban Board -->
+                @if (loadingTasks) {
+                  <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2D5757]"></div>
+                  </div>
+                } @else {
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Column 1: TO DO -->
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 border border-gray-200">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-gray-500 flex items-center justify-center shadow-md">
@@ -622,12 +528,144 @@
                     </div>
                   }
                 </div>
+                    </div>
+                  </div>
+                }
               </div>
+            }
+          </div>
+          
+          <!-- Right Column - Club Events -->
+          <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 sticky top-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xl font-bold text-[#2D5757]">Club Events</h2>
+                  <p class="text-xs text-gray-500">Upcoming activities</p>
+                </div>
+              </div>
+
+              @if (loadingEvents) {
+                <div class="flex items-center justify-center py-8">
+                  <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+                </div>
+              } @else if (clubEvents.length === 0) {
+                <div class="text-center py-8">
+                  <span class="text-4xl block mb-2">📅</span>
+                  <p class="text-sm text-gray-500 font-medium">No events yet</p>
+                  <p class="text-xs text-gray-400 mt-1">Events will appear here</p>
+                </div>
+              } @else {
+                <div class="space-y-3 max-h-[600px] overflow-y-auto">
+                  @for (event of clubEvents; track event.id) {
+                    <div 
+                      (click)="navigateToEventDetails(event.id!)"
+                      class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200 hover:shadow-md hover:border-purple-300 transition-all cursor-pointer">
+                      <div class="flex items-start gap-3">
+                        <!-- Event Icon -->
+                        <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center flex-shrink-0">
+                          <span class="text-lg">
+                            @if (event.type === 'WORKSHOP') {
+                              🛠️
+                            } @else if (event.type === 'SEMINAR') {
+                              🎓
+                            } @else {
+                              🎉
+                            }
+                          </span>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                          <!-- Event Title -->
+                          <h3 class="text-sm font-bold text-purple-900 mb-2">{{ event.title }}</h3>
+                          
+                          <!-- Event Date -->
+                          <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="text-xs text-purple-700 font-medium">{{ formatEventDate(event.startDate || '') }}</span>
+                          </div>
+                          
+                          <!-- Event Location -->
+                          <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span class="text-xs text-purple-700 truncate">{{ event.location }}</span>
+                          </div>
+                          
+                          <!-- Event Status Badge -->
+                          <div class="flex items-center gap-2 mb-2">
+                            @if (isEventFinished(event)) {
+                              <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-500 text-white text-xs font-bold rounded-full">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Terminé
+                              </span>
+                            } @else {
+                              <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-full">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                  <circle cx="12" cy="12" r="10" class="animate-pulse"></circle>
+                                </svg>
+                                En cours
+                              </span>
+                            }
+                          </div>
+                          
+                          <!-- Event Rating (only if finished and has feedbacks) -->
+                          @if (isEventFinished(event) && getEventFeedbackStats(event.id!).totalFeedbacks > 0) {
+                            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-purple-200">
+                              <div class="flex items-center gap-1">
+                                @for (star of [1, 2, 3, 4, 5]; track star) {
+                                  @if (star <= getEventFeedbackStats(event.id!).averageRating) {
+                                    <!-- Full star -->
+                                    <svg class="w-3.5 h-3.5 text-yellow-400 fill-current" viewBox="0 0 24 24">
+                                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                  } @else if (star - 0.5 <= getEventFeedbackStats(event.id!).averageRating) {
+                                    <!-- Half star using clip-path -->
+                                    <div class="relative w-3.5 h-3.5">
+                                      <svg class="absolute inset-0 text-gray-300" viewBox="0 0 24 24">
+                                        <path fill="none" stroke="currentColor" stroke-width="1" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                      </svg>
+                                      <svg class="absolute inset-0 text-yellow-400 fill-current" viewBox="0 0 24 24" style="clip-path: inset(0 50% 0 0);">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                      </svg>
+                                    </div>
+                                  } @else {
+                                    <!-- Empty star -->
+                                    <svg class="w-3.5 h-3.5 text-gray-300" viewBox="0 0 24 24">
+                                      <path fill="none" stroke="currentColor" stroke-width="1" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                  }
+                                }
+                              </div>
+                              <span class="text-xs font-bold text-purple-900">
+                                {{ getEventFeedbackStats(event.id!).averageRating.toFixed(1) }}
+                              </span>
+                              <span class="text-xs text-purple-600">
+                                ({{ getEventFeedbackStats(event.id!).totalFeedbacks }} avis)
+                              </span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
             </div>
-          }
+          </div>
         </div>
       </div>
-      }
     </div>
   } @else {
     <!-- Available Clubs Section -->
@@ -662,6 +700,33 @@
                   </div>
                 </div>
                 <p class="text-xs text-gray-600 font-medium">Discover and join clubs to practice English</p>
+              </div>
+            </div>
+            
+            <!-- Center: Search Input -->
+            <div class="flex-1 max-w-md">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  [(ngModel)]="searchQuery"
+                  (ngModelChange)="onSearchChange()"
+                  placeholder="Search clubs by name..."
+                  class="w-full pl-11 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2D5757]/20 focus:border-[#2D5757] transition-all text-sm bg-white shadow-sm"
+                />
+                <button
+                  *ngIf="searchQuery"
+                  (click)="searchQuery = ''; onSearchChange()"
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
               </div>
             </div>
             
@@ -769,11 +834,20 @@
       @if (filteredClubs.length > 0) {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
           @for (club of filteredClubs; track club.id) {
-            <div class="group relative bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+            <div class="group relative bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100" [class.opacity-60]="club.status === ClubStatus.SUSPENDED" [class.pointer-events-none]="club.status === ClubStatus.SUSPENDED">
+              
+              <!-- Suspended Badge -->
+              @if (club.status === ClubStatus.SUSPENDED) {
+                <div class="absolute top-2 right-2 z-10">
+                  <span class="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-lg">
+                    🚫 SUSPENDED
+                  </span>
+                </div>
+              }
               
               <!-- Club Image Header - Reduced height -->
               @if (club.image) {
-                <div class="relative h-32 w-full overflow-hidden bg-gray-100">
+                <div class="relative h-32 w-full overflow-hidden bg-gray-100" [class.grayscale]="club.status === ClubStatus.SUSPENDED">
                   <img 
                     [src]="club.image" 
                     [alt]="club.name" 
@@ -801,7 +875,7 @@
                 </div>
               } @else {
                 <!-- Club Header with Category Color (fallback) - Reduced height -->
-                <div class="relative h-32 p-3 flex flex-col justify-between bg-gradient-to-br from-[#2D5757] to-[#3D3D60]">
+                <div class="relative h-32 p-3 flex flex-col justify-between bg-gradient-to-br from-[#2D5757] to-[#3D3D60]" [class.grayscale]="club.status === ClubStatus.SUSPENDED">
                   <div class="flex items-center justify-between">
                     <div class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <span class="text-lg">{{ getCategoryIcon(club.category) }}</span>
@@ -820,58 +894,69 @@
               }
 
               <!-- Club Body - More compact -->
-              <div class="p-3 bg-white">
+              <div class="p-4 bg-white">
                 <!-- Description - Reduced -->
                 @if (club.image) {
-                  <p class="text-xs text-gray-600 line-clamp-2 mb-2 leading-relaxed">{{ club.description }}</p>
+                  <p class="text-sm text-gray-700 line-clamp-2 mb-3 leading-relaxed">{{ club.description }}</p>
                 }
                 
                 <!-- Status Badge - More compact -->
-                <div class="mb-2 flex justify-center">
-                  <span [class]="'inline-flex items-center px-2 py-0.5 text-xs font-bold rounded-md ' + getStatusBadgeClass(club.status)">
+                <div class="mb-3 flex justify-center">
+                  <span [class]="'inline-flex items-center px-3 py-1 text-xs font-bold rounded-md shadow-sm ' + getStatusBadgeClass(club.status)">
                     @if (club.status === ClubStatus.PENDING) {
                       ⏳ PENDING
                     } @else if (club.status === ClubStatus.APPROVED) {
                       ✅ APPROVED
                     } @else if (club.status === ClubStatus.REJECTED) {
                       ❌ REJECTED
+                    } @else if (club.status === ClubStatus.SUSPENDED) {
+                      🚫 SUSPENDED
                     }
                   </span>
                 </div>
 
                 <!-- Action Buttons - More compact -->
-                <div class="flex gap-1.5">
-                  <button
-                    (click)="openDetailsView(club)"
-                    class="flex-1 px-2 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#2D5757] to-[#3D3D60] rounded-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                  >
-                    View
-                  </button>
-                  @if (isClubPresident(club)) {
+                <div class="flex gap-2">
+                  @if (club.status === ClubStatus.SUSPENDED) {
                     <button
-                      (click)="openEditModal(club)"
-                      class="px-2 py-1.5 text-xs font-bold text-[#F6BD60] bg-[#F6BD60]/10 rounded-lg hover:bg-[#F6BD60]/20 transition-all duration-200 border border-[#F6BD60]"
-                      title="Edit Club (President only)"
+                      disabled
+                      class="flex-1 px-3 py-2 text-sm font-bold text-white bg-gray-400 rounded-lg opacity-50 cursor-not-allowed"
                     >
-                      ✏️
+                      Unavailable
                     </button>
-                  }
-                  @if (isClubMember(club.id!) && !isClubPresident(club)) {
+                  } @else {
                     <button
-                      (click)="leaveClub(club.id!)"
-                      class="px-2 py-1.5 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200"
-                      title="Leave Club"
+                      (click)="openDetailsView(club)"
+                      class="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-primary-700 rounded-lg hover:bg-primary-800 hover:shadow-lg transition-all duration-300"
                     >
-                      🚪
+                      View Details
                     </button>
-                  } @else if (!isClubMember(club.id!)) {
-                    <button
-                      (click)="joinClub(club.id!)"
-                      class="px-2 py-1.5 text-xs font-bold text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-200"
-                      title="Join Club"
-                    >
-                      ➕
-                    </button>
+                    @if (isClubPresident(club)) {
+                      <button
+                        (click)="openEditModal(club)"
+                        class="px-3 py-2.5 text-sm font-bold text-primary bg-accent-orange rounded-lg hover:bg-accent-orange-600 transition-all duration-200 shadow-md"
+                        title="Edit Club (President only)"
+                      >
+                        ✏️
+                      </button>
+                    }
+                    @if (isClubMember(club.id!) && !isClubPresident(club)) {
+                      <button
+                        (click)="leaveClub(club.id!)"
+                        class="px-3 py-2.5 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md"
+                        title="Leave Club"
+                      >
+                        Leave
+                      </button>
+                    } @else if (!isClubMember(club.id!)) {
+                      <button
+                        (click)="joinClub(club.id!)"
+                        class="px-3 py-2.5 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md"
+                        title="Join Club"
+                      >
+                        Join
+                      </button>
+                    }
                   }
                 </div>
               </div>
@@ -879,24 +964,28 @@
           }
         </div>
       } @else {
-        <div class="bg-white rounded-xl p-12 text-center shadow-sm">
+        <div class="bg-white rounded-xl p-12 text-center shadow-lg border-2 border-gray-100">
           @if (selectedCategory !== null) {
-            <span class="text-6xl mb-4 block">{{ getCategoryIcon(selectedCategory) }}</span>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">No {{ selectedCategory }} clubs</h3>
-            <p class="text-sm text-gray-600 mb-4">You don't have any {{ selectedCategory }} clubs yet.</p>
+            <div class="bg-primary w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-4xl">{{ getCategoryIcon(selectedCategory) }}</span>
+            </div>
+            <h3 class="text-xl font-bold text-primary mb-2">No {{ selectedCategory }} clubs</h3>
+            <p class="text-sm text-gray-600 mb-6">You don't have any {{ selectedCategory }} clubs yet.</p>
             <button
               (click)="filterByCategory(null)"
-              class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+              class="inline-flex items-center px-6 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors font-semibold shadow-md"
             >
               View All Clubs
             </button>
           } @else {
-            <span class="text-6xl mb-4 block">📚</span>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">No clubs yet</h3>
-            <p class="text-sm text-gray-600 mb-4">Create your first club to get started!</p>
+            <div class="bg-primary w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-4xl">📚</span>
+            </div>
+            <h3 class="text-xl font-bold text-primary mb-2">No clubs yet</h3>
+            <p class="text-sm text-gray-600 mb-6">Create your first club to get started!</p>
             <button
               (click)="openCreateModal()"
-              class="inline-flex items-center px-4 py-2 bg-[#F6BD60] text-gray-900 rounded-lg hover:bg-[#e5ac4f] transition-colors font-semibold"
+              class="inline-flex items-center px-6 py-3 bg-accent-orange text-primary rounded-lg hover:bg-accent-orange-600 transition-colors font-bold shadow-md"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -1116,38 +1205,41 @@
 
 <!-- Edit Club Modal -->
 @if (showEditModal && editingClub) {
-  <div class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm animate-fadeIn">
+  <div class="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm" (click)="closeEditModal()">
     <div class="flex items-center justify-center min-h-screen px-4 py-8">
-      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden animate-slideUp">
-        <!-- Modal Header with gradient -->
-        <div class="bg-gradient-to-r from-[#2D5757] via-[#356666] to-[#3D3D60] p-6">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+      <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="relative bg-gradient-to-br from-[#2D5757] to-[#3D3D60] p-8">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-black text-white">Modifier le Club</h3>
+                  <p class="text-sm text-white/80 mt-1">Mettez à jour les informations</p>
+                </div>
+              </div>
+              <button
+                (click)="closeEditModal()"
+                class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              >
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
-              </div>
-              <div>
-                <h3 class="text-xl font-bold text-white">Edit Club</h3>
-                <p class="text-sm text-white/80">Update your club information</p>
-              </div>
+              </button>
             </div>
-            <button
-              (click)="closeEditModal()"
-              class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200"
-            >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
           </div>
         </div>
 
         <!-- Modal Body -->
-        <div class="p-6 max-h-[calc(90vh-200px)] overflow-y-auto">
+        <div class="p-8 max-h-[calc(90vh-250px)] overflow-y-auto">
           @if (updateError) {
-            <div class="mb-4 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 animate-shake">
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-xl p-4">
               <div class="flex items-center">
                 <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mr-3">
                   <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1159,59 +1251,83 @@
             </div>
           }
 
-          <form [formGroup]="editForm" (ngSubmit)="updateClub()" class="space-y-5">
-            <!-- Club Name -->
+          <form [formGroup]="editForm" (ngSubmit)="updateClub()" class="space-y-6">
+            <!-- Image Upload -->
             <div>
-              <label class="block text-sm font-bold text-[#2D5757] mb-2">
-                Club Name <span class="text-[#C84630]">*</span>
-              </label>
-              <input
-                type="text"
-                formControlName="name"
-                placeholder="Enter club name"
-                [class.border-red-500]="isEditFieldInvalid('name')"
-                [class.border-[#2D5757]]="!isEditFieldInvalid('name')"
-                class="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all duration-200 text-sm"
-              />
-              @if (isEditFieldInvalid('name')) {
-                <p class="mt-2 text-xs text-red-600 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  @if (editForm.get('name')?.errors?.['required']) {
-                    Club name is required
-                  }
-                  @if (editForm.get('name')?.errors?.['minlength']) {
-                    Club name must be at least 3 characters
-                  }
-                </p>
-              }
+              <label class="block text-sm font-bold text-[#2D5757] mb-3">Image du Club</label>
+              <div class="flex items-center gap-6">
+                @if (editImagePreview || editingClub.image) {
+                  <div class="relative group">
+                    <img [src]="editImagePreview || editingClub.image" alt="Preview" class="w-32 h-32 object-cover rounded-2xl border-2 border-[#2D5757] shadow-lg" />
+                    <button
+                      type="button"
+                      (click)="editImagePreview = null; editImageFile = null"
+                      class="absolute -top-2 -right-2 bg-[#C84630] text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-[#a83820] shadow-lg opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                }
+                <label class="flex-1 cursor-pointer group">
+                  <div class="w-full px-6 py-8 border-2 border-dashed border-gray-300 rounded-2xl hover:border-[#F6BD60] hover:bg-[#F6BD60]/5 transition-all text-center">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-400 group-hover:text-[#F6BD60] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-sm font-semibold text-gray-700">
+                      {{ editImageFile ? editImageFile.name : 'Cliquer pour changer' }}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">PNG, JPG jusqu'à 5MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onEditImageSelected($event)"
+                    class="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
-            <!-- Category -->
-            <div>
-              <label class="block text-sm font-bold text-[#2D5757] mb-2">
-                Category <span class="text-[#C84630]">*</span>
-              </label>
-              <select
-                formControlName="category"
-                [class.border-red-500]="isEditFieldInvalid('category')"
-                [class.border-[#2D5757]]="!isEditFieldInvalid('category')"
-                class="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all duration-200 text-sm bg-white"
-              >
-                <option value="">Select a category</option>
-                @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
+            <!-- Two Column Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Club Name -->
+              <div>
+                <label class="block text-sm font-bold text-[#2D5757] mb-2">
+                  Nom du Club <span class="text-[#C84630]">*</span>
+                </label>
+                <input
+                  type="text"
+                  formControlName="name"
+                  placeholder="Nom du club"
+                  [class.border-red-500]="isEditFieldInvalid('name')"
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all"
+                />
+                @if (isEditFieldInvalid('name')) {
+                  <p class="mt-2 text-xs text-red-600">Nom requis (min. 3 caractères)</p>
                 }
-              </select>
-              @if (isEditFieldInvalid('category')) {
-                <p class="mt-2 text-xs text-red-600 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Category is required
-                </p>
-              }
+              </div>
+
+              <!-- Category -->
+              <div>
+                <label class="block text-sm font-bold text-[#2D5757] mb-2">
+                  Catégorie <span class="text-[#C84630]">*</span>
+                </label>
+                <select
+                  formControlName="category"
+                  [class.border-red-500]="isEditFieldInvalid('category')"
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all bg-white"
+                >
+                  <option value="">Sélectionner</option>
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
+                  }
+                </select>
+                @if (isEditFieldInvalid('category')) {
+                  <p class="mt-2 text-xs text-red-600">Catégorie requise</p>
+                }
+              </div>
             </div>
 
             <!-- Description -->
@@ -1222,43 +1338,30 @@
               <textarea
                 formControlName="description"
                 rows="4"
-                placeholder="Describe your club..."
+                placeholder="Décrivez votre club..."
                 [class.border-red-500]="isEditFieldInvalid('description')"
-                [class.border-[#2D5757]]="!isEditFieldInvalid('description')"
-                class="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all duration-200 text-sm resize-none"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all resize-none"
               ></textarea>
               @if (isEditFieldInvalid('description')) {
-                <p class="mt-2 text-xs text-red-600 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  @if (editForm.get('description')?.errors?.['required']) {
-                    Description is required
-                  }
-                  @if (editForm.get('description')?.errors?.['minlength']) {
-                    Description must be at least 10 characters
-                  }
-                </p>
+                <p class="mt-2 text-xs text-red-600">Description requise (min. 10 caractères)</p>
               }
             </div>
 
             <!-- Objective -->
             <div>
-              <label class="block text-sm font-bold text-[#2D5757] mb-2">
-                Club Objective
-              </label>
+              <label class="block text-sm font-bold text-[#2D5757] mb-2">Objectif</label>
               <textarea
                 formControlName="objective"
                 rows="3"
-                placeholder="What is the main objective of this club?"
-                class="w-full px-4 py-3 border-2 border-[#2D5757] rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all duration-200 text-sm resize-none"
+                placeholder="Objectif principal..."
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all resize-none"
               ></textarea>
             </div>
 
             <!-- Maximum Members -->
             <div>
               <label class="block text-sm font-bold text-[#2D5757] mb-2">
-                Maximum Members <span class="text-[#C84630]">*</span>
+                Nombre Max <span class="text-[#C84630]">*</span>
               </label>
               <input
                 type="number"
@@ -1266,87 +1369,41 @@
                 min="5"
                 max="100"
                 [class.border-red-500]="isEditFieldInvalid('maxMembers')"
-                [class.border-[#2D5757]]="!isEditFieldInvalid('maxMembers')"
-                class="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all duration-200 text-sm"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all"
               />
               @if (isEditFieldInvalid('maxMembers')) {
-                <p class="mt-2 text-xs text-red-600 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Maximum members must be between 5 and 100
-                </p>
+                <p class="mt-2 text-xs text-red-600">Between 5 and 100 members</p>
               }
-            </div>
-
-            <!-- Image Upload -->
-            <div>
-              <label class="block text-sm font-bold text-[#2D5757] mb-2">
-                Club Image
-              </label>
-              <div class="flex items-center gap-4">
-                <label class="flex-1 cursor-pointer group">
-                  <div class="w-full px-4 py-6 border-2 border-dashed border-[#2D5757] rounded-xl hover:border-[#F6BD60] hover:bg-[#F6BD60]/5 transition-all duration-200 text-center">
-                    <svg class="w-10 h-10 mx-auto mb-2 text-[#2D5757] group-hover:text-[#F6BD60] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <p class="text-sm font-medium text-[#2D5757]">
-                      {{ editImageFile ? editImageFile.name : (editingClub.image ? 'Change image' : 'Click to upload') }}
-                    </p>
-                    <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    (change)="onEditImageSelected($event)"
-                    class="hidden"
-                  />
-                </label>
-                @if (editImagePreview || editingClub.image) {
-                  <div class="relative group">
-                    <img [src]="editImagePreview || editingClub.image" alt="Preview" class="w-24 h-24 object-cover rounded-xl border-2 border-[#2D5757] shadow-md" />
-                    <button
-                      type="button"
-                      (click)="editImagePreview = null; editImageFile = null"
-                      class="absolute -top-2 -right-2 bg-[#C84630] text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-[#a83820] shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
-                    </button>
-                  </div>
-                }
-              </div>
             </div>
           </form>
         </div>
 
-        <!-- Modal Footer with gradient -->
-        <div class="flex justify-end gap-3 p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-3 p-6 bg-gray-50 border-t border-gray-200">
           <button
             type="button"
             (click)="closeEditModal()"
-            class="px-6 py-2.5 text-[#2D5757] font-semibold border-2 border-[#2D5757] rounded-xl hover:bg-[#2D5757] hover:text-white transition-all duration-200 shadow-sm"
+            class="px-6 py-3 text-[#2D5757] font-semibold border-2 border-gray-300 rounded-xl hover:bg-gray-100 transition-all"
           >
-            Cancel
+            Annuler
           </button>
           <button
             type="button"
             (click)="updateClub()"
             [disabled]="updating || editForm.invalid"
-            class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 font-bold rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             @if (updating) {
               <svg class="animate-spin -ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Updating...
+              Mise à jour...
             } @else {
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
               </svg>
-              Update Club
+              Mettre à Jour
             }
           </button>
         </div>
@@ -1498,7 +1555,7 @@
               <span class="text-3xl">📝</span>
             </div>
             <div>
-              <h2 class="text-2xl font-bold">Demandes de Modification</h2>
+              <h2 class="text-2xl font-bold">Update Requests</h2>
               <p class="text-sm text-gray-100">{{ selectedClub.name }}</p>
             </div>
           </div>
@@ -1522,8 +1579,8 @@
         } @else if (getPendingRequestsForClub(selectedClub.id!).length === 0) {
           <div class="text-center py-12">
             <span class="text-6xl block mb-4">✅</span>
-            <p class="text-gray-500 text-lg">Aucune demande en attente</p>
-            <p class="text-gray-400 text-sm mt-2">Toutes les demandes ont été traitées</p>
+            <p class="text-gray-500 text-lg">No pending requests</p>
+            <p class="text-gray-400 text-sm mt-2">All requests have been processed</p>
           </div>
         } @else {
           <div class="space-y-4">
@@ -1534,7 +1591,7 @@
                     Demandé le {{ request.createdAt | date:'dd/MM/yyyy à HH:mm' }}
                   </p>
                   <span class="px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full">
-                    EN ATTENTE
+                    PENDING
                   </span>
                 </div>
                 
@@ -1570,7 +1627,7 @@
                         <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
                         </svg>
-                        <span class="text-xs font-bold text-green-700 uppercase">Nouveaux Membres Max</span>
+                        <span class="text-xs font-bold text-green-700 uppercase">New Max Members</span>
                       </div>
                       <p class="text-sm font-bold text-gray-900">{{ request.maxMembers }}</p>
                       <p class="text-xs text-gray-500 mt-1">Actuel: {{ selectedClub.maxMembers }}</p>
@@ -1595,7 +1652,7 @@
                 
                 <!-- Approval Status -->
                 <div class="bg-white rounded-xl p-4 mb-4 shadow-md border border-gray-200">
-                  <h4 class="text-xs font-bold text-gray-700 uppercase mb-3">Statut des Approbations</h4>
+                  <h4 class="text-xs font-bold text-gray-700 uppercase mb-3">Approval Status</h4>
                   <div class="flex items-center gap-6">
                     <div class="flex items-center flex-1">
                       @if (request.vicePresidentApproved) {
@@ -1605,8 +1662,8 @@
                           </svg>
                         </div>
                         <div>
-                          <p class="text-sm font-bold text-green-700">Vice-Président</p>
-                          <p class="text-xs text-green-600">Approuvé ✓</p>
+                          <p class="text-sm font-bold text-green-700">Vice President</p>
+                          <p class="text-xs text-green-600">Approved ✓</p>
                         </div>
                       } @else {
                         <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-3">
@@ -1615,8 +1672,8 @@
                           </svg>
                         </div>
                         <div>
-                          <p class="text-sm font-bold text-gray-700">Vice-Président</p>
-                          <p class="text-xs text-gray-500">En attente</p>
+                          <p class="text-sm font-bold text-gray-700">Vice President</p>
+                          <p class="text-xs text-gray-500">Pending</p>
                         </div>
                       }
                     </div>
@@ -1628,8 +1685,8 @@
                           </svg>
                         </div>
                         <div>
-                          <p class="text-sm font-bold text-green-700">Secrétaire</p>
-                          <p class="text-xs text-green-600">Approuvé ✓</p>
+                          <p class="text-sm font-bold text-green-700">Secretary</p>
+                          <p class="text-xs text-green-600">Approved ✓</p>
                         </div>
                       } @else {
                         <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-3">
@@ -1638,8 +1695,8 @@
                           </svg>
                         </div>
                         <div>
-                          <p class="text-sm font-bold text-gray-700">Secrétaire</p>
-                          <p class="text-xs text-gray-500">En attente</p>
+                          <p class="text-sm font-bold text-gray-700">Secretary</p>
+                          <p class="text-xs text-gray-500">Pending</p>
                         </div>
                       }
                     </div>
@@ -1677,7 +1734,7 @@
       <div class="bg-gray-50 p-6 border-t border-gray-200">
         <div class="flex items-center justify-between">
           <p class="text-sm text-gray-600">
-            Demandes en attente: <span class="font-bold text-yellow-600">{{ getPendingRequestsForClub(selectedClub.id!).length }}</span>
+            Pending requests: <span class="font-bold text-yellow-600">{{ getPendingRequestsForClub(selectedClub.id!).length }}</span>
           </p>
           <button
             (click)="closeUpdateRequestsModal()"
@@ -1685,6 +1742,135 @@
           >
             Fermer
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- Club History Modal -->
+@if (showHistoryModal && selectedClubForHistory) {
+  <div class="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm" (click)="closeHistoryModal()">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+        
+        <!-- Top Navigation Bar -->
+        <div class="flex items-center justify-between bg-white rounded-t-3xl p-6 shadow-sm border-b border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-2xl font-black text-[#2D5757]">Club History</h3>
+              <p class="text-sm text-gray-600">{{ selectedClubForHistory.name }} - All Activities</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="closeHistoryModal()"
+            class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all"
+          >
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 max-h-[calc(90vh-180px)] overflow-y-auto">
+          @if (loadingHistory) {
+            <div class="flex flex-col items-center justify-center py-12">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D5757] mb-4"></div>
+              <p class="text-gray-600">Loading history...</p>
+            </div>
+          } @else if (clubHistory.length === 0) {
+            <div class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
+              <div class="text-6xl mb-4">📜</div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">No History Yet</h3>
+              <p class="text-gray-600">Your club activities will appear here</p>
+            </div>
+          } @else {
+            <!-- History Cards Grid -->
+            <div class="space-y-4">
+              @for (item of clubHistory; track item.id) {
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                  <!-- Header -->
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
+                        <span class="text-2xl">{{ getHistoryIcon(item.type) }}</span>
+                      </div>
+                      <div>
+                        <h4 class="text-lg font-bold text-[#2D5757]">{{ item.action }}</h4>
+                        <p class="text-xs text-gray-500">{{ formatHistoryDate(item.createdAt) }}</p>
+                      </div>
+                    </div>
+                    <span class="px-3 py-1.5 text-xs font-bold rounded-full shadow-sm" [ngClass]="getHistoryTypeBadgeClass(item.type)">
+                      {{ item.type }}
+                    </span>
+                  </div>
+                  
+                  <!-- Description -->
+                  @if (item.description) {
+                    <p class="text-sm text-gray-700 mb-4 pl-15">{{ item.description }}</p>
+                  }
+                  
+                  <!-- Value Changes -->
+                  @if (item.oldValue || item.newValue) {
+                    <div class="pl-15">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @if (item.oldValue) {
+                          <div class="bg-red-50 rounded-xl p-4 border-2 border-red-200">
+                            <div class="flex items-center gap-2 mb-2">
+                              <div class="w-6 h-6 rounded-lg bg-red-500 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                              </div>
+                              <p class="text-xs font-bold text-red-600 uppercase tracking-wide">Previous Value</p>
+                            </div>
+                            <p class="text-sm text-red-900 font-medium">{{ item.oldValue }}</p>
+                          </div>
+                        }
+                        @if (item.newValue) {
+                          <div class="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                            <div class="flex items-center gap-2 mb-2">
+                              <div class="w-6 h-6 rounded-lg bg-green-500 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              </div>
+                              <p class="text-xs font-bold text-green-600 uppercase tracking-wide">New Value</p>
+                            </div>
+                            <p class="text-sm text-green-900 font-medium">{{ item.newValue }}</p>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-white border-t border-gray-200 p-6 rounded-b-3xl">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-gray-600">
+              Total activities: <span class="font-bold text-[#2D5757]">{{ clubHistory.length }}</span>
+            </p>
+            <button
+              type="button"
+              (click)="closeHistoryModal()"
+              class="px-6 py-3 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all font-semibold"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

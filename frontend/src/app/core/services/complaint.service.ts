@@ -15,6 +15,7 @@ export interface Complaint {
   difficulty?: string;
   issueType?: string;
   sessionCount?: number;
+  clubId?: number; // For CLUB_SUSPENSION category
   response?: string | null;
   responderId?: number;
   responderRole?: string;
@@ -45,6 +46,7 @@ export interface ComplaintWithUser {
   difficulty?: string;
   issueType?: string;
   sessionCount?: number;
+  clubId?: number; // For CLUB_SUSPENSION category
   responderId?: number;
   responderRole?: string;
 }

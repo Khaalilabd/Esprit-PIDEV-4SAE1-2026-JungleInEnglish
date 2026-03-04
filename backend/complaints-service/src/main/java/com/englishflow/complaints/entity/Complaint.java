@@ -79,6 +79,9 @@ public class Complaint {
     @Column
     private Integer sessionCount; // Nombre de séances concernées
     
+    @Column
+    private Integer clubId; // Pour CLUB_SUSPENSION - ID du club concerné
+    
     @Column(columnDefinition = "TEXT")
     private String response;
     

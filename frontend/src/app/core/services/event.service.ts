@@ -7,16 +7,25 @@ export interface Event {
   id?: number;
   title: string;
   type: 'WORKSHOP' | 'SEMINAR' | 'SOCIAL';
-  eventDate: string;
+  startDate: string;
+  endDate: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   maxParticipants: number;
   currentParticipants?: number;
   description?: string;
   creatorId?: number;
+  clubId?: number;
+  clubName?: string;
   image?: string;
+  gallery?: string[]; // Array of image URLs for gallery
   status?: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdAt?: string;
   updatedAt?: string;
+  
+  // Backward compatibility (deprecated)
+  eventDate?: string;
 }
 
 export interface Participant {

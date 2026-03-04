@@ -45,6 +45,13 @@ export const routes: Routes = [
     title: 'Clubs | Jungle in English'
   },
   
+  // Page publique des événements
+  {
+    path: 'events',
+    loadComponent: () => import('./pages/public-events/public-events.component').then(m => m.PublicEventsComponent),
+    title: 'Events | Jungle in English'
+  },
+  
   // Pack Details - Page publique
   {
     path: 'pack-details/:id',
@@ -157,6 +164,11 @@ export const routes: Routes = [
         path: 'events',
         loadComponent: () => import('./pages/student-panel/events/events.component').then(m => m.EventsComponent),
         title: 'Events | Jungle in English'
+      },
+      {
+        path: 'events/:id',
+        loadComponent: () => import('./pages/student-panel/events/events.component').then(m => m.EventsComponent),
+        title: 'Event Details | Jungle in English'
       },
       {
         path: 'club-requests',
@@ -571,6 +583,11 @@ export const routes: Routes = [
         path: 'events/manage',
         loadComponent: () => import('./pages/dashboard/events-manage/events-manage.component').then(m => m.EventsManageComponent),
         title: 'Manage Events | Jungle in English Dashboard'
+      },
+      {
+        path: 'events/requests',
+        loadComponent: () => import('./pages/dashboard/events-requests/events-requests.component').then(m => m.EventsRequestsComponent),
+        title: 'Event Requests | Jungle in English Dashboard'
       },
       {
         path: 'complaints',

@@ -98,4 +98,29 @@ public class ClubController {
         ClubDTO rejectedClub = clubService.rejectClub(id, reviewerId, comment);
         return ResponseEntity.ok(rejectedClub);
     }
+    
+    @PostMapping("/{id}/suspend")
+    public ResponseEntity<ClubDTO> suspendClub(
+            @PathVariable Integer id,
+            @RequestParam Integer managerId,
+            @RequestParam(required = true) String reason) {
+        try {
+            ClubDTO suspendedClub = clubService.suspendClub(id, managerId, reason);
+            return ResponseEntity.ok(suspendedClub);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PostMapping("/{id}/activate")
+    public ResponseEntity<ClubDTO> activateClub(
+            @PathVariable Integer id,
+            @RequestParam Integer managerId) {
+        try {
+            ClubDTO activatedClub = clubService.activateClub(id, managerId);
+            return ResponseEntity.ok(activatedClub);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

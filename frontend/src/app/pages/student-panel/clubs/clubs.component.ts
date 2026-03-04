@@ -7,7 +7,11 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TaskService } from '../../../core/services/task.service';
 import { MemberService } from '../../../core/services/member.service';
 import { UserService } from '../../../core/services/user.service';
+import { EventService, Event as ClubEvent } from '../../../core/services/event.service';
+import { EventFeedbackService } from '../../../core/services/event-feedback.service';
 import { ClubUpdateRequestService, ClubUpdateRequest } from '../../../core/services/club-update-request.service';
+import { ClubHistoryService, ClubHistory } from '../../../core/services/club-history.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Club, ClubCategory, ClubStatus } from '../../../core/models/club.model';
 import { Task, TaskStatus } from '../../../core/models/task.model';
 import { filter, forkJoin, of } from 'rxjs';
@@ -30,6 +34,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
   categories = Object.values(ClubCategory);
   selectedCategory: ClubCategory | null = null;
   currentUserId: number | null = null;
+  searchQuery: string = ''; // Dynamic search
   
   // Store user roles for each club
   clubRoles: { [clubId: number]: 'PRESIDENT' | 'VICE_PRESIDENT' | 'SECRETARY' | 'TREASURER' | 'COMMUNICATION_MANAGER' | 'EVENT_MANAGER' | 'PARTNERSHIP_MANAGER' | 'MEMBER' } = {};
@@ -86,6 +91,19 @@ export class ClubsComponent implements OnInit, OnDestroy {
   
   // Update requests modal
   showUpdateRequestsModal = false;
+  
+  // Club events
+  clubEvents: ClubEvent[] = [];
+  loadingEvents = false;
+  
+  // Event feedback stats
+  eventFeedbackStats: { [eventId: number]: { averageRating: number; totalFeedbacks: number } } = {};
+
+  // Club History
+  showHistoryModal = false;
+  selectedClubForHistory: Club | null = null;
+  clubHistory: any[] = [];
+  loadingHistory = false;
 
   // Helper method to filter pending requests by club ID
   getPendingRequestsForClub(clubId: number): ClubUpdateRequest[] {
@@ -98,7 +116,11 @@ export class ClubsComponent implements OnInit, OnDestroy {
     private taskService: TaskService,
     private memberService: MemberService,
     private userService: UserService,
+    private eventService: EventService,
+    private eventFeedbackService: EventFeedbackService,
     private updateRequestService: ClubUpdateRequestService,
+    private clubHistoryService: ClubHistoryService,
+    private notificationService: NotificationService,
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router
@@ -215,9 +237,10 @@ export class ClubsComponent implements OnInit, OnDestroy {
         
         this.loading = false;
         
-        // Load tasks, member count, and pending requests after displaying
+        // Load tasks, member count, events, and pending requests after displaying
         this.loadTasksForClub(club.id!);
         this.loadActualMemberCount(club.id!);
+        this.loadClubEventsForClub(club.id!);
         this.loadPendingRequests();
       },
       error: (err) => {
@@ -263,6 +286,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
       members: this.currentUserId ? this.memberService.getMembersByUser(this.currentUserId) : of([])
     }).subscribe({
       next: ({ clubs, members }) => {
+        // Ne pas filtrer les clubs suspendus, les afficher tous
         this.allClubs = clubs;
         
         // Process member roles
@@ -346,14 +370,14 @@ export class ClubsComponent implements OnInit, OnDestroy {
 
   getRoleLabel(role: string): string {
     const labels: { [key: string]: string } = {
-      'PRESIDENT': 'Président(e)',
-      'VICE_PRESIDENT': 'Vice-président(e)',
-      'SECRETARY': 'Secrétaire',
-      'TREASURER': 'Trésorier(ère)',
-      'COMMUNICATION_MANAGER': 'Responsable Communication',
-      'EVENT_MANAGER': 'Responsable Événementiel',
-      'PARTNERSHIP_MANAGER': 'Responsable Partenariats',
-      'MEMBER': 'Membre'
+      'PRESIDENT': 'President',
+      'VICE_PRESIDENT': 'Vice President',
+      'SECRETARY': 'Secretary',
+      'TREASURER': 'Treasurer',
+      'COMMUNICATION_MANAGER': 'Communication Manager',
+      'EVENT_MANAGER': 'Event Manager',
+      'PARTNERSHIP_MANAGER': 'Partnership Manager',
+      'MEMBER': 'Member'
     };
     return labels[role] || labels['MEMBER'];
   }
@@ -365,11 +389,26 @@ export class ClubsComponent implements OnInit, OnDestroy {
   }
 
   applyFilter() {
-    if (this.selectedCategory === null) {
-      this.filteredClubs = this.myClubs;
-    } else {
-      this.filteredClubs = this.myClubs.filter(club => club.category === this.selectedCategory);
+    let clubs = this.myClubs;
+    
+    // Filter by category
+    if (this.selectedCategory !== null) {
+      clubs = clubs.filter(club => club.category === this.selectedCategory);
     }
+    
+    // Filter by search query (only by club name)
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase().trim();
+      clubs = clubs.filter(club => 
+        club.name.toLowerCase().includes(query)
+      );
+    }
+    
+    this.filteredClubs = clubs;
+  }
+
+  onSearchChange() {
+    this.applyFilter();
   }
 
   filterByCategory(category: ClubCategory | null) {
@@ -411,12 +450,12 @@ export class ClubsComponent implements OnInit, OnDestroy {
       const file = input.files[0];
       
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        this.notificationService.error('Invalid File', 'Please select an image file');
         return;
       }
       
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
+        this.notificationService.error('File Too Large', 'Image size must be less than 5MB');
         return;
       }
       
@@ -436,12 +475,12 @@ export class ClubsComponent implements OnInit, OnDestroy {
       const file = input.files[0];
       
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        this.notificationService.error('Invalid File', 'Please select an image file');
         return;
       }
       
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
+        this.notificationService.error('File Too Large', 'Image size must be less than 5MB');
         return;
       }
       
@@ -496,27 +535,17 @@ export class ClubsComponent implements OnInit, OnDestroy {
           this.creating = false;
           this.closeCreateModal();
           this.loadClubs();
-          alert('Club request submitted successfully! It will be reviewed by an Academic Affairs Officer.');
+          this.notificationService.success('Club Request Submitted', 'Your club request has been submitted successfully! It will be reviewed by an Academic Affairs Officer.');
         },
         error: (err) => {
-          console.error('❌ Error creating club:', err);
-          console.error('❌ Error status:', err.status);
-          console.error('❌ Error message:', err.error);
-          
-          // Afficher le message d'erreur du backend si disponible
-          if (err.error && err.error.message) {
-            this.createError = `Failed to create club: ${err.error.message}`;
-          } else if (err.error && typeof err.error === 'string') {
-            this.createError = `Failed to create club: ${err.error}`;
-          } else {
-            this.createError = 'Failed to create club. Please check all required fields.';
-          }
-          
           this.creating = false;
+          const errorMessage = err.error?.message || 'Failed to create club. Please try again.';
+          this.notificationService.error('Club Creation Failed', errorMessage);
+          this.createError = errorMessage;
         }
       });
     } catch (error) {
-      console.error('Error processing image:', error);
+      this.notificationService.error('Processing Error', 'Failed to process image. Please try again.');
       this.createError = 'Failed to process image. Please try again.';
       this.creating = false;
     }
@@ -529,31 +558,28 @@ export class ClubsComponent implements OnInit, OnDestroy {
 
   leaveClub(clubId: number) {
     if (!this.currentUserId) {
-      alert('Please log in to leave a club.');
+      this.notificationService.warning('Login Required', 'Please log in to leave a club.');
       return;
     }
 
     if (confirm('Are you sure you want to leave this club?')) {
       this.memberService.removeMemberFromClub(clubId, this.currentUserId).subscribe({
         next: () => {
-          console.log('✅ Successfully left club');
-          alert('You have left the club successfully!');
+          this.notificationService.success('Left Club', 'You have left the club successfully!');
           // Remove from club roles map
           delete this.clubRoles[clubId];
           // Notify that club membership has changed (this will update the sidebar)
           this.clubService.notifyClubMembershipChanged();
+          // Update member count if in details view
+          if (this.showDetailsView && this.selectedClub?.id === clubId) {
+            this.loadActualMemberCount(clubId);
+          }
           // Reload clubs to update the UI
           this.loadClubs();
         },
         error: (err) => {
-          console.error('❌ Error leaving club:', err);
-          if (err.error && err.error.message) {
-            alert(`Failed to leave club: ${err.error.message}`);
-          } else if (err.error && typeof err.error === 'string') {
-            alert(`Failed to leave club: ${err.error}`);
-          } else {
-            alert('Failed to leave club. Please try again.');
-          }
+          const errorMessage = err.error?.message || err.error || 'Failed to leave club. Please try again.';
+          this.notificationService.error('Failed to Leave', errorMessage);
         }
       });
     }
@@ -581,7 +607,8 @@ export class ClubsComponent implements OnInit, OnDestroy {
     const classes: { [key: string]: string } = {
       'PENDING': 'text-amber-800 bg-amber-100 dark:text-amber-200 dark:bg-amber-900',
       'APPROVED': 'text-green-800 bg-green-100 dark:text-green-200 dark:bg-green-900',
-      'REJECTED': 'text-red-800 bg-red-100 dark:text-red-200 dark:bg-red-900'
+      'REJECTED': 'text-red-800 bg-red-100 dark:text-red-200 dark:bg-red-900',
+      'SUSPENDED': 'text-red-800 bg-red-100 dark:text-red-200 dark:bg-red-900'
     };
     return classes[status || 'PENDING'] || 'text-gray-800 bg-gray-100';
   }
@@ -704,7 +731,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
   // Members management methods
   openMembersModal(clubId: number) {
     if (this.getUserRole(clubId) !== 'PRESIDENT') {
-      alert('Only the president can manage members.');
+      this.notificationService.warning('Access Denied', 'Only the president can manage members.');
       return;
     }
     
@@ -785,9 +812,8 @@ export class ClubsComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        console.error('❌ Error loading club members:', err);
         this.loadingMembers = false;
-        alert('Failed to load club members.');
+        this.notificationService.error('Load Failed', 'Failed to load club members.');
       }
     });
   }
@@ -805,8 +831,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
     }
 
     if (!this.currentUserId) {
-      console.error('❌ No current user ID available');
-      alert('Error: User not authenticated. Please refresh the page.');
+      this.notificationService.error('Authentication Error', 'User not authenticated. Please refresh the page.');
       return;
     }
 
@@ -816,8 +841,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
       
       this.memberService.updateMemberRole(memberId, newRole, this.currentUserId).subscribe({
         next: (updatedMember) => {
-          console.log('✅ Role updated successfully:', updatedMember);
-          alert(`Role successfully updated to ${this.getRoleLabel(newRole)}!`);
+          this.notificationService.success('Role Updated', `Member role has been successfully updated to ${this.getRoleLabel(newRole)}!`);
           // Reload members to get fresh data from server
           this.loadClubMembers(clubId);
           // Reload user roles
@@ -843,7 +867,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
             }
           }
           
-          alert(`Error ${err.status}: ${errorMessage}`);
+          this.notificationService.error(`Error ${err.status}`, errorMessage);
           // Reload members to reset the dropdown
           this.loadClubMembers(clubId);
         }
@@ -860,15 +884,14 @@ export class ClubsComponent implements OnInit, OnDestroy {
       this.memberService.removeMemberFromClub(clubId, userId).subscribe({
         next: () => {
           console.log('✅ Member removed successfully');
-          alert('Member removed successfully!');
+          this.notificationService.success('Member Removed', 'The member has been removed from the club successfully!');
           // Reload members
           this.loadClubMembers(clubId);
           // Update member count
           this.loadActualMemberCount(clubId);
         },
         error: (err) => {
-          console.error('❌ Error removing member:', err);
-          alert('Failed to remove member. Please try again.');
+          this.notificationService.error('Remove Failed', 'Failed to remove member. Please try again.');
         }
       });
     }
@@ -898,19 +921,13 @@ export class ClubsComponent implements OnInit, OnDestroy {
 
   // Details view methods (not modal)
   openDetailsView(club: Club) {
-    this.selectedClub = club;
-    this.showDetailsView = true;
-    this.showDescription = true;  // Réinitialiser à ouvert
-    this.showObjective = true;    // Réinitialiser à ouvert
-    this.loadTasksForClub(club.id!);
+    // Navigate to the club detail route with ID
+    this.router.navigate(['/user-panel/clubs', club.id]);
   }
 
   closeDetailsView() {
-    this.showDetailsView = false;
-    this.selectedClub = null;
-    this.newTaskText = '';
-    // Reload clubs list
-    this.loadClubs();
+    // Navigate back to clubs list
+    this.router.navigate(['/user-panel/clubs']);
   }
 
   toggleDescription() {
@@ -978,7 +995,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
           // Recharger les demandes en attente
           this.loadPendingRequests();
           
-          alert('Demande de modification créée avec succès ! Elle doit être approuvée par le vice-président et le secrétaire.');
+          this.notificationService.success('Update Request Created', 'Your update request has been submitted successfully! It must be approved by the vice president and secretary.');
         },
         error: (err) => {
           console.error('Error creating update request:', err);
@@ -1010,11 +1027,10 @@ export class ClubsComponent implements OnInit, OnDestroy {
       this.clubService.deleteClub(clubId).subscribe({
         next: () => {
           this.loadClubs();
-          alert('Club deleted successfully!');
+          this.notificationService.success('Club Deleted', 'The club has been deleted successfully!');
         },
         error: (err) => {
-          console.error('Error deleting club:', err);
-          alert('Failed to delete club. Please try again.');
+          this.notificationService.error('Delete Failed', 'Failed to delete club. Please try again.');
         }
       });
     }
@@ -1038,34 +1054,37 @@ export class ClubsComponent implements OnInit, OnDestroy {
     return this.clubRoles.hasOwnProperty(clubId);
   }
 
+  // Check if current user can view history (President, VP, or Secretary)
+  canViewHistory(clubId: number): boolean {
+    const role = this.clubRoles[clubId];
+    return role === 'PRESIDENT' || role === 'VICE_PRESIDENT' || role === 'SECRETARY';
+  }
+
   // Join a club
   joinClub(clubId: number) {
     if (!this.currentUserId) {
-      alert('Please log in to join a club.');
+      this.notificationService.warning('Login Required', 'Please log in to join a club.');
       return;
     }
 
     if (confirm('Do you want to join this club?')) {
       this.memberService.addMemberToClub(clubId, this.currentUserId).subscribe({
         next: (member) => {
-          console.log('✅ Successfully joined club:', member);
-          alert('You have successfully joined the club!');
+          this.notificationService.success('Joined Club', 'You have successfully joined the club!');
           // Update the club roles map
           this.clubRoles[clubId] = member.rank;
           // Notify that club membership has changed (this will update the sidebar)
           this.clubService.notifyClubMembershipChanged();
+          // Update member count if in details view
+          if (this.showDetailsView && this.selectedClub?.id === clubId) {
+            this.loadActualMemberCount(clubId);
+          }
           // Reload clubs to update the UI (this will also reload roles)
           this.loadClubs();
         },
         error: (err) => {
-          console.error('❌ Error joining club:', err);
-          if (err.error && err.error.message) {
-            alert(`Failed to join club: ${err.error.message}`);
-          } else if (err.error && typeof err.error === 'string') {
-            alert(`Failed to join club: ${err.error}`);
-          } else {
-            alert('Failed to join club. The club might be full or you are already a member.');
-          }
+          const errorMessage = err.error?.message || err.error || 'Failed to join club. The club might be full or you are already a member.';
+          this.notificationService.error('Failed to Join', errorMessage);
         }
       });
     }
@@ -1118,10 +1137,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
         this.newTaskText = '';
       },
       error: (err) => {
-        console.error('❌ Error creating task:', err);
-        console.error('❌ Error status:', err.status);
-        console.error('❌ Error details:', err.error);
-        alert('Failed to create task. Please try again.');
+        this.notificationService.error('Task Creation Failed', 'Failed to create task. Please try again.');
       }
     });
   }
@@ -1137,8 +1153,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Error updating task:', err);
-        alert('Failed to update task. Please try again.');
+        this.notificationService.error('Update Failed', 'Failed to update task. Please try again.');
       }
     });
   }
@@ -1174,8 +1189,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
         this.clubTasks[clubId] = this.clubTasks[clubId].filter(t => t.id !== taskId);
       },
       error: (err) => {
-        console.error('Error deleting task:', err);
-        alert('Failed to delete task. Please try again.');
+        this.notificationService.error('Delete Failed', 'Failed to delete task. Please try again.');
       }
     });
   }
@@ -1195,7 +1209,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
   // Save edited task
   saveEditedTask(clubId: number, taskId: number) {
     if (!this.editingTaskText.trim()) {
-      alert('Task text cannot be empty');
+      this.notificationService.warning('Empty Task', 'Task text cannot be empty');
       return;
     }
 
@@ -1209,8 +1223,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
         this.cancelEditingTask();
       },
       error: (err) => {
-        console.error('Error updating task:', err);
-        alert('Failed to update task. Please try again.');
+        this.notificationService.error('Update Failed', 'Failed to update task. Please try again.');
       }
     });
   }
@@ -1234,9 +1247,9 @@ export class ClubsComponent implements OnInit, OnDestroy {
 
   getTaskStatusLabel(status: TaskStatus): string {
     const labels: { [key in TaskStatus]: string } = {
-      [TaskStatus.TODO]: 'À faire',
-      [TaskStatus.IN_PROGRESS]: 'En cours',
-      [TaskStatus.DONE]: 'Terminé'
+      [TaskStatus.TODO]: 'To Do',
+      [TaskStatus.IN_PROGRESS]: 'In Progress',
+      [TaskStatus.DONE]: 'Done'
     };
     return labels[status];
   }
@@ -1295,48 +1308,106 @@ export class ClubsComponent implements OnInit, OnDestroy {
 
   approveRequest(requestId: number) {
     if (!this.currentUserId) {
-      alert('Vous devez être connecté pour approuver');
+      this.notificationService.warning('Login Required', 'You must be logged in to approve');
       return;
     }
 
+    console.log('🔄 Approving request:', requestId);
+    
     this.updateRequestService.approveRequest(requestId, this.currentUserId).subscribe({
       next: (updatedRequest) => {
-        if (updatedRequest.status === 'APPROVED') {
-          alert('Demande approuvée et modifications appliquées !');
-          this.loadClubs(); // Reload clubs to show updated info
-          if (this.selectedClub) {
-            this.loadAndDisplayClub(this.selectedClub.id!); // Reload the selected club
-          }
-        } else {
-          alert('Votre approbation a été enregistrée. En attente de l\'autre approbation.');
-        }
-        this.loadPendingRequests();
         
-        // Close modal if no more pending requests for this club
-        if (this.selectedClub && this.getPendingRequestsForClub(this.selectedClub.id!).length === 0) {
+        if (updatedRequest.status === 'APPROVED') {
+          this.notificationService.success('Request Approved', 'The request has been approved and changes have been applied!');
+          
+          // Close modal first
           this.closeUpdateRequestsModal();
+          
+          // Force reload everything with a longer delay to ensure DB is updated
+          setTimeout(() => {
+            console.log('🔄 Reloading club data after approval...');
+            
+            if (this.selectedClub) {
+              const clubId = this.selectedClub.id!;
+              console.log('🔍 Reloading club ID:', clubId);
+              
+              // Reload the specific club from server
+              this.clubService.getClubById(clubId).subscribe({
+                next: (updatedClub) => {
+                  console.log('✅ Club reloaded after approval:', updatedClub);
+                  console.log('📝 Old name:', this.selectedClub?.name);
+                  console.log('📝 New name:', updatedClub.name);
+                  
+                  // Update selectedClub reference (this will trigger change detection)
+                  this.selectedClub = { ...updatedClub };
+                  
+                  // Also update selectedClubForHistory if it's the same club
+                  if (this.selectedClubForHistory?.id === clubId) {
+                    console.log('🔄 Updating selectedClubForHistory with new club data');
+                    this.selectedClubForHistory = { ...updatedClub };
+                  }
+                  
+                  // Also update in the clubs list
+                  const index = this.allClubs.findIndex(c => c.id === clubId);
+                  if (index !== -1) {
+                    console.log('📝 Updating allClubs[' + index + ']');
+                    this.allClubs[index] = { ...updatedClub };
+                  }
+                  const myIndex = this.myClubs.findIndex(c => c.id === clubId);
+                  if (myIndex !== -1) {
+                    console.log('📝 Updating myClubs[' + myIndex + ']');
+                    this.myClubs[myIndex] = { ...updatedClub };
+                  }
+                  
+                  // Force re-apply filter to update filteredClubs
+                  this.applyFilter();
+                  console.log('✅ Club data updated successfully');
+                  
+                  // Reload history to show the new changes
+                  if (this.showHistoryModal && this.selectedClubForHistory?.id === clubId) {
+                    console.log('🔄 Reloading history after approval...');
+                    this.loadClubHistory(clubId);
+                  }
+                },
+                error: (err) => {
+                  console.error('❌ Error reloading club:', err);
+                  // Fallback: reload all clubs
+                  this.loadClubs();
+                }
+              });
+            } else {
+              // If no selected club, reload all
+              console.log('🔄 No selected club, reloading all clubs');
+              this.loadClubs();
+            }
+            
+            // Reload pending requests
+            this.loadPendingRequests();
+          }, 1500); // Increased delay to 1.5 seconds to ensure DB transaction completes
+        } else {
+          this.notificationService.info('Approval Recorded', 'Your approval has been recorded. Waiting for the other approval.');
+          this.loadPendingRequests();
         }
       },
       error: (err) => {
-        console.error('Error approving request:', err);
-        alert(err.error?.message || 'Erreur lors de l\'approbation');
+        this.notificationService.error('Approval Failed', err.error?.message || 'Error during approval');
       }
     });
   }
 
   rejectRequest(requestId: number) {
     if (!this.currentUserId) {
-      alert('Vous devez être connecté pour rejeter');
+      this.notificationService.warning('Login Required', 'You must be logged in to reject');
       return;
     }
 
-    if (!confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')) {
+    if (!confirm('Are you sure you want to reject this request?')) {
       return;
     }
 
     this.updateRequestService.rejectRequest(requestId, this.currentUserId).subscribe({
       next: () => {
-        alert('Demande rejetée');
+        alert('Request rejected');
         this.loadPendingRequests();
         
         // Close modal if no more pending requests for this club
@@ -1345,8 +1416,7 @@ export class ClubsComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Error rejecting request:', err);
-        alert(err.error?.message || 'Erreur lors du rejet');
+        this.notificationService.error('Rejection Failed', err.error?.message || 'Error during rejection');
       }
     });
   }
@@ -1369,4 +1439,307 @@ export class ClubsComponent implements OnInit, OnDestroy {
   closeUpdateRequestsModal() {
     this.showUpdateRequestsModal = false;
   }
+  
+  // Club events methods
+  loadClubEventsForClub(clubId: number) {
+    this.loadingEvents = true;
+    // First, get the club president
+    this.memberService.getMembersByClub(clubId).subscribe({
+      next: (members) => {
+        const president = members.find(m => m.rank === 'PRESIDENT');
+        if (president) {
+          // Load events created by the president
+          this.eventService.getEventsByCreator(president.userId).subscribe({
+            next: (events) => {
+              this.clubEvents = events.filter(e => e.status === 'APPROVED').sort((a, b) => {
+                const dateA = new Date(a.startDate || a.eventDate || '').getTime();
+                const dateB = new Date(b.startDate || b.eventDate || '').getTime();
+                return dateA - dateB;
+              });
+              this.loadingEvents = false;
+              console.log('✅ Loaded', this.clubEvents.length, 'events for club president');
+              
+              // Load feedback stats for each event
+              this.clubEvents.forEach(event => {
+                if (event.id) {
+                  this.loadEventFeedbackStats(event.id);
+                }
+              });
+            },
+            error: (error) => {
+              console.error('Error loading club events:', error);
+              this.clubEvents = [];
+              this.loadingEvents = false;
+            }
+          });
+        } else {
+          console.log('⚠️ No president found for club');
+          this.clubEvents = [];
+          this.loadingEvents = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading club members:', error);
+        this.clubEvents = [];
+        this.loadingEvents = false;
+      }
+    });
+  }
+  
+  // Load feedback stats for an event
+  loadEventFeedbackStats(eventId: number) {
+    this.eventFeedbackService.getEventFeedbackStats(eventId).subscribe({
+      next: (stats) => {
+        this.eventFeedbackStats[eventId] = {
+          averageRating: stats.averageRating,
+          totalFeedbacks: stats.totalFeedbacks
+        };
+      },
+      error: (err) => {
+        console.error(`Error loading feedback stats for event ${eventId}:`, err);
+        this.eventFeedbackStats[eventId] = {
+          averageRating: 0,
+          totalFeedbacks: 0
+        };
+      }
+    });
+  }
+  
+  // Check if event is finished
+  isEventFinished(event: ClubEvent): boolean {
+    const endDate = event.endDate || event.eventDate;
+    if (!endDate) return false;
+    return new Date(endDate) < new Date();
+  }
+  
+  // Get feedback stats for an event
+  getEventFeedbackStats(eventId: number): { averageRating: number; totalFeedbacks: number } {
+    return this.eventFeedbackStats[eventId] || { averageRating: 0, totalFeedbacks: 0 };
+  }
+  
+  loadClubEvents(creatorId: number) {
+    this.loadingEvents = true;
+    this.eventService.getEventsByCreator(creatorId).subscribe({
+      next: (events) => {
+        this.clubEvents = events.filter(e => e.status === 'APPROVED').sort((a, b) => {
+          const dateA = new Date(a.startDate || a.eventDate || '').getTime();
+          const dateB = new Date(b.startDate || b.eventDate || '').getTime();
+          return dateA - dateB;
+        });
+        this.loadingEvents = false;
+      },
+      error: (error) => {
+        console.error('Error loading club events:', error);
+        this.clubEvents = [];
+        this.loadingEvents = false;
+      }
+    });
+  }
+  
+  formatEventDate(dateString: string): string {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return date.toLocaleDateString('en-US', options);
+  }
+  
+  getEventStatusClass(status: string | undefined): string {
+    switch (status) {
+      case 'APPROVED':
+        return 'bg-green-500 text-white';
+      case 'PENDING':
+        return 'bg-yellow-500 text-white';
+      case 'REJECTED':
+        return 'bg-red-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  }
+  
+  // Navigate to event details
+  navigateToEventDetails(eventId: number) {
+    this.router.navigate(['/user-panel/events', eventId]);
+  }
+
+  // ==================== CLUB HISTORY METHODS ====================
+  
+  openHistoryModal(club: Club) {
+    console.log('🔍 Opening history modal for club:', club);
+    console.log('📝 Club name:', club.name);
+    console.log('📝 Club ID:', club.id);
+    
+    this.selectedClubForHistory = club;
+    this.showHistoryModal = true;
+    this.loadClubHistory(club.id!);
+  }
+
+  closeHistoryModal() {
+    this.showHistoryModal = false;
+    this.selectedClubForHistory = null;
+    this.clubHistory = [];
+  }
+
+  loadClubHistory(clubId: number) {
+    if (!this.currentUserId) {
+      console.error('❌ No current user ID');
+      return;
+    }
+    
+    this.loadingHistory = true;
+    console.log('🔍 Loading club history for club:', clubId);
+    
+    // Load complete club history (for President, VP, and Secretary)
+    this.clubHistoryService.getClubHistory(clubId).subscribe({
+      next: (history: ClubHistory[]) => {
+        this.clubHistory = history;
+        this.loadingHistory = false;
+        console.log('✅ Club history loaded:', history.length, 'entries');
+        console.log('📋 History data:', history);
+      },
+      error: (error) => {
+        console.error('❌ Error loading club history:', error);
+        console.error('❌ Error status:', error.status);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Full error:', error);
+        this.loadingHistory = false;
+        // Show empty history on error
+        this.clubHistory = [];
+      }
+    });
+  }
+
+  // Mock history generator (for testing purposes only - not used in production)
+  generateMockHistory(clubId: number): any[] {
+    const now = new Date();
+    return [
+      {
+        id: 1,
+        clubId: clubId,
+        userId: this.currentUserId,
+        type: 'MEMBER_JOINED',
+        action: 'Joined the Club',
+        description: 'You became a member of this club',
+        oldValue: null,
+        newValue: 'Member',
+        performedBy: this.currentUserId,
+        createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 2,
+        clubId: clubId,
+        userId: this.currentUserId,
+        type: 'RANK_CHANGED',
+        action: 'Role Updated',
+        description: 'Your role in the club was updated',
+        oldValue: 'Member',
+        newValue: 'Event Manager',
+        performedBy: 1,
+        createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 3,
+        clubId: clubId,
+        userId: this.currentUserId,
+        type: 'EVENT_PARTICIPATED',
+        action: 'Participated in Event',
+        description: 'You participated in "English Speaking Workshop"',
+        oldValue: null,
+        newValue: null,
+        performedBy: this.currentUserId,
+        createdAt: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 4,
+        clubId: clubId,
+        userId: this.currentUserId,
+        type: 'CONTRIBUTION',
+        action: 'Made a Contribution',
+        description: 'You contributed to club activities',
+        oldValue: null,
+        newValue: 'Organized study session',
+        performedBy: this.currentUserId,
+        createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 5,
+        clubId: clubId,
+        userId: this.currentUserId,
+        type: 'ACHIEVEMENT_EARNED',
+        action: 'Achievement Unlocked',
+        description: 'You earned the "Active Member" badge',
+        oldValue: null,
+        newValue: 'Active Member Badge',
+        performedBy: this.currentUserId,
+        createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+  }
+
+  getHistoryIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'MEMBER_JOINED': '👋',
+      'MEMBER_LEFT': '👋',
+      'MEMBER_REMOVED': '🚫',
+      'RANK_CHANGED': '⭐',
+      'CLUB_CREATED': '🎉',
+      'CLUB_UPDATED': '✏️',
+      'CLUB_STATUS_CHANGED': '🔄',
+      'EVENT_CREATED': '📅',
+      'EVENT_PARTICIPATED': '🎯',
+      'ACHIEVEMENT_EARNED': '🏆',
+      'CONTRIBUTION': '💡',
+      'OTHER': '📝'
+    };
+    return icons[type] || '📝';
+  }
+
+  getHistoryTypeBadgeClass(type: string): string {
+    const classes: { [key: string]: string } = {
+      'MEMBER_JOINED': 'bg-green-100 text-green-700',
+      'MEMBER_LEFT': 'bg-gray-100 text-gray-700',
+      'MEMBER_REMOVED': 'bg-red-100 text-red-700',
+      'RANK_CHANGED': 'bg-blue-100 text-blue-700',
+      'CLUB_CREATED': 'bg-purple-100 text-purple-700',
+      'CLUB_UPDATED': 'bg-yellow-100 text-yellow-700',
+      'CLUB_STATUS_CHANGED': 'bg-orange-100 text-orange-700',
+      'EVENT_CREATED': 'bg-indigo-100 text-indigo-700',
+      'EVENT_PARTICIPATED': 'bg-teal-100 text-teal-700',
+      'ACHIEVEMENT_EARNED': 'bg-amber-100 text-amber-700',
+      'CONTRIBUTION': 'bg-cyan-100 text-cyan-700',
+      'OTHER': 'bg-gray-100 text-gray-700'
+    };
+    return classes[type] || 'bg-gray-100 text-gray-700';
+  }
+
+  formatHistoryDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} month${months > 1 ? 's' : ''} ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  }
+
 }

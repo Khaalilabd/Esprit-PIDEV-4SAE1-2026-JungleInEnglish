@@ -88,7 +88,14 @@ export class ComplaintDetailTutorComponent implements OnInit {
   loadMessages(id: number): void {
     this.complaintService.getMessages(id).subscribe({
       next: (messages) => {
-        this.messages = messages;
+        this.messages = messages.map(m => ({
+          id: m.id,
+          author: m.senderName || 'Unknown',
+          authorRole: m.senderRole,
+          content: m.message,
+          timestamp: m.createdAt ? new Date(m.createdAt) : new Date(),
+          isAdmin: m.senderRole !== 'STUDENT'
+        }));
       },
       error: (error) => {
         console.error('Error loading messages:', error);
@@ -97,7 +104,7 @@ export class ComplaintDetailTutorComponent implements OnInit {
   }
 
   sendMessage(): void {
-    if (!this.newMessage.trim() || !this.complaint) return;
+    if (!this.newMessage.trim() || !this.complaint || !this.complaint.id) return;
 
     const currentUser = this.authService.currentUserValue;
     if (!currentUser) return;
@@ -110,7 +117,14 @@ export class ComplaintDetailTutorComponent implements OnInit {
 
     this.complaintService.sendMessage(this.complaint.id, messageData).subscribe({
       next: (message) => {
-        this.messages.push(message);
+        this.messages.push({
+          id: message.id,
+          author: message.senderName || 'You',
+          authorRole: message.senderRole,
+          content: message.message,
+          timestamp: message.createdAt ? new Date(message.createdAt) : new Date(),
+          isAdmin: true
+        });
         this.newMessage = '';
       },
       error: (error) => {
@@ -157,11 +171,13 @@ export class ComplaintDetailTutorComponent implements OnInit {
         console.log('🚀 Sending request to mark as noted:', data);
         console.log('🚀 Complaint ID:', this.complaint.id);
 
-        this.complaintService.updateComplaintStatus(this.complaint.id, data).subscribe({
+        this.complaintService.updateComplaintStatus(this.complaint.id!, data).subscribe({
           next: (response) => {
             console.log('✅ Success response:', response);
             Swal.fire('Success', 'Complaint marked as noted', 'success');
-            this.loadComplaintDetails(this.complaint!.id);
+            if (this.complaint?.id) {
+              this.loadComplaintDetails(this.complaint.id);
+            }
           },
           error: (error) => {
             console.error('❌ Error marking as noted:', error);
@@ -180,7 +196,8 @@ export class ComplaintDetailTutorComponent implements OnInit {
     this.router.navigate(['/tutor-panel/complaints']);
   }
 
-  getPriorityClass(priority: string): string {
+  getPriorityClass(priority: string | undefined): string {
+    if (!priority) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     const classes: any = {
       'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
       'HIGH': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
@@ -189,7 +206,8 @@ export class ComplaintDetailTutorComponent implements OnInit {
     return classes[priority] || 'bg-gray-100 text-gray-800';
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'bg-gray-100 text-gray-800';
     const classes: any = {
       'OPEN': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       'NOTED': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
@@ -201,7 +219,8 @@ export class ComplaintDetailTutorComponent implements OnInit {
     return classes[status] || 'bg-gray-100 text-gray-800';
   }
 
-  getSeverityBadge(priority: string): { text: string; class: string } {
+  getSeverityBadge(priority: string | undefined): { text: string; class: string } {
+    if (!priority) return { text: 'Medium Severity', class: 'bg-yellow-500' };
     const badges: any = {
       'MEDIUM': { text: 'Medium Severity', class: 'bg-yellow-500' },
       'HIGH': { text: 'High Severity', class: 'bg-orange-500' },
@@ -210,7 +229,8 @@ export class ComplaintDetailTutorComponent implements OnInit {
     return badges[priority] || badges['MEDIUM'];
   }
 
-  getDaysOpenBadge(days: number): { text: string; class: string } {
+  getDaysOpenBadge(days: number | undefined): { text: string; class: string } {
+    if (!days) return { text: '0 days waiting', class: 'bg-blue-500' };
     if (days >= 5) {
       return { text: `${days} days - Overdue`, class: 'bg-red-500' };
     } else if (days >= 2) {

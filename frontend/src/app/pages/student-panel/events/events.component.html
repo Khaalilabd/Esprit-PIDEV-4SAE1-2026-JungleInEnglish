@@ -1,269 +1,497 @@
 <div class="w-full">
   <!-- Details View -->
-  <div *ngIf="showDetailsView && selectedEvent" class="space-y-6">
-    <!-- Action Buttons -->
-    <div class="flex items-center gap-3">
-      <!-- Back Button -->
-      <button
-        (click)="closeDetailsView()"
-        class="inline-flex items-center px-4 py-2 text-sm font-semibold text-[#2D5757] bg-white border-2 border-[#2D5757] rounded-xl hover:bg-[#2D5757] hover:text-white transition-all duration-300 shadow-md hover:shadow-lg"
-      >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-        </svg>
-        Back to Events
-      </button>
+  <div *ngIf="showDetailsView && selectedEvent" class="min-h-screen bg-gray-50">
+    <!-- Top Bar -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <button
+          (click)="closeDetailsView()"
+          class="inline-flex items-center px-3 py-2 text-sm font-semibold text-[#2D5757] hover:bg-gray-100 rounded-lg transition-all"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back
+        </button>
 
-      <!-- Edit Button - Only for Creator -->
-      <button
-        *ngIf="isEventCreator(selectedEvent)"
-        (click)="openEditModal(selectedEvent)"
-        class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-      >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-        </svg>
-        Edit Event
-      </button>
+        <div class="flex gap-2">
+          <button
+            *ngIf="isEventCreator(selectedEvent!)"
+            (click)="openEditModal(selectedEvent!)"
+            class="inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-900 bg-[#F6BD60] rounded-lg hover:bg-[#e5ac4f] transition-all"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit
+          </button>
 
-      <!-- Delete Button -->
-      <button
-        *ngIf="isEventCreator(selectedEvent) || isAdmin"
-        (click)="deleteEvent(selectedEvent.id!); closeDetailsView()"
-        class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-      >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-        </svg>
-        Delete Event
-      </button>
+          <button
+            *ngIf="isEventCreator(selectedEvent!) || isAdmin"
+            (click)="deleteEvent(selectedEvent!.id!); closeDetailsView()"
+            class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-all"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Hero Section with Event Image -->
-    <div class="relative h-64 rounded-2xl overflow-hidden shadow-xl group">
-      <div *ngIf="selectedEvent.image" class="absolute inset-0">
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <!-- Image Section -->
+      <div class="relative h-64 rounded-2xl overflow-hidden bg-gradient-to-br from-[#2D5757] to-[#3D3D60] shadow-xl">
         <img 
-          [src]="selectedEvent.image" 
-          [alt]="selectedEvent.title" 
-          class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+          *ngIf="selectedEvent!.image"
+          [src]="selectedEvent!.image" 
+          [alt]="selectedEvent!.title" 
+          class="w-full h-full object-cover"
         />
+        <div *ngIf="!selectedEvent!.image" class="w-full h-full flex items-center justify-center text-8xl">
+          {{ getEventIcon(selectedEvent!.type) }}
+        </div>
       </div>
-      <div *ngIf="!selectedEvent.image" class="absolute inset-0 bg-gradient-to-br from-[#2D5757] via-[#3D3D60] to-[#2D5757]"></div>
-      
-      <!-- Gradient Overlays -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
-      
-      <!-- Event Info Overlay -->
-      <div class="absolute bottom-0 left-0 right-0 p-8">
-        <div class="flex items-center gap-4">
-          <span class="text-5xl">{{ getEventIcon(selectedEvent.type) }}</span>
-          <div>
-            <div class="flex items-center gap-3 mb-2">
-              <span class="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-gray-700 shadow-sm">
-                {{ selectedEvent.type }}
-              </span>
-              <span *ngIf="isComingSoon(selectedEvent)" class="px-3 py-1 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 rounded-full text-xs font-bold shadow-lg">
-                ⏰ COMING SOON
-              </span>
+
+      <!-- Info Grid: Title, Date, Cooldown -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Title Card -->
+        <div class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-[#2D5757]">
+          <p class="text-xs font-bold text-gray-500 uppercase mb-2">Titre</p>
+          <h1 class="text-2xl font-black text-[#2D5757]">{{ selectedEvent!.title }}</h1>
+          <div class="flex items-center gap-2 mt-3">
+            <span class="px-3 py-1 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-full text-xs font-bold">
+              {{ selectedEvent!.type }}
+            </span>
+            <span *ngIf="isComingSoon(selectedEvent!)" class="px-3 py-1 bg-[#F6BD60] text-gray-900 rounded-full text-xs font-bold">
+              ⏰ SOON
+            </span>
+            <span *ngIf="isEventCreator(selectedEvent!)" class="px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-bold">
+              👑
+            </span>
+          </div>
+        </div>
+
+        <!-- Date Card -->
+        <div class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-[#F6BD60]">
+          <p class="text-xs font-bold text-gray-500 uppercase mb-2">Date & Durée</p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#F6BD60] to-[#e5ac4f] flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500">Début</p>
+                <p class="text-sm font-bold text-[#2D5757]">{{ formatDate(selectedEvent!.startDate) }}</p>
+              </div>
             </div>
-            <h1 class="text-4xl font-black text-white tracking-tight drop-shadow-2xl">{{ selectedEvent.title }}</h1>
-            <p class="text-sm text-gray-200 mt-2 tracking-tight flex items-center gap-2">
-              <span>📍</span>
-              <span>{{ selectedEvent.location }}</span>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500">Fin</p>
+                <p class="text-sm font-bold text-[#2D5757]">{{ formatDate(selectedEvent!.endDate) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Countdown Card -->
+        <div *ngIf="!isEventStarted()" class="bg-gradient-to-br from-[#2D5757] to-[#3D3D60] rounded-xl p-6 shadow-lg text-white">
+          <p class="text-xs font-bold uppercase mb-3">Cooldown</p>
+          <div class="grid grid-cols-4 gap-2">
+            <div class="text-center">
+              <div class="text-2xl font-black">{{ countdown.days }}</div>
+              <div class="text-xs opacity-80">J</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-black">{{ countdown.hours }}</div>
+              <div class="text-xs opacity-80">H</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-black">{{ countdown.minutes }}</div>
+              <div class="text-xs opacity-80">M</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-black text-[#F6BD60]">{{ countdown.seconds }}</div>
+              <div class="text-xs opacity-80">S</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event Status Display -->
+        <!-- Upcoming Event -->
+        <div *ngIf="getEventStatus() === 'upcoming'" class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg text-white text-center">
+          <div class="text-4xl mb-2">⏰</div>
+          <p class="text-lg font-black">Upcoming Event</p>
+          <p class="text-sm mt-1 opacity-90">Event hasn't started yet</p>
+        </div>
+
+        <!-- Event Started (Ongoing) -->
+        <div *ngIf="getEventStatus() === 'ongoing'" class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-lg text-white text-center">
+          <div class="text-4xl mb-2">🎉</div>
+          <p class="text-lg font-black">Event Started!</p>
+          <p class="text-sm mt-1 opacity-90">Event is currently ongoing</p>
+        </div>
+
+        <!-- Event Ended -->
+        <div *ngIf="getEventStatus() === 'ended'" class="bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl p-6 shadow-lg text-white text-center">
+          <div class="text-4xl mb-2">✅</div>
+          <p class="text-lg font-black">Event Ended</p>
+          <p class="text-sm mt-1 opacity-90">This event has concluded</p>
+        </div>
+      </div>
+
+      <!-- Bottom Grid: Participants + Description | Location -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Participants + Description -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Participants Card -->
+          <div 
+            class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-[#C84630]"
+            [class.cursor-pointer]="isEventCreator(selectedEvent)"
+            (click)="isEventCreator(selectedEvent) ? openParticipantsModal(selectedEvent.id!) : null">
+            <p class="text-xs font-bold text-gray-500 uppercase mb-3">
+              Participant / Max Participant
+              <span *ngIf="isEventCreator(selectedEvent)" class="text-[#F6BD60] ml-1">(Cliquer pour voir)</span>
+            </p>
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-3xl font-black text-[#2D5757]">
+                  {{ selectedEvent!.currentParticipants || 0 }} / {{ selectedEvent!.maxParticipants }}
+                </p>
+                <div class="mt-3 h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-[#C84630] to-[#a83820] rounded-full transition-all duration-1000"
+                    [style.width.%]="((selectedEvent!.currentParticipants || 0) / selectedEvent!.maxParticipants) * 100">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description Card -->
+          <div class="bg-white rounded-xl p-6 shadow-lg">
+            <p class="text-xs font-bold text-gray-500 uppercase mb-3">À propos de l'event</p>
+            <p class="text-gray-700 leading-relaxed">
+              {{ selectedEvent!.description || 'Aucune description disponible.' }}
             </p>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Date Card -->
-      <div class="group relative bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
-        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#2D5757]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-        <div class="relative z-10">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl">🗓️</span>
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
+          <!-- Feedback Section -->
+          <div *ngIf="showFeedbackSection()" class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-[#F6BD60]">
+            <!-- Feedback Form (for participants after event) -->
+            <div *ngIf="showFeedbackForm()">
+              <p class="text-xs font-bold text-gray-500 uppercase mb-3">📝 Donnez votre avis</p>
+              <p class="text-sm text-gray-600 mb-4">Comment évaluez-vous cet événement?</p>
+              
+              <!-- Star Rating -->
+              <div class="feedback-form-container">
+                <div class="flex justify-center mb-4">
+                  <app-star-rating
+                    [rating]="feedbackForm.rating"
+                    [readonly]="false"
+                    [showValue]="false"
+                    [size]="'large'"
+                    [allowHalf]="true"
+                    (ratingChange)="setRating($event)">
+                  </app-star-rating>
+                </div>
+                
+                <!-- Encouragement message based on rating -->
+                <div *ngIf="feedbackForm.rating > 0" class="mt-3 text-center animate-fade-in">
+                  <p *ngIf="feedbackForm.rating >= 4.5" class="text-sm font-semibold text-[#F6BD60] flex items-center justify-center gap-2">
+                    <span class="text-xl">🎉</span>
+                    <span>Excellent! Merci pour votre enthousiasme!</span>
+                    <span class="text-xl">🎉</span>
+                  </p>
+                  <p *ngIf="feedbackForm.rating >= 3.5 && feedbackForm.rating < 4.5" class="text-sm font-semibold text-green-600 flex items-center justify-center gap-2">
+                    <span class="text-xl">👍</span>
+                    <span>Très bien! Merci pour votre avis positif!</span>
+                  </p>
+                  <p *ngIf="feedbackForm.rating >= 2.5 && feedbackForm.rating < 3.5" class="text-sm font-semibold text-blue-600 flex items-center justify-center gap-2">
+                    <span class="text-xl">👌</span>
+                    <span>Bien! Vos commentaires nous aideront à améliorer.</span>
+                  </p>
+                  <p *ngIf="feedbackForm.rating < 2.5" class="text-sm font-semibold text-orange-600 flex items-center justify-center gap-2">
+                    <span class="text-xl">💭</span>
+                    <span>Merci pour votre retour. Dites-nous comment améliorer!</span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Comment -->
+              <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">💬 Votre commentaire (optionnel)</label>
+                <textarea 
+                  [(ngModel)]="feedbackForm.comment"
+                  rows="3"
+                  maxlength="500"
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all resize-none"
+                  placeholder="Partagez votre expérience..."></textarea>
+                <p class="text-xs text-gray-500 mt-1">{{ feedbackForm.comment?.length || 0 }}/500 caractères</p>
+              </div>
+
+              <!-- Anonymous Option -->
+              <div class="mb-4 flex items-center gap-3 p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-[#F6BD60] transition-all">
+                <input 
+                  type="checkbox" 
+                  id="anonymousCheckbox"
+                  [(ngModel)]="feedbackForm.anonymous"
+                  class="w-5 h-5 text-[#2D5757] bg-white border-gray-300 rounded focus:ring-[#F6BD60] focus:ring-2 cursor-pointer">
+                <label for="anonymousCheckbox" class="flex-1 cursor-pointer">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">🕶️</span>
+                    <span class="text-sm font-semibold text-gray-700">Commentaire anonyme</span>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Votre nom ne sera pas affiché avec votre commentaire (la note reste visible)</p>
+                </label>
+              </div>
+
+              <!-- Submit Button -->
+              <button 
+                (click)="submitFeedback()"
+                [disabled]="feedbackForm.rating === 0 || submittingFeedback"
+                class="w-full px-4 py-3 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span *ngIf="!submittingFeedback">Soumettre mon avis</span>
+                <span *ngIf="submittingFeedback" class="flex items-center gap-2">
+                  <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                  <span>Envoi...</span>
+                </span>
+              </button>
+            </div>
+
+            <!-- Feedback Stats (for everyone when feedbacks exist) -->
+            <div *ngIf="showFeedbackStats() && feedbackStats">
+              <p class="text-xs font-bold text-gray-500 uppercase mb-4">📊 Avis des Participants</p>
+              
+              <!-- No feedbacks yet (for creator only) -->
+              <div *ngIf="feedbackStats.totalFeedbacks === 0 && isEventCreator(selectedEvent!)" class="text-center py-8">
+                <div class="text-6xl mb-4">📊</div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Aucun avis pour le moment</h3>
+                <p class="text-sm text-gray-600">Les participants pourront donner leur avis après la fin de l'événement.</p>
+              </div>
+              
+              <!-- Stats display (when there are feedbacks) -->
+              <div *ngIf="feedbackStats.totalFeedbacks > 0">
+                <!-- Summary with Star Rating Component -->
+                <div class="flex items-center justify-center mb-6">
+                  <app-star-rating
+                    [rating]="feedbackStats.averageRating"
+                    [readonly]="true"
+                    [showValue]="true"
+                    [size]="'large'">
+                  </app-star-rating>
+                </div>
+                
+                <!-- Satisfaction Rate -->
+                <div class="flex items-center justify-center gap-3 mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
+                  <span class="text-4xl animate-pulse">😊</span>
+                  <div class="text-center">
+                    <span class="text-3xl font-black text-[#2D5757]">{{ feedbackStats.satisfactionRate.toFixed(0) }}%</span>
+                    <p class="text-sm text-gray-600 font-semibold">de satisfaction</p>
+                  </div>
+                  <div class="text-center">
+                    <span class="text-2xl font-black text-[#2D5757]">{{ feedbackStats.totalFeedbacks }}</span>
+                    <p class="text-xs text-gray-600 font-semibold">avis</p>
+                  </div>
+                </div>
+
+                <!-- Rating Distribution -->
+                <div class="space-y-2 mb-4">
+                  <div *ngFor="let rating of [5,4,3,2,1]; let i = index" class="flex items-center gap-3 animate-slide-up" [style.animation-delay]="i * 0.1 + 's'">
+                    <span class="text-sm font-semibold text-gray-700 w-16 flex items-center gap-1">
+                      <span>{{ rating }}</span>
+                      <span class="text-[#F6BD60]">⭐</span>
+                    </span>
+                    <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                      <div 
+                        class="h-full bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                        [style.width.%]="getDistributionPercentage(rating)">
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                      </div>
+                    </div>
+                    <span class="text-sm font-bold text-[#2D5757] w-10 text-right">
+                      {{ feedbackStats.ratingDistribution[rating] || 0 }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- View Comments Button (for creator) -->
+                <button 
+                  *ngIf="isEventCreator(selectedEvent!) && feedbackStats.totalFeedbacks > 0"
+                  (click)="openFeedbackCommentsModal()"
+                  class="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                  </svg>
+                  <span>Voir les commentaires ({{ feedbackStats.totalFeedbacks }})</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- User Already Gave Feedback - Modern Professional Design -->
+            <div *ngIf="hasGivenFeedback && !showFeedbackForm() && userFeedback" class="relative">
+              <!-- Header with Icon -->
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-black text-gray-800">Votre Avis</h3>
+                  <p class="text-xs text-gray-500">Publié le {{ formatDate(userFeedback.createdAt!) }}</p>
+                </div>
+              </div>
+              
+              <!-- Main Card -->
+              <div class="relative bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <!-- Decorative gradient bar -->
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500"></div>
+                
+                <div class="p-6">
+                  <!-- Rating Display with Value -->
+                  <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-100">
+                    <div class="flex-1">
+                      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Votre Note</p>
+                      <div class="flex items-center gap-3">
+                        <app-star-rating
+                          [rating]="userFeedback.rating"
+                          [readonly]="true"
+                          [showValue]="false"
+                          [size]="'medium'">
+                        </app-star-rating>
+                        <span class="text-3xl font-black text-[#2D5757]">{{ userFeedback.rating.toFixed(1) }}</span>
+                        <span class="text-sm text-gray-500">/5.0</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Anonymous Badge (if applicable) -->
+                    <div *ngIf="userFeedback.anonymous" class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl">
+                      <span class="text-xl">🕶️</span>
+                      <div class="text-left">
+                        <p class="text-xs font-semibold text-gray-700">Anonyme</p>
+                        <p class="text-xs text-gray-500">Identité masquée</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Comment Section -->
+                  <div *ngIf="userFeedback.comment" class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                      <svg class="w-5 h-5 text-[#2D5757]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                      </svg>
+                      <p class="text-sm font-bold text-gray-700">Votre Commentaire</p>
+                    </div>
+                    <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
+                      <div class="absolute top-3 left-3 text-4xl text-gray-300 opacity-50">"</div>
+                      <p class="text-gray-700 leading-relaxed pl-8 pr-4 relative z-10">
+                        {{ userFeedback.comment }}
+                      </p>
+                      <div class="absolute bottom-3 right-3 text-4xl text-gray-300 opacity-50 rotate-180">"</div>
+                    </div>
+                  </div>
+                  
+                  <!-- No Comment Message -->
+                  <div *ngIf="!userFeedback.comment" class="mb-6 text-center py-4">
+                    <p class="text-sm text-gray-400 italic">Aucun commentaire écrit</p>
+                  </div>
+                  
+                  <!-- Success Footer -->
+                  <div class="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                    <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center animate-pulse">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                    <div class="text-left">
+                      <p class="text-sm font-bold text-green-700">Avis enregistré avec succès</p>
+                      <p class="text-xs text-green-600">Merci pour votre contribution!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date & Time</h3>
-          <p class="text-lg font-black text-[#2D5757] tracking-tight">{{ formatDate(selectedEvent.eventDate) }}</p>
-        </div>
-      </div>
 
-      <!-- Participants Card -->
-      <div 
-        class="group relative bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100"
-        [class.cursor-pointer]="isEventCreator(selectedEvent)"
-        (click)="isEventCreator(selectedEvent) ? openParticipantsModal(selectedEvent.id!) : null">
-        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#F6BD60]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-        <div class="relative z-10">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl">👥</span>
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#F6BD60] to-[#e5ac4f] flex items-center justify-center shadow-md">
-              <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-              </svg>
-            </div>
-          </div>
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-            Participants
-            <span *ngIf="isEventCreator(selectedEvent)" class="text-xs text-[#F6BD60] ml-1">(View List)</span>
-          </h3>
-          <p class="text-lg font-black text-[#2D5757] tracking-tight">
-            {{ selectedEvent.currentParticipants || 0 }} / {{ selectedEvent.maxParticipants }}
-          </p>
-          <!-- Progress Bar -->
-          <div class="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              class="h-full bg-gradient-to-r from-[#2D5757] to-[#3D3D60] rounded-full relative overflow-hidden transition-all duration-1000"
-              [style.width.%]="((selectedEvent.currentParticipants || 0) / selectedEvent.maxParticipants) * 100">
-              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+          <!-- Gallery Card -->
+          <div *ngIf="selectedEvent!.gallery && selectedEvent!.gallery.length > 0" class="bg-white rounded-xl p-6 shadow-lg">
+            <p class="text-xs font-bold text-gray-500 uppercase mb-4">Galerie Photos</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div *ngFor="let image of selectedEvent!.gallery; let i = index" class="relative group">
+                <img 
+                  [src]="image" 
+                  [alt]="'Gallery image ' + (i + 1)" 
+                  class="w-full h-32 object-cover rounded-xl shadow-md cursor-pointer hover:shadow-xl transition-all"
+                  (click)="openImageModal(image)"
+                />
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-all flex items-center justify-center">
+                  <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Status Card -->
-      <div class="group relative bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
-        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#C84630]/10 to-transparent rounded-full -mr-12 -mt-12"></div>
-        <div class="relative z-10">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-4xl">
-              <span *ngIf="isEventFull(selectedEvent)">🔴</span>
-              <span *ngIf="!isEventFull(selectedEvent)">🟢</span>
-            </span>
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C84630] to-[#a83820] flex items-center justify-center shadow-md">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
+        <!-- Right Column: Location -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-xl shadow-lg flex flex-col overflow-hidden" style="max-height: 650px;">
+            <p class="text-xs font-bold text-gray-500 uppercase px-6 pt-6 pb-4">Emplacement</p>
+            
+            <!-- Map Component -->
+            <div class="relative" style="height: 400px;">
+              <app-location-map
+                [latitude]="selectedEvent!.latitude"
+                [longitude]="selectedEvent!.longitude"
+                [address]="selectedEvent!.location"
+                [height]="400"
+                [zoom]="15">
+              </app-location-map>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3 px-6 pb-6 pt-4">
+              <button 
+                *ngIf="!isUserRegistered(selectedEvent!.id!) && !isEventCreator(selectedEvent!) && !isComingSoon(selectedEvent!)"
+                (click)="joinEvent(selectedEvent!.id!)"
+                [disabled]="isEventFull(selectedEvent!)"
+                class="w-full px-4 py-3 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isEventFull(selectedEvent!) ? 'Complet' : 'Rejoindre' }}
+              </button>
+              
+              <button 
+                *ngIf="isUserRegistered(selectedEvent!.id!) && !isEventCreator(selectedEvent!)"
+                (click)="leaveEvent(selectedEvent!.id!)"
+                class="w-full px-4 py-3 bg-gradient-to-r from-[#C84630] to-[#a83820] text-white rounded-xl hover:shadow-lg transition-all font-semibold">
+                Quitter
+              </button>
+
+              <div *ngIf="isUserRegistered(selectedEvent!.id!) && !isEventCreator(selectedEvent!)" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-50 text-green-600 rounded-xl font-semibold border-2 border-green-200">
+                <span>✓</span>
+                <span>Inscrit</span>
+              </div>
+
+              <div *ngIf="isEventCreator(selectedEvent!)" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-semibold border-2 border-amber-200">
+                <span>👑</span>
+                <span>Votre Event</span>
+              </div>
             </div>
           </div>
-          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Status</h3>
-          <p class="text-lg font-black text-[#2D5757] tracking-tight">
-            {{ isEventFull(selectedEvent) ? 'Event Full' : 'Spots Available' }}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Countdown Card -->
-    <div *ngIf="!isEventStarted()" class="relative bg-gradient-to-br from-[#2D5757] via-[#3D3D60] to-[#2D5757] rounded-2xl p-8 shadow-2xl overflow-hidden">
-      <!-- Decorative elements -->
-      <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
-      <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
-      
-      <div class="relative z-10">
-        <div class="text-center mb-6">
-          <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-4">
-            <span class="text-2xl">⏰</span>
-            <span class="text-white font-bold text-sm uppercase tracking-wider">Event Starts In</span>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-4 gap-4">
-          <!-- Days -->
-          <div class="text-center">
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-2 border border-white/20 shadow-lg">
-              <div class="text-5xl font-black text-white mb-1 tracking-tight">{{ countdown.days }}</div>
-            </div>
-            <p class="text-white/80 text-sm font-semibold uppercase tracking-wider">Days</p>
-          </div>
-          
-          <!-- Hours -->
-          <div class="text-center">
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-2 border border-white/20 shadow-lg">
-              <div class="text-5xl font-black text-white mb-1 tracking-tight">{{ countdown.hours }}</div>
-            </div>
-            <p class="text-white/80 text-sm font-semibold uppercase tracking-wider">Hours</p>
-          </div>
-          
-          <!-- Minutes -->
-          <div class="text-center">
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-2 border border-white/20 shadow-lg">
-              <div class="text-5xl font-black text-white mb-1 tracking-tight">{{ countdown.minutes }}</div>
-            </div>
-            <p class="text-white/80 text-sm font-semibold uppercase tracking-wider">Minutes</p>
-          </div>
-          
-          <!-- Seconds -->
-          <div class="text-center">
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-2 border border-white/20 shadow-lg animate-pulse">
-              <div class="text-5xl font-black text-[#F6BD60] mb-1 tracking-tight">{{ countdown.seconds }}</div>
-            </div>
-            <p class="text-white/80 text-sm font-semibold uppercase tracking-wider">Seconds</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Event Started Card -->
-    <div *ngIf="isEventStarted()" class="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-2xl p-8 shadow-2xl overflow-hidden">
-      <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
-      <div class="relative z-10 text-center">
-        <div class="text-6xl mb-4">🎉</div>
-        <h3 class="text-3xl font-black text-white mb-2">Event Has Started!</h3>
-        <p class="text-white/90 text-lg">Join us now for an amazing experience</p>
-      </div>
-    </div>
-
-    <!-- Description Section -->
-    <div *ngIf="selectedEvent.description" class="group relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-      <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#2D5757] via-[#F6BD60] to-[#C84630]"></div>
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center shadow-md">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-[#2D5757] tracking-tight">Description</h2>
-            <p class="text-xs text-gray-500 tracking-tight">Learn more about this event</p>
-          </div>
-        </div>
-        <div class="p-5 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100">
-          <p class="text-gray-700 leading-relaxed">{{ selectedEvent.description }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Action Buttons Section -->
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-      <div class="flex gap-3">
-        <!-- Join button -->
-        <button 
-          *ngIf="!isUserRegistered(selectedEvent.id!) && !isEventCreator(selectedEvent) && !isComingSoon(selectedEvent)"
-          (click)="joinEvent(selectedEvent.id!)"
-          [disabled]="isEventFull(selectedEvent)"
-          [class.opacity-50]="isEventFull(selectedEvent)"
-          [class.cursor-not-allowed]="isEventFull(selectedEvent)"
-          class="flex-1 px-6 py-3 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold disabled:from-gray-400 disabled:to-gray-500">
-          {{ isEventFull(selectedEvent) ? 'Event Full' : 'Join Event' }}
-        </button>
-        
-        <!-- Leave button -->
-        <button 
-          *ngIf="isUserRegistered(selectedEvent.id!) && !isEventCreator(selectedEvent)"
-          (click)="leaveEvent(selectedEvent.id!)"
-          class="flex-1 px-6 py-3 bg-gradient-to-r from-[#C84630] to-[#a83820] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold">
-          Leave Event
-        </button>
-
-        <!-- Status badges -->
-        <div *ngIf="isUserRegistered(selectedEvent.id!) && !isEventCreator(selectedEvent)" class="flex-1 flex items-center justify-center gap-2 text-green-600 font-semibold bg-green-50 rounded-xl py-3 px-6">
-          <span>✓</span>
-          <span>You're Registered</span>
-        </div>
-        
-        <div *ngIf="isEventCreator(selectedEvent)" class="flex-1 flex items-center justify-center gap-2 text-amber-700 font-semibold bg-amber-50 rounded-xl py-3 px-6">
-          <span>👑</span>
-          <span>You Created This Event</span>
         </div>
       </div>
     </div>
@@ -298,34 +526,64 @@
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="mb-6 bg-white rounded-xl shadow-sm p-2 inline-flex gap-2">
-    <button 
-      (click)="selectTab('upcoming')"
-      [class.bg-gradient-to-r]="selectedTab === 'upcoming'"
-      [class.from-[#2D5757]]="selectedTab === 'upcoming'"
-      [class.to-[#3D3D60]]="selectedTab === 'upcoming'"
-      [class.text-white]="selectedTab === 'upcoming'"
-      [class.shadow-md]="selectedTab === 'upcoming'"
-      class="px-5 py-2 font-semibold rounded-lg transition-all duration-300 hover:bg-gray-50 text-sm">
-      <span class="flex items-center gap-2">
-        <span>📅</span>
-        <span>Upcoming</span>
-      </span>
-    </button>
-    <button 
-      (click)="selectTab('all')"
-      [class.bg-gradient-to-r]="selectedTab === 'all'"
-      [class.from-[#2D5757]]="selectedTab === 'all'"
-      [class.to-[#3D3D60]]="selectedTab === 'all'"
-      [class.text-white]="selectedTab === 'all'"
-      [class.shadow-md]="selectedTab === 'all'"
-      class="px-5 py-2 font-semibold rounded-lg transition-all duration-300 hover:bg-gray-50 text-sm">
-      <span class="flex items-center gap-2">
-        <span>📋</span>
-        <span>All Events</span>
-      </span>
-    </button>
+  <!-- Tabs and Search -->
+  <div class="mb-6 flex items-center justify-between gap-4">
+    <!-- Tabs -->
+    <div class="bg-white rounded-xl shadow-sm p-2 inline-flex gap-2">
+      <button 
+        (click)="selectTab('upcoming')"
+        [class.bg-gradient-to-r]="selectedTab === 'upcoming'"
+        [class.from-[#2D5757]]="selectedTab === 'upcoming'"
+        [class.to-[#3D3D60]]="selectedTab === 'upcoming'"
+        [class.text-white]="selectedTab === 'upcoming'"
+        [class.shadow-md]="selectedTab === 'upcoming'"
+        class="px-5 py-2 font-semibold rounded-lg transition-all duration-300 hover:bg-gray-50 text-sm">
+        <span class="flex items-center gap-2">
+          <span>📅</span>
+          <span>Upcoming</span>
+        </span>
+      </button>
+      <button 
+        (click)="selectTab('all')"
+        [class.bg-gradient-to-r]="selectedTab === 'all'"
+        [class.from-[#2D5757]]="selectedTab === 'all'"
+        [class.to-[#3D3D60]]="selectedTab === 'all'"
+        [class.text-white]="selectedTab === 'all'"
+        [class.shadow-md]="selectedTab === 'all'"
+        class="px-5 py-2 font-semibold rounded-lg transition-all duration-300 hover:bg-gray-50 text-sm">
+        <span class="flex items-center gap-2">
+          <span>📋</span>
+          <span>All Events</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="flex-1 max-w-md">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search events by club name..."
+          class="w-full pl-11 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2D5757]/20 focus:border-[#2D5757] transition-all text-sm bg-white shadow-sm"
+        />
+        <button
+          *ngIf="searchQuery"
+          (click)="searchQuery = ''; onSearchChange()"
+          class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -333,143 +591,80 @@
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F6BD60]"></div>
   </div>
 
-  <!-- Events Grid -->
-  <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+  <!-- Events Grid - Minimaliste -->
+  <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 max-w-7xl mx-auto">
+    <!-- Event Card -->
     <div 
       *ngFor="let event of getDisplayEvents(); let i = index"
-      (click)="viewEventDetails(event)"
-      class="group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-[#F6BD60]/50 hover:-translate-y-2 animate-slide-up cursor-pointer"
+      class="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-[#F6BD60]"
       [style.animation-delay]="i * 100 + 'ms'">
       
-      <!-- Event Image -->
-      <div class="relative h-40 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+      <!-- Image -->
+      <div class="relative h-56 bg-gradient-to-br from-[#2D5757] to-[#3D3D60] overflow-hidden">
         <img 
           *ngIf="event.image" 
           [src]="event.image" 
           [alt]="event.title" 
-          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        
         <div 
           *ngIf="!event.image" 
-          class="w-full h-full flex items-center justify-center text-5xl"
-          [ngClass]="getEventColor(event.type)">
+          class="w-full h-full flex items-center justify-center text-7xl">
           {{ getEventIcon(event.type) }}
         </div>
         
-        <!-- Coming Soon Badge on Image -->
-        <div *ngIf="isComingSoon(event)" class="absolute top-3 right-3 px-3 py-1.5 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 rounded-full text-xs font-bold shadow-lg backdrop-blur-sm flex items-center gap-1.5">
-          <span>⏰</span>
-          <span>SOON</span>
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        
+        <!-- Nom du Club -->
+        <div class="absolute bottom-4 left-4 right-4">
+          <div class="bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center gap-2">
+            <div class="w-7 h-7 rounded bg-[#2D5757] flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs">🎯</span>
+            </div>
+            <p class="text-xs font-bold text-[#2D5757] truncate">{{ event.clubName || 'English Flow Club' }}</p>
+          </div>
         </div>
       </div>
 
-      <!-- Event Content -->
+      <!-- Nom de l'Event -->
       <div class="p-4">
-        <!-- Event Type Badge & Icon -->
-        <div class="flex items-center justify-between mb-2.5">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-full text-xs font-bold shadow-sm">
-            <span>{{ getEventIcon(event.type) }}</span>
-            <span>{{ event.type }}</span>
-          </span>
-          
-          <!-- Creator Badge -->
-          <span *ngIf="isEventCreator(event)" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
-            <span>👑</span>
-          </span>
-        </div>
-
-        <!-- Title -->
-        <h3 class="text-base font-bold text-gray-900 mb-2 hover:text-[#2D5757] transition-colors line-clamp-2">
+        <h3 class="text-base font-bold text-gray-900 line-clamp-2 mb-3 min-h-[3rem] group-hover:text-[#2D5757] transition-colors">
           {{ event.title }}
         </h3>
 
-        <!-- Location & Date -->
-        <div class="space-y-1.5 mb-3">
-          <div class="flex items-center gap-2 text-xs text-gray-600">
-            <span class="text-sm">📍</span>
-            <span class="font-medium truncate">{{ event.location }}</span>
-          </div>
-          <div class="flex items-center gap-2 text-xs text-gray-600">
-            <span class="text-sm">🗓️</span>
-            <span class="font-medium">{{ formatDate(event.eventDate) }}</span>
-          </div>
-        </div>
-
-        <!-- Description -->
-        <p *ngIf="event.description" class="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-          {{ event.description }}
-        </p>
-
-        <!-- Participants Progress -->
-        <div class="mb-3">
-          <div class="flex items-center justify-between text-xs mb-1.5">
-            <span class="text-gray-600 font-medium flex items-center gap-1">
-              <span>👥</span>
-              <span>Participants</span>
-            </span>
-            <span class="font-bold text-[#2D5757]">
-              {{ event.currentParticipants || 0 }} / {{ event.maxParticipants }}
-            </span>
-          </div>
-          <div class="relative w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-            <div 
-              class="absolute inset-0 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] h-1.5 rounded-full transition-all duration-1000 ease-out"
-              [style.width.%]="((event.currentParticipants || 0) / event.maxParticipants) * 100">
-              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-            </div>
-          </div>
-        </div>
-
         <!-- Action Buttons -->
-        <div class="flex gap-2" (click)="$event.stopPropagation()">
-          <!-- Join button -->
+        <div class="space-y-2">
+          <!-- Join Button (if not registered and not creator) -->
           <button 
             *ngIf="!isUserRegistered(event.id!) && !isEventCreator(event) && !isComingSoon(event)"
-            (click)="joinEvent(event.id!)"
+            (click)="joinEvent(event.id!); $event.stopPropagation()"
             [disabled]="isEventFull(event)"
-            [class.opacity-50]="isEventFull(event)"
-            [class.cursor-not-allowed]="isEventFull(event)"
-            class="flex-1 px-3 py-2 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all duration-300 text-xs font-semibold disabled:from-gray-400 disabled:to-gray-500">
-            {{ isEventFull(event) ? 'Full' : 'Join' }}
+            class="w-full px-4 py-2.5 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+            <span *ngIf="!isEventFull(event)">✅ Join Event</span>
+            <span *ngIf="isEventFull(event)">🚫 Event Full</span>
           </button>
-          
-          <!-- Leave button -->
-          <button 
+
+          <!-- Already Registered Badge -->
+          <div 
             *ngIf="isUserRegistered(event.id!) && !isEventCreator(event)"
-            (click)="leaveEvent(event.id!)"
-            class="flex-1 px-3 py-2 bg-gradient-to-r from-[#C84630] to-[#a83820] text-white rounded-xl hover:shadow-lg transition-all duration-300 text-xs font-semibold">
-            Leave
-          </button>
-
-          <!-- Edit button -->
-          <button 
-            *ngIf="isEventCreator(event)"
-            (click)="openEditModal(event)"
-            class="flex-1 px-3 py-2 bg-[#F6BD60] text-gray-900 rounded-xl hover:bg-[#e5ac4f] hover:shadow-lg transition-all duration-300 text-xs font-semibold">
-            ✏️ Edit
-          </button>
-
-          <!-- Delete button -->
-          <button 
-            *ngIf="isEventCreator(event) || isAdmin"
-            (click)="deleteEvent(event.id!)"
-            class="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 text-xs font-semibold">
-            🗑️
-          </button>
-        </div>
-
-        <!-- Status Badges -->
-        <div class="mt-2.5 flex flex-wrap gap-2">
-          <!-- Registered Badge -->
-          <div *ngIf="isUserRegistered(event.id!) && !isEventCreator(event)" class="flex-1 flex items-center justify-center gap-1.5 text-green-600 text-xs font-semibold bg-green-50 rounded-lg py-1.5 px-2">
-            <span>✓</span>
-            <span>Registered</span>
+            class="w-full px-4 py-2.5 bg-green-100 text-green-700 rounded-lg text-center font-semibold text-sm border-2 border-green-300">
+            ✅ Registered
           </div>
-          
+
           <!-- Creator Badge -->
-          <div *ngIf="isEventCreator(event)" class="flex-1 flex items-center justify-center gap-1.5 text-amber-700 text-xs font-semibold bg-amber-50 rounded-lg py-1.5 px-2">
-            <span>👑</span>
-            <span>Your Event</span>
+          <div 
+            *ngIf="isEventCreator(event)"
+            class="w-full px-4 py-2.5 bg-amber-100 text-amber-700 rounded-lg text-center font-semibold text-sm border-2 border-amber-300">
+            👑 Your Event
           </div>
+
+          <!-- View Details Button -->
+          <button 
+            (click)="viewEventDetails(event); $event.stopPropagation()"
+            class="w-full px-4 py-2.5 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 rounded-lg hover:shadow-lg transition-all font-semibold text-sm">
+            View Details
+          </button>
         </div>
       </div>
     </div>
@@ -484,136 +679,225 @@
 </div>
 
 <!-- Create/Edit Event Modal -->
-<div *ngIf="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" (click)="closeModal()">
-  <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-    <div class="p-6 border-b border-gray-200">
-      <h2 class="text-2xl font-bold text-gray-800">{{ isEditMode ? 'Edit Event' : 'Create New Event' }}</h2>
+<div *ngIf="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeModal()">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="relative bg-gradient-to-br from-[#2D5757] to-[#3D3D60] p-8">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
+      <div class="relative z-10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-2xl font-black text-white">{{ isEditMode ? 'Modifier l\'Événement' : 'Créer un Événement' }}</h2>
+              <p class="text-sm text-white/80 mt-1">{{ isEditMode ? 'Mettez à jour les informations' : 'Remplissez les détails' }}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+          >
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
     
-    <form (ngSubmit)="saveEvent()" class="p-6 space-y-4">
-      <!-- Title -->
+    <!-- Modal Body -->
+    <form (ngSubmit)="saveEvent()" class="p-8 space-y-6 max-h-[calc(90vh-250px)] overflow-y-auto">
+      <!-- Image Upload First -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Title *</label>
-        <input 
-          type="text" 
-          [(ngModel)]="eventForm.title" 
-          name="title"
-          required
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
-          placeholder="Enter event title">
+        <label class="block text-sm font-bold text-[#2D5757] mb-3">Image de l'Événement</label>
+        <div class="space-y-3">
+          <!-- Image Preview -->
+          <div *ngIf="eventForm.image" class="relative w-full h-48 rounded-2xl overflow-hidden border-2 border-[#2D5757] shadow-lg">
+            <img [src]="eventForm.image" alt="Event preview" class="w-full h-full object-cover">
+            <button 
+              type="button"
+              (click)="removeImage()"
+              class="absolute top-3 right-3 w-10 h-10 bg-[#C84630] text-white rounded-full flex items-center justify-center hover:bg-[#a83820] transition-colors shadow-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Upload Button -->
+          <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-[#F6BD60] transition-all group">
+            <div class="flex flex-col items-center justify-center">
+              <svg class="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#F6BD60] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              <p class="mb-2 text-sm text-gray-700"><span class="font-semibold">Cliquer pour uploader</span></p>
+              <p class="text-xs text-gray-500">PNG, JPG (MAX. 2MB)</p>
+            </div>
+            <input 
+              type="file" 
+              class="hidden" 
+              accept="image/*"
+              (change)="onImageSelected($event)">
+          </label>
+        </div>
       </div>
 
-      <!-- Type -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Type *</label>
-        <select 
-          [(ngModel)]="eventForm.type" 
-          name="type"
-          required
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent">
-          <option value="WORKSHOP">Workshop</option>
-          <option value="SEMINAR">Seminar</option>
-          <option value="SOCIAL">Social</option>
-        </select>
-      </div>
+      <!-- Two Column Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Title -->
+        <div>
+          <label class="block text-sm font-bold text-[#2D5757] mb-2">Titre <span class="text-[#C84630]">*</span></label>
+          <input 
+            type="text" 
+            [(ngModel)]="eventForm.title" 
+            name="title"
+            required
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all"
+            placeholder="Titre de l'événement">
+        </div>
 
-      <!-- Date & Time -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Date & Time *</label>
-        <input 
-          type="datetime-local" 
-          [(ngModel)]="eventForm.eventDate" 
-          name="eventDate"
-          required
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent">
-      </div>
+        <!-- Type -->
+        <div>
+          <label class="block text-sm font-bold text-[#2D5757] mb-2">Type <span class="text-[#C84630]">*</span></label>
+          <select 
+            [(ngModel)]="eventForm.type" 
+            name="type"
+            required
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all bg-white">
+            <option value="WORKSHOP">Workshop</option>
+            <option value="SEMINAR">Seminar</option>
+            <option value="SOCIAL">Social</option>
+          </select>
+        </div>
 
-      <!-- Location -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Location *</label>
-        <input 
-          type="text" 
-          [(ngModel)]="eventForm.location" 
-          name="location"
-          required
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
-          placeholder="Enter location">
+        <!-- Start Date & Time -->
+        <div>
+          <label class="block text-sm font-bold text-[#2D5757] mb-2">
+            📅 Date & Heure de Début <span class="text-[#C84630]">*</span>
+          </label>
+          <input 
+            type="datetime-local" 
+            [(ngModel)]="eventForm.startDate" 
+            name="startDate"
+            required
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all">
+        </div>
+
+        <!-- End Date & Time -->
+        <div>
+          <label class="block text-sm font-bold text-[#2D5757] mb-2">
+            ⏰ Date & Heure de Fin <span class="text-[#C84630]">*</span>
+          </label>
+          <input 
+            type="datetime-local" 
+            [(ngModel)]="eventForm.endDate" 
+            name="endDate"
+            required
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all">
+        </div>
+
+        <!-- Location -->
+        <div class="md:col-span-2">
+          <app-location-search
+            label="Emplacement"
+            placeholder="Rechercher un lieu..."
+            [required]="true"
+            [initialValue]="eventForm.location"
+            (locationSelected)="onLocationSelected($event)">
+          </app-location-search>
+        </div>
       </div>
 
       <!-- Max Participants -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Max Participants *</label>
+        <label class="block text-sm font-bold text-[#2D5757] mb-2">Participants Maximum <span class="text-[#C84630]">*</span></label>
         <input 
           type="number" 
           [(ngModel)]="eventForm.maxParticipants" 
           name="maxParticipants"
           required
           min="1"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#2D5757] focus:border-transparent"
-          placeholder="Enter max participants">
-      </div>
-
-      <!-- Image Upload -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Event Image</label>
-        <div class="space-y-3">
-          <!-- Image Preview -->
-          <div *ngIf="eventForm.image" class="relative w-full h-48 rounded-xl overflow-hidden border-2 border-gray-200">
-            <img [src]="eventForm.image" alt="Event preview" class="w-full h-full object-cover">
-            <button 
-              type="button"
-              (click)="removeImage()"
-              class="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg">
-              ✕
-            </button>
-          </div>
-          
-          <!-- Upload Button -->
-          <div class="flex items-center justify-center w-full">
-            <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-              <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                </svg>
-                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-                <p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 2MB)</p>
-              </div>
-              <input 
-                type="file" 
-                class="hidden" 
-                accept="image/*"
-                (change)="onImageSelected($event)">
-            </label>
-          </div>
-        </div>
+          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all"
+          placeholder="Nombre maximum">
       </div>
 
       <!-- Description -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+        <label class="block text-sm font-bold text-[#2D5757] mb-2">Description</label>
         <textarea 
           [(ngModel)]="eventForm.description" 
           name="description"
           rows="4"
-          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
-          placeholder="Enter event description"></textarea>
+          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#F6BD60] focus:border-[#F6BD60] transition-all resize-none"
+          placeholder="Décrivez l'événement..."></textarea>
       </div>
 
-      <!-- Buttons -->
-      <div class="flex gap-3 pt-4">
-        <button 
-          type="button"
-          (click)="closeModal()"
-          class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-semibold">
-          Cancel
-        </button>
-        <button 
-          type="submit"
-          class="flex-1 px-6 py-3 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold">
-          {{ isEditMode ? 'Update' : 'Create' }}
-        </button>
+      <!-- Gallery Upload -->
+      <div>
+        <label class="block text-sm font-bold text-[#2D5757] mb-3">Galerie Photos (Optionnel)</label>
+        
+        <!-- Gallery Preview -->
+        <div *ngIf="eventForm.gallery && eventForm.gallery.length > 0" class="grid grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+          <div *ngFor="let image of eventForm.gallery; let i = index" class="relative group">
+            <img 
+              [src]="image" 
+              [alt]="'Gallery ' + (i + 1)" 
+              class="w-full h-24 object-cover rounded-xl border-2 border-gray-200"
+            />
+            <button
+              type="button"
+              (click)="removeGalleryImage(i)"
+              class="absolute -top-2 -right-2 w-7 h-7 bg-[#C84630] text-white rounded-full flex items-center justify-center hover:bg-[#a83820] shadow-lg opacity-0 group-hover:opacity-100 transition-all"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Upload Button -->
+        <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-[#F6BD60] transition-all group">
+          <div class="flex flex-col items-center justify-center">
+            <svg class="w-10 h-10 mb-2 text-gray-400 group-hover:text-[#F6BD60] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <p class="text-sm text-gray-700"><span class="font-semibold">Ajouter des photos</span></p>
+            <p class="text-xs text-gray-500 mt-1">Plusieurs images possibles</p>
+          </div>
+          <input 
+            type="file" 
+            class="hidden" 
+            accept="image/*"
+            multiple
+            (change)="onGalleryImageSelected($event)">
+        </label>
       </div>
     </form>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end gap-3 p-6 bg-gray-50 border-t border-gray-200">
+      <button 
+        type="button"
+        (click)="closeModal()"
+        class="px-6 py-3 text-[#2D5757] font-semibold border-2 border-gray-300 rounded-xl hover:bg-gray-100 transition-all">
+        Annuler
+      </button>
+      <button 
+        type="button"
+        (click)="saveEvent()"
+        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 font-bold rounded-xl hover:shadow-lg transition-all">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        {{ isEditMode ? 'Mettre à Jour' : 'Créer' }}
+      </button>
+    </div>
   </div>
 </div>
 
@@ -697,6 +981,7 @@
 
             <!-- Remove Button -->
             <button
+              *ngIf="selectedEvent?.id"
               (click)="removeParticipant(participant.id, participant.userId, selectedEvent!.id!)"
               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -716,6 +1001,125 @@
         class="w-full px-6 py-3 bg-gradient-to-r from-[#2D5757] to-[#3D3D60] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold">
         Close
       </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Image Lightbox Modal -->
+<div *ngIf="selectedGalleryImage" class="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" (click)="closeImageModal()">
+  <div class="relative max-w-5xl w-full" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button
+      (click)="closeImageModal()"
+      class="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all"
+    >
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+    
+    <!-- Image -->
+    <img 
+      [src]="selectedGalleryImage" 
+      alt="Gallery image" 
+      class="w-full h-auto max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+    />
+  </div>
+</div>
+
+
+
+
+
+<!-- Feedback Comments Modal (for creator) -->
+<div *ngIf="showFeedbackCommentsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeFeedbackCommentsModal()">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-[#2D5757] to-[#3D3D60] p-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <span class="text-2xl">💬</span>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Commentaires des Participants</h2>
+            <p class="text-white/80 text-sm">{{ feedbackComments.length }} avis</p>
+          </div>
+        </div>
+        <button 
+          (click)="closeFeedbackCommentsModal()"
+          class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingFeedbackComments" class="flex justify-center items-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F6BD60]"></div>
+    </div>
+
+    <!-- Comments List -->
+    <div *ngIf="!loadingFeedbackComments" class="p-6 space-y-4 max-h-[calc(90vh-150px)] overflow-y-auto">
+      <div *ngIf="feedbackComments.length === 0" class="text-center py-12">
+        <div class="text-6xl mb-4">📝</div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Aucun commentaire</h3>
+        <p class="text-gray-600">Les participants n'ont pas encore laissé de commentaires.</p>
+      </div>
+
+      <div *ngFor="let feedback of feedbackComments" class="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
+        <!-- Rating -->
+        <div class="flex items-center gap-2 mb-3">
+          <div class="flex items-center">
+            <span *ngFor="let star of [1,2,3,4,5]" 
+                  class="text-xl"
+                  [class.text-[#F6BD60]]="star <= feedback.rating"
+                  [class.text-gray-300]="star > feedback.rating">
+              ⭐
+            </span>
+          </div>
+          <span class="text-lg font-bold text-[#2D5757]">{{ feedback.rating }}/5</span>
+          <span *ngIf="feedback.anonymous" class="ml-2 px-2 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-semibold flex items-center gap-1">
+            <span>🕶️</span>
+            <span>Anonyme</span>
+          </span>
+        </div>
+
+        <!-- Comment -->
+        <p *ngIf="feedback.comment" class="text-gray-700 leading-relaxed mb-3">
+          "{{ feedback.comment }}"
+        </p>
+        <p *ngIf="!feedback.comment" class="text-gray-400 italic">
+          Aucun commentaire écrit
+        </p>
+
+        <!-- User Info & Date -->
+        <div class="flex items-center justify-between text-sm text-gray-500 mt-3 pt-3 border-t border-gray-200">
+          <div class="flex items-center gap-2">
+            <!-- Anonymous User -->
+            <div *ngIf="feedback.anonymous" class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold text-xs">
+                <span>🕶️</span>
+              </div>
+              <span class="font-medium text-gray-500">Participant Anonyme</span>
+            </div>
+            
+            <!-- Named User -->
+            <div *ngIf="!feedback.anonymous" class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#2D5757] to-[#3D3D60] flex items-center justify-center text-white font-semibold text-xs">
+                {{ feedback.userFirstName?.charAt(0) || '?' }}{{ feedback.userLastName?.charAt(0) || '?' }}
+              </div>
+              <span class="font-medium">
+                {{ feedback.userFirstName || 'Utilisateur' }} {{ feedback.userLastName || '' }}
+              </span>
+            </div>
+          </div>
+          <span>{{ formatDate(feedback.createdAt!) }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

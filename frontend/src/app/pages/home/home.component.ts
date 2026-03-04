@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { PackService } from '../../core/services/pack.service';
 import { CourseCategoryService } from '../../core/services/course-category.service';
+import { EventService, Event as ClubEvent } from '../../core/services/event.service';
 import { Pack, PackStatus } from '../../core/models/pack.model';
 import { CourseCategory } from '../../core/models/course-category.model';
 import { FrontofficeUserDropdownComponent } from '../../shared/components/frontoffice-user-dropdown.component';
@@ -29,10 +30,15 @@ export class HomeComponent implements OnInit, AfterViewInit {
   selectedCategory: string = '';
   loading = false;
   
+  // Events
+  upcomingEvents: ClubEvent[] = [];
+  loadingEvents = false;
+  
   constructor(
     public authService: AuthService,
     private packService: PackService,
-    private categoryService: CourseCategoryService
+    private categoryService: CourseCategoryService,
+    private eventService: EventService
   ) {
     this.isAuthenticated$ = this.authService.currentUser$.pipe(
       map(user => !!user)
@@ -72,6 +78,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
     // Charger les catégories et les packs
     this.loadCategories();
     this.loadPacks();
+    this.loadUpcomingEvents();
   }
 
   ngAfterViewInit() {
@@ -173,5 +180,71 @@ export class HomeComponent implements OnInit, AfterViewInit {
     if (!pack.maxStudents || pack.maxStudents === 0) return 0;
     const enrolled = pack.maxStudents - (pack.availableSlots || 0);
     return Math.round((enrolled / pack.maxStudents) * 100);
+  }
+
+  loadUpcomingEvents(): void {
+    this.loadingEvents = true;
+    this.eventService.getAllEvents().subscribe({
+      next: (events: ClubEvent[]) => {
+        // Filter approved and upcoming events
+        const now = new Date();
+        this.upcomingEvents = events
+          .filter((event: ClubEvent) => {
+            // Only show approved events
+            if (event.status !== 'APPROVED') return false;
+            
+            // Only show upcoming events (events that haven't ended yet)
+            const endDate = event.endDate ? new Date(event.endDate) : new Date(event.startDate);
+            return endDate >= now;
+          })
+          .sort((a: ClubEvent, b: ClubEvent) => {
+            const dateA = new Date(a.startDate);
+            const dateB = new Date(b.startDate);
+            return dateA.getTime() - dateB.getTime();
+          })
+          .slice(0, 3); // Show only 3 upcoming events
+        this.loadingEvents = false;
+      },
+      error: (error: any) => {
+        console.error('Error loading events:', error);
+        this.loadingEvents = false;
+      }
+    });
+  }
+
+  formatEventDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric'
+    });
+  }
+
+  getEventDuration(event: ClubEvent): string {
+    if (!event.endDate) return 'TBD';
+    
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    const diffMs = end.getTime() - start.getTime();
+    const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+    
+    if (diffHours < 1) {
+      const diffMinutes = Math.round(diffMs / (1000 * 60));
+      return `${diffMinutes} Minutes`;
+    }
+    
+    return `${diffHours} Hour${diffHours > 1 ? 's' : ''}`;
+  }
+
+  getEventTypeLabel(type: string): string {
+    const labels: { [key: string]: string } = {
+      'WORKSHOP': 'Workshop',
+      'SEMINAR': 'Seminar',
+      'SOCIAL': 'Social Event',
+      'COMPETITION': 'Competition',
+      'CONFERENCE': 'Conference'
+    };
+    return labels[type] || type;
   }
 }

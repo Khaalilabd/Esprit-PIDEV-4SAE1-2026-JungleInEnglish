@@ -1,0 +1,65 @@
+<div class="cont" (wheel)="onWheel($event)">
+  <div 
+    class="slider" 
+    [class.animation]="animation"
+    [style.transform]="getTransform()"
+    (mousedown)="onMouseDown($event)"
+    (mousemove)="onMouseMove($event)"
+    (mouseup)="onMouseUp()"
+    (mouseleave)="onMouseUp()"
+    (touchstart)="onMouseDown($event)"
+    (touchmove)="onMouseMove($event)"
+    (touchend)="onMouseUp()">
+    
+    <div 
+      *ngFor="let slide of slides; let i = index" 
+      class="slide slide--{{i + 1}}"
+      [attr.data-target]="i">
+      
+      <div 
+        class="slide__darkbg slide--{{i + 1}}__darkbg"
+        [style.background-image]="'url(' + slide.image + ')'"
+        [style.left.%]="-50 * i"
+        [style.transform]="getDarkBgTransform()">
+      </div>
+      
+      <div class="slide__text-wrapper slide--{{i + 1}}__text-wrapper">
+        <div 
+          class="slide__letter slide--{{i + 1}}__letter"
+          [style.background-image]="'url(' + slide.image + ')'"
+          [style.transform]="getLetterTransform()">
+          {{ getFirstLetter(slide.title) }}
+        </div>
+        
+        <div 
+          *ngFor="let part of splitTitle(slide.title); let j = index"
+          class="slide__text slide__text--{{j + 1}}"
+          [style.transform]="getTextTransform()">
+          {{ part }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <ul class="nav">
+    <li 
+      *ngFor="let slide of slides; let i = index"
+      class="nav__slide nav__slide--{{i + 1}}"
+      [class.nav-active]="currentSlide === i"
+      [attr.data-target]="i"
+      (click)="goToSlide(i)">
+    </li>
+  </ul>
+  
+  <div 
+    data-target='right' 
+    class="side-nav side-nav--right"
+    (click)="navigateRight()">
+  </div>
+  
+  <div 
+    data-target='left' 
+    class="side-nav side-nav--left"
+    (click)="navigateLeft()">
+  </div>
+</div>

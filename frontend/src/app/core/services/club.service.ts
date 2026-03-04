@@ -50,7 +50,7 @@ export class ClubService {
   }
 
   getClubMembers(clubId: number): Observable<Member[]> {
-    return this.http.get<Member[]>(`${this.apiUrl}/${clubId}/members`);
+    return this.http.get<Member[]>(`${environment.apiUrl}/members/club/${clubId}`);
   }
 
   joinClub(clubId: number, request: JoinClubRequest): Observable<Member> {
@@ -90,5 +90,18 @@ export class ClubService {
       .set('reviewerId', reviewerId.toString())
       .set('comment', comment || '');
     return this.http.post<Club>(`${this.apiUrl}/${clubId}/reject`, null, { params });
+  }
+
+  suspendClub(clubId: number, managerId: number, reason: string): Observable<Club> {
+    const params = new HttpParams()
+      .set('managerId', managerId.toString())
+      .set('reason', reason);
+    return this.http.post<Club>(`${this.apiUrl}/${clubId}/suspend`, null, { params });
+  }
+
+  activateClub(clubId: number, managerId: number): Observable<Club> {
+    const params = new HttpParams()
+      .set('managerId', managerId.toString());
+    return this.http.post<Club>(`${this.apiUrl}/${clubId}/activate`, null, { params });
   }
 }

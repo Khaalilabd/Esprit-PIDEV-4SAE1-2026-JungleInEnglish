@@ -1,0 +1,37 @@
+<div class="star-rating-container" [ngClass]="{'readonly': readonly}" (mouseleave)="onMouseLeave()">
+  <!-- Rating value display (like in the image) -->
+  <div *ngIf="showValue" class="rating-value">
+    {{ getDisplayRating().toFixed(1) }}
+  </div>
+  
+  <!-- Stars container -->
+  <div class="stars-wrapper">
+    <div 
+      *ngFor="let star of stars; let i = index" 
+      class="star-item"
+      [ngClass]="getSizeClass()"
+      (click)="onStarClick(i, $event)"
+      (mousemove)="onStarHover(i, $event)"
+      [title]="'Star ' + (i + 1)">
+      
+      <!-- Full star -->
+      <span *ngIf="star.full" class="star star-full">⭐</span>
+      
+      <!-- Half star -->
+      <div *ngIf="star.half" class="star star-half">
+        <div class="star-half-container">
+          <div class="star-half-fill">⭐</div>
+          <div class="star-half-empty">⭐</div>
+        </div>
+      </div>
+      
+      <!-- Empty star -->
+      <span *ngIf="star.empty" class="star star-empty">⭐</span>
+    </div>
+  </div>
+  
+  <!-- Debug info (remove in production) -->
+  <div *ngIf="!readonly && isHovering" class="text-xs text-gray-500 ml-2">
+    Hover: {{ hoverRating.toFixed(1) }}
+  </div>
+</div>

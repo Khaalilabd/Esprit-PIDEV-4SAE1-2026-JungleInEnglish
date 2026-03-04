@@ -61,6 +61,15 @@ public class Club {
     @Column(name = "review_comment", columnDefinition = "TEXT")
     private String reviewComment; // Commentaire de l'officer
     
+    @Column(name = "suspended_by")
+    private Integer suspendedBy; // User ID du manager qui a suspendu le club
+    
+    @Column(name = "suspension_reason", columnDefinition = "TEXT")
+    private String suspensionReason; // Raison de la suspension
+    
+    @Column(name = "suspended_at")
+    private LocalDateTime suspendedAt; // Date de suspension
+    
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Member> members = new ArrayList<>();

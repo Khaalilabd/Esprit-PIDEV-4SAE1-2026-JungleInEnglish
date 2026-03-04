@@ -15,7 +15,8 @@ import java.util.List;
 @Entity
 @Table(name = "events", indexes = {
     @Index(name = "idx_event_type", columnList = "type"),
-    @Index(name = "idx_event_date", columnList = "eventDate"),
+    @Index(name = "idx_event_start_date", columnList = "startDate"),
+    @Index(name = "idx_event_end_date", columnList = "endDate"),
     @Index(name = "idx_event_status", columnList = "status"),
     @Index(name = "idx_event_creator", columnList = "creatorId")
 })
@@ -36,10 +37,19 @@ public class Event {
     private EventType type;
     
     @Column(nullable = false)
-    private LocalDateTime eventDate;
+    private LocalDateTime startDate;
+    
+    @Column(nullable = false)
+    private LocalDateTime endDate;
     
     @Column(nullable = false)
     private String location;
+    
+    @Column
+    private Double latitude;
+    
+    @Column
+    private Double longitude;
     
     @Column(nullable = false)
     private Integer maxParticipants;
@@ -53,9 +63,20 @@ public class Event {
     @Column(nullable = false)
     private Long creatorId; // ID of the user who created the event
     
+    @Column
+    private Integer clubId; // ID of the club organizing the event
+    
+    @Column
+    private String clubName; // Name of the club organizing the event
+    
     @Lob
     @Column(columnDefinition = "TEXT")
     private String image; // Base64 encoded image
+    
+    @ElementCollection
+    @CollectionTable(name = "event_gallery", joinColumns = @JoinColumn(name = "event_id"))
+    @Column(name = "image_data", columnDefinition = "TEXT")
+    private List<String> gallery = new ArrayList<>(); // Gallery of base64 encoded images
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -70,6 +91,16 @@ public class Event {
     
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+    
+    // Feedback statistics (calculated fields, not stored)
+    @Transient
+    private Double averageRating;
+    
+    @Transient
+    private Integer totalFeedbacks;
+    
+    @Transient
+    private Double satisfactionRate;
     
     @PrePersist
     protected void onCreate() {

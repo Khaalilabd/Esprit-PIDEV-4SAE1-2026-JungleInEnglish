@@ -71,4 +71,10 @@ public class EventController {
     public ResponseEntity<EventDTO> rejectEvent(@PathVariable Integer id) {
         return ResponseEntity.ok(eventService.rejectEvent(id));
     }
+    
+    @PostMapping("/sync-club-names")
+    public ResponseEntity<String> syncClubNames() {
+        int updated = eventService.syncClubNamesForAllEvents();
+        return ResponseEntity.ok("Updated " + updated + " events with club names");
+    }
 }

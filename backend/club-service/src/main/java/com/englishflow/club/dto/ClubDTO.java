@@ -41,9 +41,19 @@ public class ClubDTO {
     
     private Integer createdBy;
     
+    private String creatorName; // Nom du créateur récupéré du service auth
+    
+    private Integer currentMembersCount; // Nombre actuel de membres
+    
     private Integer reviewedBy;
     
     private String reviewComment;
+    
+    private Integer suspendedBy; // User ID du manager qui a suspendu
+    
+    private String suspensionReason; // Raison de la suspension
+    
+    private LocalDateTime suspendedAt; // Date de suspension
     
     private LocalDateTime createdAt;
     

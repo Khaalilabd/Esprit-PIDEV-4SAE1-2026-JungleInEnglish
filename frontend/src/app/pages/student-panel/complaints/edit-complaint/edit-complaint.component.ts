@@ -100,7 +100,10 @@ export class EditComplaintComponent implements OnInit {
     this.isSubmitting = true;
 
     // Students can only update subject and description
-    const updateData = {
+    const updateData: any = {
+      userId: this.complaint.userId,
+      title: this.editForm.subject,
+      category: this.complaint.category,
       subject: this.editForm.subject,
       description: this.editForm.description
       // Status and response are NOT included - only managers can update these

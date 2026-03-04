@@ -29,7 +29,7 @@
           <li><a href="#courses" class="nav-link">Courses</a></li>
           <li><a routerLink="/clubs" class="nav-link">Clubs</a></li>
           <li><a href="#team" class="nav-link">Team</a></li>
-          <li><a href="#events" class="nav-link">Events</a></li>
+          <li><a routerLink="/events" class="nav-link">Events</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
 
@@ -316,60 +316,54 @@
     <div class="section-header">
       <span class="section-badge">Upcoming Events</span>
       <h2 class="section-title">Join Our Events</h2>
-      <p class="section-description">Free workshops and webinars to boost your English skills</p>
+      <p class="section-description">Discover exciting events organized by our clubs</p>
     </div>
 
-    <div class="events-list">
-      <div class="event-card">
-        <div class="event-image">
-          <img src="assets/images/event-01.jpg" alt="English Pronunciation">
-          <span class="event-type">Workshop</span>
-        </div>
-        <div class="event-content">
-          <h3 class="event-title">English Pronunciation Masterclass</h3>
-          <p class="event-description">Learn the secrets of perfect English pronunciation</p>
-          <div class="event-details">
-            <span class="event-date">📅 March 16, 2026</span>
-            <span class="event-duration">⏱️ 2 Hours</span>
-            <span class="event-price">🎫 Free</span>
-          </div>
-          <a href="#" class="event-register">Register Now</a>
-        </div>
+    @if (loadingEvents) {
+      <div class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <p class="mt-4 text-gray-600">Loading events...</p>
       </div>
+    } @else if (upcomingEvents.length === 0) {
+      <div class="text-center py-12">
+        <p class="text-gray-600 text-lg">No upcoming events at the moment. Check back soon!</p>
+      </div>
+    } @else {
+      <div class="events-list">
+        @for (event of upcomingEvents; track event.id) {
+          <div class="event-card">
+            <div class="event-image">
+              @if (event.image) {
+                <img [src]="event.image" [alt]="event.title">
+              } @else {
+                <img src="assets/images/event-placeholder.jpg" [alt]="event.title">
+              }
+              <span class="event-type">{{ getEventTypeLabel(event.type) }}</span>
+            </div>
+            <div class="event-content">
+              <h3 class="event-title">{{ event.title }}</h3>
+              <p class="event-description">{{ event.description }}</p>
+              <div class="event-details">
+                <span class="event-date">📅 {{ formatEventDate(event.startDate) }}</span>
+                <span class="event-duration">⏱️ {{ getEventDuration(event) }}</span>
+                @if (event.clubName) {
+                  <span class="event-club">🎯 {{ event.clubName }}</span>
+                }
+              </div>
+              <a [routerLink]="['/events']" class="event-register">View Details</a>
+            </div>
+          </div>
+        }
+      </div>
+    }
 
-      <div class="event-card">
-        <div class="event-image">
-          <img src="assets/images/event-02.jpg" alt="IELTS Tips">
-          <span class="event-type">Webinar</span>
-        </div>
-        <div class="event-content">
-          <h3 class="event-title">IELTS Tips & Tricks</h3>
-          <p class="event-description">Insider strategies to ace your IELTS exam</p>
-          <div class="event-details">
-            <span class="event-date">📅 March 24, 2026</span>
-            <span class="event-duration">⏱️ 1.5 Hours</span>
-            <span class="event-price">🎫 Free</span>
-          </div>
-          <a href="#" class="event-register">Register Now</a>
-        </div>
-      </div>
-
-      <div class="event-card">
-        <div class="event-image">
-          <img src="assets/images/event-03.jpg" alt="Business Communication">
-          <span class="event-type">Masterclass</span>
-        </div>
-        <div class="event-content">
-          <h3 class="event-title">Business English Communication</h3>
-          <p class="event-description">Professional English for career advancement</p>
-          <div class="event-details">
-            <span class="event-date">📅 April 12, 2026</span>
-            <span class="event-duration">⏱️ 3 Hours</span>
-            <span class="event-price">🎫 $50</span>
-          </div>
-          <a href="#" class="event-register">Register Now</a>
-        </div>
-      </div>
+    <div class="text-center mt-8">
+      <a [routerLink]="['/events']" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors">
+        View All Events
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
     </div>
   </div>
 </section>
@@ -466,6 +460,8 @@
             <li><a href="#home">Home</a></li>
             <li><a href="#services">Services</a></li>
             <li><a href="#courses">Courses</a></li>
+            <li><a routerLink="/clubs">Clubs</a></li>
+            <li><a routerLink="/events">Events</a></li>
             <li><a href="#team">Team</a></li>
           </ul>
         </div>

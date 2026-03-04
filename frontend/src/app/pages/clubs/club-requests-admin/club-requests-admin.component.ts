@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClubService } from '../../../core/services/club.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Club, ClubStatus } from '../../../core/models/club.model';
 
 @Component({
@@ -13,7 +14,12 @@ import { Club, ClubStatus } from '../../../core/models/club.model';
   styleUrls: ['./club-requests-admin.component.scss']
 })
 export class ClubRequestsAdminComponent implements OnInit {
+  allClubs: Club[] = [];
   pendingClubs: Club[] = [];
+  approvedClubs: Club[] = [];
+  rejectedClubs: Club[] = [];
+  
+  selectedTab: 'pending' | 'approved' | 'rejected' = 'pending';
   loading = false;
   error: string | null = null;
   
@@ -28,28 +34,36 @@ export class ClubRequestsAdminComponent implements OnInit {
 
   constructor(
     private clubService: ClubService,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
-    this.loadPendingClubs();
+    this.loadClubs();
   }
 
-  loadPendingClubs() {
+  loadClubs() {
     this.loading = true;
     this.error = null;
 
-    this.clubService.getPendingClubs().subscribe({
+    this.clubService.getAllClubs().subscribe({
       next: (clubs) => {
-        this.pendingClubs = clubs;
+        this.allClubs = clubs;
+        this.categorizeClubs();
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading pending clubs:', err);
-        this.error = 'Failed to load pending club requests.';
+        console.error('Error loading clubs:', err);
+        this.error = 'Failed to load club requests.';
         this.loading = false;
       }
     });
+  }
+
+  categorizeClubs() {
+    this.pendingClubs = this.allClubs.filter(c => c.status === ClubStatus.PENDING);
+    this.approvedClubs = this.allClubs.filter(c => c.status === ClubStatus.APPROVED);
+    this.rejectedClubs = this.allClubs.filter(c => c.status === ClubStatus.REJECTED);
   }
 
   openReviewModal(club: Club, action: 'approve' | 'reject') {
@@ -71,7 +85,7 @@ export class ClubRequestsAdminComponent implements OnInit {
 
     const currentUser = this.authService.currentUserValue;
     if (!currentUser) {
-      alert('You must be logged in to review clubs');
+      this.notificationService.warning('Login Required', 'You must be logged in to review clubs');
       return;
     }
 
@@ -85,12 +99,12 @@ export class ClubRequestsAdminComponent implements OnInit {
       next: () => {
         this.processing = false;
         this.closeReviewModal();
-        this.loadPendingClubs();
-        alert(`Club ${this.reviewAction}d successfully!`);
+        this.loadClubs();
+        const action = this.reviewAction === 'approve' ? 'approved' : 'rejected';
+        this.notificationService.success(`Club ${action.charAt(0).toUpperCase() + action.slice(1)}`, `Club has been ${action} successfully!`);
       },
       error: (err) => {
-        console.error(`Error ${this.reviewAction}ing club:`, err);
-        alert(`Failed to ${this.reviewAction} club. Please try again.`);
+        this.notificationService.error(`${this.reviewAction === 'approve' ? 'Approval' : 'Rejection'} Failed`, `Failed to ${this.reviewAction} club. Please try again.`);
         this.processing = false;
       }
     });
