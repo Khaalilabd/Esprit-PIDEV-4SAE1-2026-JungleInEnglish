@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -33,7 +34,8 @@ public class ComplaintService {
     private final NotificationSseService notificationSseService;
     private final RestTemplate restTemplate;
     
-    private static final String AUTH_SERVICE_URL = "http://localhost:8081/api/users";
+    @Value("${auth.service.url}")
+    private String authServiceUrl;
     
     @Transactional
     public Complaint createComplaint(Complaint complaint) {
@@ -248,7 +250,7 @@ public class ComplaintService {
     
     private Map<String, Object> getUserInfo(Long userId) {
         try {
-            String url = AUTH_SERVICE_URL + "/" + userId;
+            String url = authServiceUrl + "/users/" + userId + "/public";
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             log.info("Successfully fetched user info for userId: {}", userId);
             return response != null ? response : Map.of("firstName", "Unknown", "lastName", "User");

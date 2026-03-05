@@ -60,3 +60,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+# Auth Service Configuration
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8080/api/auth}

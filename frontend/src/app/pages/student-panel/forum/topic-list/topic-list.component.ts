@@ -838,10 +838,12 @@ export class TopicListComponent implements OnInit {
   }
 
   goToTopic(topicId: number): void {
-    // Détecter si on est dans le dashboard ou le student panel
+    // Détecter si on est dans le dashboard, tutor-panel ou user-panel
     const currentUrl = this.router.url;
     if (currentUrl.includes('/dashboard/')) {
       this.router.navigate(['/dashboard/forum/topic', topicId]);
+    } else if (currentUrl.includes('/tutor-panel/')) {
+      this.router.navigate(['/tutor-panel/forum/topic', topicId]);
     } else {
       this.router.navigate(['/user-panel/forum/topic', topicId]);
     }

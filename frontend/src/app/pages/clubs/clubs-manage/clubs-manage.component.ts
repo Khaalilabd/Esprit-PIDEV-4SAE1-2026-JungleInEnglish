@@ -2,8 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClubService } from '../../../core/services/club.service';
+import { UserService } from '../../../core/services/user.service';
 import { Club, Member } from '../../../core/models/club.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { forkJoin, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-clubs-manage',
@@ -28,6 +31,7 @@ export class ClubsManageComponent implements OnInit {
 
   constructor(
     private clubService: ClubService,
+    private userService: UserService,
     private notificationService: NotificationService
   ) {}
 
@@ -40,9 +44,34 @@ export class ClubsManageComponent implements OnInit {
     this.error = null;
 
     // Charger tous les clubs approuvés
-    this.clubService.getApprovedClubs().subscribe({
-      next: (clubs) => {
-        this.clubs = clubs;
+    this.clubService.getApprovedClubs().pipe(
+      switchMap(clubs => {
+        // Extraire tous les IDs des créateurs
+        const creatorIds = [...new Set(clubs.map(c => c.createdBy).filter(id => id !== undefined))] as number[];
+        
+        if (creatorIds.length === 0) {
+          return of({ clubs, users: [] });
+        }
+
+        // Charger les informations des créateurs
+        return this.userService.getUsersByIds(creatorIds).pipe(
+          map(users => ({ clubs, users }))
+        );
+      })
+    ).subscribe({
+      next: ({ clubs, users }) => {
+        // Créer une map des utilisateurs
+        const userMap = new Map(users.map(u => [u.id, u]));
+        
+        // Enrichir les clubs avec les noms des créateurs
+        this.clubs = clubs.map(club => {
+          const creator = userMap.get(club.createdBy!);
+          return {
+            ...club,
+            creatorName: creator ? `${creator.firstName} ${creator.lastName}` : undefined
+          };
+        });
+        
         this.loading = false;
       },
       error: (err) => {
@@ -61,9 +90,35 @@ export class ClubsManageComponent implements OnInit {
 
   loadClubMembers(clubId: number) {
     this.loadingMembers = true;
-    this.clubService.getClubMembers(clubId).subscribe({
-      next: (members) => {
-        this.clubMembers = members;
+    this.clubService.getClubMembers(clubId).pipe(
+      switchMap(members => {
+        // Extraire tous les IDs des utilisateurs
+        const userIds = [...new Set(members.map(m => m.userId))];
+        
+        if (userIds.length === 0) {
+          return of({ members, users: [] });
+        }
+
+        // Charger les informations des utilisateurs
+        return this.userService.getUsersByIds(userIds).pipe(
+          map(users => ({ members, users }))
+        );
+      })
+    ).subscribe({
+      next: ({ members, users }) => {
+        // Créer une map des utilisateurs
+        const userMap = new Map(users.map(u => [u.id, u]));
+        
+        // Enrichir les membres avec les noms des utilisateurs
+        this.clubMembers = members.map(member => {
+          const user = userMap.get(member.userId);
+          return {
+            ...member,
+            userName: user ? `${user.firstName} ${user.lastName}` : undefined,
+            userEmail: user?.email
+          };
+        });
+        
         this.loadingMembers = false;
       },
       error: (err) => {

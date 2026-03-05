@@ -110,6 +110,8 @@ export class TopicDetailComponent implements OnInit, OnDestroy {
       next: (data) => {
         console.log('=== TOPIC LOADED ===');
         console.log('Topic data:', data);
+        console.log('🔍 Resource Type:', data.resourceType);
+        console.log('🔍 Resource Link:', data.resourceLink);
         
         this.topic = data;
         

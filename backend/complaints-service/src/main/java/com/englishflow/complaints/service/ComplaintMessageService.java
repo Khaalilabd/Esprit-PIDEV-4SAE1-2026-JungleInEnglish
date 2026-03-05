@@ -9,6 +9,7 @@ import com.englishflow.complaints.repository.ComplaintNotificationRepository;
 import com.englishflow.complaints.repository.ComplaintRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,7 +28,8 @@ public class ComplaintMessageService {
     private final NotificationSseService notificationSseService;
     private final RestTemplate restTemplate;
     
-    private static final String AUTH_SERVICE_URL = "http://localhost:8081/api/users";
+    @Value("${auth.service.url}")
+    private String authServiceUrl;
     
     public ComplaintMessageDTO createMessage(ComplaintMessage message) {
         log.info("Creating message for complaint: {}", message.getComplaintId());
@@ -95,18 +97,22 @@ public class ComplaintMessageService {
     
     private String getAuthorName(Long authorId) {
         try {
-            String url = AUTH_SERVICE_URL + "/" + authorId;
+            String url = authServiceUrl + "/users/" + authorId + "/public";
+            log.info("🔍 Fetching author name from URL: {}", url);
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            log.info("📥 Response received: {}", response);
             if (response != null) {
                 String firstName = (String) response.getOrDefault("firstName", "");
                 String lastName = (String) response.getOrDefault("lastName", "");
                 String fullName = (firstName + " " + lastName).trim();
+                log.info("✅ Author name resolved: {} (from authorId: {})", fullName, authorId);
                 return fullName.isEmpty() ? "User#" + authorId : fullName;
             }
         } catch (Exception e) {
-            log.error("Failed to fetch author name for authorId: {}", authorId, e);
+            log.error("❌ Failed to fetch author name for authorId: {} from URL: {}", authorId, authServiceUrl + "/users/" + authorId + "/public", e);
         }
         
+        log.warn("⚠️ Returning fallback name for authorId: {}", authorId);
         return "User#" + authorId;
     }
 }

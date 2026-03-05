@@ -112,10 +112,10 @@ export class StudentSidebarComponent {
         {
           icon: 'fas fa-calendar-check',
           name: "Events",
-          path: "/user-panel/events",
+          path: "events",
           subItems: [
             // User's events will be added by loadUserEvents()
-            { name: "Loading...", path: "/user-panel/events" } as SubItem
+            { name: "Loading...", path: "events" } as SubItem
           ]
         },
         {
@@ -434,7 +434,7 @@ export class StudentSidebarComponent {
         const eventsItem = communitySection.items.find(item => item.name === 'Events');
         if (eventsItem && eventsItem.subItems) {
           eventsItem.subItems = [
-            { name: "Please login", path: "/user-panel/events" }
+            { name: "Please login", path: "events" }
           ];
         }
       }
@@ -517,7 +517,7 @@ export class StudentSidebarComponent {
                     const eventsItem = communitySection.items.find(item => item.name === 'Events');
                     if (eventsItem && eventsItem.subItems) {
                       eventsItem.subItems = [
-                        { name: "No events yet", path: "/user-panel/events" }
+                        { name: "No events yet", path: "events" }
                       ];
                     }
                   }
@@ -567,7 +567,7 @@ export class StudentSidebarComponent {
 
                       return {
                         name: displayName,
-                        path: `/user-panel/events/${event.id}`,
+                        path: `events/${event.id}`,
                         badge: badge,
                         badgeColor: badgeColor
                       };
@@ -596,7 +596,7 @@ export class StudentSidebarComponent {
           const eventsItem = communitySection.items.find(item => item.name === 'Events');
           if (eventsItem && eventsItem.subItems) {
             eventsItem.subItems = [
-              { name: "Error loading events", path: "/user-panel/events" }
+              { name: "Error loading events", path: "events" }
             ];
           }
         }

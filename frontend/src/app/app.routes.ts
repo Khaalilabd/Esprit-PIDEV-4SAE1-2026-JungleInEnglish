@@ -46,6 +46,13 @@ export const routes: Routes = [
     title: 'Clubs | Jungle in English'
   },
   
+  // Page publique des événements
+  {
+    path: 'events',
+    loadComponent: () => import('./pages/public-events/public-events.component').then(m => m.PublicEventsComponent),
+    title: 'Events | Jungle in English'
+  },
+  
   // Pack Details - Page publique
   {
     path: 'pack-details/:id',
@@ -198,6 +205,11 @@ export const routes: Routes = [
         title: 'Events | Jungle in English'
       },
       {
+        path: 'events/:id',
+        loadComponent: () => import('./pages/student-panel/events/events.component').then(m => m.EventsComponent),
+        title: 'Event Details | Jungle in English'
+      },
+      {
         path: 'club-requests',
         loadComponent: () => import('./pages/student-panel/club-requests/club-requests.component').then(m => m.ClubRequestsComponent),
         title: 'Club Requests | Jungle in English'
@@ -236,6 +248,11 @@ export const routes: Routes = [
         path: 'complaints',
         loadComponent: () => import('./pages/student-panel/complaints/complaints.component').then(m => m.ComplaintsComponent),
         title: 'Complaints | Jungle in English'
+      },
+      {
+        path: 'complaints/:id',
+        loadComponent: () => import('./pages/student-panel/complaints/complaint-detail/complaint-detail.component').then(m => m.StudentComplaintDetailComponent),
+        title: 'Complaint Details | Jungle in English'
       },
       {
         path: 'complaints/edit/:id',
@@ -576,6 +593,11 @@ export const routes: Routes = [
         path: 'events/manage',
         loadComponent: () => import('./pages/dashboard/events-manage/events-manage.component').then(m => m.EventsManageComponent),
         title: 'Manage Events | Jungle in English Dashboard'
+      },
+      {
+        path: 'events/requests',
+        loadComponent: () => import('./pages/dashboard/events-requests/events-requests.component').then(m => m.EventsRequestsComponent),
+        title: 'Event Requests | Jungle in English Dashboard'
       },
       {
         path: 'complaints',

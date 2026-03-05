@@ -90,11 +90,11 @@ export class ComplaintDetailTutorComponent implements OnInit {
       next: (messages) => {
         this.messages = messages.map(m => ({
           id: m.id,
-          author: m.senderName || 'Unknown',
-          authorRole: m.senderRole,
-          content: m.message,
-          timestamp: m.createdAt ? new Date(m.createdAt) : new Date(),
-          isAdmin: m.senderRole !== 'STUDENT'
+          author: m.author || 'Unknown',  // Utiliser 'author' au lieu de 'senderName'
+          authorRole: m.authorRole,
+          content: m.content,
+          timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+          isAdmin: m.authorRole !== 'STUDENT'
         }));
       },
       error: (error) => {
@@ -117,12 +117,17 @@ export class ComplaintDetailTutorComponent implements OnInit {
 
     this.complaintService.sendMessage(this.complaint.id, messageData).subscribe({
       next: (message) => {
+        // Use current user's name instead of "You"
+        const authorName = currentUser.firstName && currentUser.lastName 
+          ? `${currentUser.firstName} ${currentUser.lastName}`
+          : (message.author || 'You');
+          
         this.messages.push({
           id: message.id,
-          author: message.senderName || 'You',
-          authorRole: message.senderRole,
-          content: message.message,
-          timestamp: message.createdAt ? new Date(message.createdAt) : new Date(),
+          author: authorName,
+          authorRole: message.authorRole,
+          content: message.content,
+          timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
           isAdmin: true
         });
         this.newMessage = '';

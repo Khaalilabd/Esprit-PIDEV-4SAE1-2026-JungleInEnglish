@@ -99,10 +99,10 @@ export class UserService {
 
   // New methods for club member details
   getUserById(userId: number): Observable<UserDetails> {
-    return this.http.get<UserDetails>(`${this.apiUrl}/auth/users/${userId}`);
+    return this.http.get<UserDetails>(`${this.apiUrl}/users/${userId}/public`);
   }
 
   getUsersByIds(userIds: number[]): Observable<UserDetails[]> {
-    return this.http.post<UserDetails[]>(`${this.apiUrl}/auth/users/batch`, { userIds });
+    return this.http.post<UserDetails[]>(`${this.apiUrl}/users/batch`, { userIds });
   }
 }

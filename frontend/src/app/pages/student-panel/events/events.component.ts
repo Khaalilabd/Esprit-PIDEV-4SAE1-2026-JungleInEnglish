@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { switchMap, map } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { EventService, Event } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
@@ -1164,11 +1166,45 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.showFeedbackCommentsModal = true;
     this.loadingFeedbackComments = true;
 
-    this.feedbackService.getEventFeedbacks(this.selectedEvent.id!).subscribe({
-      next: (feedbacks) => {
-        this.feedbackComments = feedbacks;
+    this.feedbackService.getEventFeedbacks(this.selectedEvent.id!).pipe(
+      switchMap((feedbacks: EventFeedback[]) => {
+        // Extraire les IDs des utilisateurs non-anonymes
+        const userIds = feedbacks
+          .filter((f: EventFeedback) => !f.anonymous)
+          .map((f: EventFeedback) => f.userId)
+          .filter((id: number, index: number, self: number[]) => self.indexOf(id) === index); // Unique IDs
+        
+        if (userIds.length === 0) {
+          return of({ feedbacks, users: [] });
+        }
+
+        // Charger les informations des utilisateurs
+        return this.userService.getUsersByIds(userIds).pipe(
+          map(users => ({ feedbacks, users }))
+        );
+      })
+    ).subscribe({
+      next: ({ feedbacks, users }) => {
+        // Créer une map des utilisateurs
+        const userMap = new Map(users.map(u => [u.id, u]));
+        
+        // Enrichir les feedbacks avec les noms des utilisateurs
+        this.feedbackComments = feedbacks.map((feedback: EventFeedback) => {
+          if (feedback.anonymous) {
+            return feedback;
+          }
+          
+          const user = userMap.get(feedback.userId);
+          return {
+            ...feedback,
+            userFirstName: user?.firstName || '',
+            userLastName: user?.lastName || '',
+            userImage: user?.image || undefined
+          };
+        });
+        
         this.loadingFeedbackComments = false;
-        console.log('💬 Feedback comments loaded:', feedbacks);
+        console.log('💬 Feedback comments loaded with user details:', this.feedbackComments);
       },
       error: (err) => {
         console.error('❌ Error loading feedback comments:', err);

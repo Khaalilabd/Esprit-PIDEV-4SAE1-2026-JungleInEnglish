@@ -53,6 +53,14 @@ spring:
             - StripPrefix=1
           order: 4
             
+        - id: community-uploads
+          uri: lb://community-service
+          predicates:
+            - Path=/api/community/uploads/**
+          filters:
+            - StripPrefix=2
+          order: 9
+            
         - id: community-service
           uri: lb://community-service
           predicates:

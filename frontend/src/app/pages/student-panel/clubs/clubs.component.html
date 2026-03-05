@@ -730,13 +730,26 @@
               </div>
             </div>
             
-            <!-- Right: Category Filter -->
-            <div class="relative">
+            <!-- Right: Actions (Create Club + Category Filter) -->
+            <div class="flex items-center gap-3">
+              <!-- Create Club Button -->
               <button
-                #filterButton
-                (click)="toggleCategoryDropdown()"
-                class="group flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-[#2D5757] transition-all duration-300 shadow-md hover:shadow-lg"
+                (click)="openCreateModal()"
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#F6BD60] to-[#e5ac4f] text-gray-900 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 font-bold shadow-md"
               >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Club
+              </button>
+
+              <!-- Category Filter -->
+              <div class="relative">
+                <button
+                  #filterButton
+                  (click)="toggleCategoryDropdown()"
+                  class="group flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-[#2D5757] transition-all duration-300 shadow-md hover:shadow-lg"
+                >
                 <!-- Icon -->
                 <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#2D5757]/10 to-[#3D3D60]/10 group-hover:from-[#2D5757]/20 group-hover:to-[#3D3D60]/20 transition-all">
                   <span class="text-lg">
@@ -770,6 +783,7 @@
                   </svg>
                 </div>
               </button>
+              </div>
             </div>
           </div>
         </div>

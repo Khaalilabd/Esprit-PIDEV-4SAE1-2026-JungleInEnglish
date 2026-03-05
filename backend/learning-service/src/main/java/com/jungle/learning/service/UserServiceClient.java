@@ -21,9 +21,15 @@ public class UserServiceClient {
     @Cacheable(value = "users", key = "#userId")
     public UserDTO getUserById(Long userId) {
         try {
-            String url = authServiceUrl + "/api/auth/users/" + userId + "/public";
+            String url = authServiceUrl + "/users/" + userId + "/public";
             log.debug("Fetching user info from: {}", url);
-            return restTemplate.getForObject(url, UserDTO.class);
+            UserDTO user = restTemplate.getForObject(url, UserDTO.class);
+            
+            if (user != null) {
+                log.debug("Successfully fetched user: {} {}", user.getFirstName(), user.getLastName());
+            }
+            
+            return user;
         } catch (Exception e) {
             log.error("Error fetching user info for userId: {}", userId, e);
             // Return a default user if the service is unavailable

@@ -1316,10 +1316,10 @@
           <div class="flex items-start justify-between mb-2">
             <div class="flex items-center gap-2">
               <div class="w-10 h-10 bg-[#2D5F5D] rounded-full flex items-center justify-center text-white font-bold">
-                {{ review.userName?.charAt(0) || 'U' }}
+                {{ review.userName?.charAt(0)?.toUpperCase() || 'U' }}
               </div>
               <div>
-                <p class="font-bold text-gray-900 text-sm">{{ review.userName || 'Anonymous' }}</p>
+                <p class="font-bold text-gray-900 text-sm">{{ review.userName || 'Anonymous User' }}</p>
                 <p class="text-xs text-gray-500">{{ review.createdAt | date:'short' }}</p>
               </div>
             </div>
