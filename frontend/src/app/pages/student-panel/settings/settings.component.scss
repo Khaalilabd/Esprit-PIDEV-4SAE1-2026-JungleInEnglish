@@ -1,28 +1,249 @@
-// Custom toggle switch styles
-input[type="checkbox"]:checked + div {
-  background-color: #F6BD60;
+// Animations
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-// Smooth transitions
-* {
-  transition: all 0.2s ease;
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-// Custom scrollbar
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+}
+
+.animate-fade-in { animation: fade-in 0.5s ease-out; }
+.animate-slide-down { animation: slide-down 0.6s ease-out; }
+.animate-slide-up { animation: slide-up 0.6s ease-out; }
+.animate-slide-right { animation: slide-right 0.6s ease-out; }
+
+// Tab transitions
+.tab-content {
+  animation: fade-in 0.4s ease-out;
+}
+
+// Custom toggle switch
+.toggle-switch {
+  input:checked + div {
+    background-color: #3b82f6;
+  }
+  
+  input:checked + div:after {
+    transform: translateX(100%);
+  }
+}
+
+// Password strength indicator
+.password-strength {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  
+  &.weak { 
+    width: 33%; 
+    background: linear-gradient(90deg, #ef4444, #f87171);
+  }
+  &.medium { 
+    width: 66%; 
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  }
+  &.strong { 
+    width: 100%; 
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+}
+
+// Profile completion progress
+.progress-ring {
+  transform: rotate(-90deg);
+  
+  circle {
+    transition: stroke-dashoffset 0.5s ease;
+  }
+}
+
+// Drag and drop zone
+.drop-zone {
+  border: 2px dashed #cbd5e1;
+  transition: all 0.3s ease;
+  
+  &.drag-over {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+  }
+}
+
+// Modal backdrop blur
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.2s ease-out;
+}
+
+// Card hover effects
+.settings-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+// Active session indicator
+.session-active {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -12px;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    animation: pulse-glow 2s infinite;
+  }
+}
+
+// Notification badge
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  border: 2px solid white;
+}
+
+// Smooth scrollbar
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #F6BD60;
+  background: #cbd5e1;
   border-radius: 10px;
+  
+  &:hover {
+    background: #94a3b8;
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #f5b041;
+// Input focus effects
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+// Button ripple effect
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  &:active::after {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+// Skeleton loader
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// Success checkmark animation
+@keyframes checkmark {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: checkmark 0.6s ease-in-out forwards;
+}
+
+// Gradient text
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .settings-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    
+    nav {
+      display: flex;
+      justify-content: space-around;
+      
+      button {
+        flex-direction: column;
+        padding: 8px;
+        font-size: 12px;
+        
+        i {
+          margin: 0 0 4px 0;
+        }
+      }
+    }
+  }
 }

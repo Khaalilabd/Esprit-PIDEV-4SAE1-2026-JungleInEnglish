@@ -8,12 +8,12 @@ import Swal from 'sweetalert2';
 
 @Component({
   standalone: true,
-  selector: 'app-tutor-profile',
+  selector: 'app-student-profile',
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
-export class TutorProfileComponent implements OnInit {
+export class StudentProfileComponent implements OnInit {
   currentUser: AuthResponse | null = null;
   profileForm!: FormGroup;
   isEditing = false;
@@ -111,7 +111,7 @@ export class TutorProfileComponent implements OnInit {
           icon: 'success', 
           title: 'Success!', 
           text: 'Profile photo updated', 
-          confirmButtonColor: '#14b8a6', 
+          confirmButtonColor: '#F6BD60', 
           timer: 2000 
         });
         this.profilePhotoPreview = null;
@@ -135,7 +135,7 @@ export class TutorProfileComponent implements OnInit {
           icon: 'error', 
           title: 'Error!', 
           text: error.error?.error || 'Failed to upload photo', 
-          confirmButtonColor: '#14b8a6' 
+          confirmButtonColor: '#F6BD60' 
         });
       }
     });
@@ -158,7 +158,7 @@ export class TutorProfileComponent implements OnInit {
           icon: 'success', 
           title: 'Success!', 
           text: 'Profile updated successfully', 
-          confirmButtonColor: '#14b8a6', 
+          confirmButtonColor: '#F6BD60', 
           timer: 2000 
         });
         this.loadUserProfile();
@@ -169,7 +169,7 @@ export class TutorProfileComponent implements OnInit {
           icon: 'error', 
           title: 'Error!', 
           text: error.error?.message || 'Failed to update profile', 
-          confirmButtonColor: '#14b8a6' 
+          confirmButtonColor: '#F6BD60' 
         });
       }
     });
@@ -183,7 +183,7 @@ export class TutorProfileComponent implements OnInit {
       return `http://localhost:8081${this.currentUser.profilePhoto}`;
     }
     const name = `${this.currentUser?.firstName || 'User'}+${this.currentUser?.lastName || 'Name'}`;
-    return `https://ui-avatars.com/api/?name=${name}&background=14b8a6&color=fff&size=256`;
+    return `https://ui-avatars.com/api/?name=${name}&background=F6BD60&color=fff&size=256`;
   }
 
   getFieldError(fieldName: string): string {

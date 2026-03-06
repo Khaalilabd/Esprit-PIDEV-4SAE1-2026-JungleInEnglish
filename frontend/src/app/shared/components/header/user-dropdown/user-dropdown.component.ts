@@ -60,4 +60,36 @@ export class UserDropdownComponent {
     const parts = levelName.split(' - ');
     return parts.length > 1 ? parts[1] : 'Level';
   }
+
+  getSettingsRoute(): string {
+    const role = this.currentUser?.role;
+    switch (role) {
+      case 'STUDENT':
+        return '/user-panel/settings';
+      case 'TUTOR':
+      case 'TEACHER':
+        return '/tutor-panel/settings';
+      case 'ADMIN':
+      case 'ACADEMIC_OFFICE_AFFAIR':
+        return '/dashboard/settings';
+      default:
+        return '/dashboard/settings';
+    }
+  }
+
+  getProfileRoute(): string {
+    const role = this.currentUser?.role;
+    switch (role) {
+      case 'STUDENT':
+        return '/user-panel/settings';
+      case 'TUTOR':
+      case 'TEACHER':
+        return '/tutor-panel/profile';
+      case 'ADMIN':
+      case 'ACADEMIC_OFFICE_AFFAIR':
+        return '/dashboard/profile';
+      default:
+        return '/dashboard/profile';
+    }
+  }
 }

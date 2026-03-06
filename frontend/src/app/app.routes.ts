@@ -265,6 +265,11 @@ export const routes: Routes = [
         title: 'My Sessions | Jungle in English'
       },
       {
+        path: 'profile',
+        loadComponent: () => import('./pages/student-panel/profile/profile.component').then(m => m.StudentProfileComponent),
+        title: 'My Profile | Jungle in English'
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./pages/student-panel/settings/settings.component').then(m => m.StudentSettingsComponent),
         title: 'Settings | Jungle in English'

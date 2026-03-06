@@ -29,6 +29,29 @@ export class StudentSettingsComponent implements OnInit {
   
   profilePhotoPreview: string | null = null;
   selectedFile: File | null = null;
+  isDragging = false;
+  
+  // Password strength
+  passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
+  
+  // Profile completion
+  profileCompletion = 0;
+  
+  // Dark mode
+  isDarkMode = false;
+  
+  // Active sessions (mock data for now)
+  activeSessions = [
+    {
+      id: 1,
+      device: 'Windows PC',
+      browser: 'Chrome',
+      location: 'Paris, France',
+      ip: '192.168.1.1',
+      lastActive: new Date(),
+      isCurrent: true
+    }
+  ];
 
   // 2FA properties
   twoFactorStatus: TwoFactorStatusResponse | null = null;
@@ -64,6 +87,56 @@ export class StudentSettingsComponent implements OnInit {
     });
     
     this.initializeForms();
+    this.calculateProfileCompletion();
+    this.loadDarkModePreference();
+  }
+  
+  calculateProfileCompletion() {
+    if (!this.currentUser) return;
+    
+    const fields = [
+      this.currentUser.firstName,
+      this.currentUser.lastName,
+      this.currentUser.email,
+      this.currentUser.phone,
+      this.currentUser.dateOfBirth,
+      this.currentUser.address,
+      this.currentUser.city,
+      this.currentUser.postalCode,
+      this.currentUser.bio,
+      this.currentUser.profilePhoto
+    ];
+    
+    const filledFields = fields.filter(field => field && field.toString().trim() !== '').length;
+    this.profileCompletion = Math.round((filledFields / fields.length) * 100);
+  }
+  
+  loadDarkModePreference() {
+    const savedMode = localStorage.getItem('darkMode');
+    this.isDarkMode = savedMode === 'true';
+    if (this.isDarkMode) {
+      document.documentElement.classList.add('dark');
+    }
+  }
+  
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    localStorage.setItem('darkMode', this.isDarkMode.toString());
+    
+    if (this.isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Theme Updated!',
+      text: `${this.isDarkMode ? 'Dark' : 'Light'} mode activated`,
+      confirmButtonColor: '#3b82f6',
+      timer: 1500,
+      showConfirmButton: false
+    });
   }
 
   loadUserProfile() {
@@ -113,6 +186,11 @@ export class StudentSettingsComponent implements OnInit {
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
+    
+    // Watch password changes for strength indicator
+    this.passwordForm.get('newPassword')?.valueChanges.subscribe(password => {
+      this.checkPasswordStrength(password);
+    });
 
     this.notificationForm = this.fb.group({
       emailNotifications: [true],
@@ -126,6 +204,32 @@ export class StudentSettingsComponent implements OnInit {
   passwordMatchValidator(g: FormGroup) {
     return g.get('newPassword')?.value === g.get('confirmPassword')?.value ? null : { 'mismatch': true };
   }
+  
+  checkPasswordStrength(password: string) {
+    if (!password) {
+      this.passwordStrength = null;
+      return;
+    }
+    
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
+    
+    // Character variety checks
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z\d]/.test(password)) strength++;
+    
+    if (strength <= 2) {
+      this.passwordStrength = 'weak';
+    } else if (strength <= 4) {
+      this.passwordStrength = 'medium';
+    } else {
+      this.passwordStrength = 'strong';
+    }
+  }
 
   setActiveTab(tab: 'profile' | 'security' | 'notifications' | 'appearance') {
     this.activeTab = tab;
@@ -134,13 +238,62 @@ export class StudentSettingsComponent implements OnInit {
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.profilePhotoPreview = e.target.result;
-      };
-      reader.readAsDataURL(file);
+      this.handleFile(file);
     }
+  }
+  
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+  
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+  
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.handleFile(files[0]);
+    }
+  }
+  
+  handleFile(file: File) {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid File',
+        text: 'Please select an image file',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'File Too Large',
+        text: 'Please select an image smaller than 5MB',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+    
+    this.selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.profilePhotoPreview = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   uploadProfilePhoto() {
@@ -154,7 +307,7 @@ export class StudentSettingsComponent implements OnInit {
     this.http.post<any>(`http://localhost:8080/api/users/${this.currentUser.id}/upload-photo`, formData).subscribe({
       next: (response) => {
         console.log('Upload response:', response);
-        Swal.fire({ icon: 'success', title: 'Success!', text: 'Profile photo updated', confirmButtonColor: '#F6BD60', timer: 2000 });
+        Swal.fire({ icon: 'success', title: 'Success!', text: 'Profile photo updated', confirmButtonColor: '#3b82f6', timer: 2000 });
         this.profilePhotoPreview = null;
         this.selectedFile = null;
         
@@ -175,7 +328,7 @@ export class StudentSettingsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Upload error:', error);
-        Swal.fire({ icon: 'error', title: 'Error!', text: error.error?.error || 'Failed to upload photo', confirmButtonColor: '#F6BD60' });
+        Swal.fire({ icon: 'error', title: 'Error!', text: error.error?.error || 'Failed to upload photo', confirmButtonColor: '#3b82f6' });
       }
     });
   }
@@ -189,11 +342,12 @@ export class StudentSettingsComponent implements OnInit {
     this.authService.updateProfile(this.profileForm.getRawValue()).subscribe({
       next: () => {
         this.isLoadingProfile = false;
-        Swal.fire({ icon: 'success', title: 'Success!', text: 'Profile updated', confirmButtonColor: '#F6BD60', timer: 2000 });
+        this.calculateProfileCompletion();
+        Swal.fire({ icon: 'success', title: 'Success!', text: 'Profile updated', confirmButtonColor: '#3b82f6', timer: 2000 });
       },
       error: (error) => {
         this.isLoadingProfile = false;
-        Swal.fire({ icon: 'error', title: 'Error!', text: error.error?.message || 'Failed to update', confirmButtonColor: '#F6BD60' });
+        Swal.fire({ icon: 'error', title: 'Error!', text: error.error?.message || 'Failed to update', confirmButtonColor: '#3b82f6' });
       }
     });
   }
@@ -209,11 +363,11 @@ export class StudentSettingsComponent implements OnInit {
       next: () => {
         this.isLoadingPassword = false;
         this.passwordForm.reset();
-        Swal.fire({ icon: 'success', title: 'Success!', text: 'Password changed', confirmButtonColor: '#F6BD60', timer: 2000 });
+        Swal.fire({ icon: 'success', title: 'Success!', text: 'Password changed', confirmButtonColor: '#3b82f6', timer: 2000 });
       },
       error: (error) => {
         this.isLoadingPassword = false;
-        Swal.fire({ icon: 'error', title: 'Error!', text: error.error?.message || 'Failed to change password', confirmButtonColor: '#F6BD60' });
+        Swal.fire({ icon: 'error', title: 'Error!', text: error.error?.message || 'Failed to change password', confirmButtonColor: '#3b82f6' });
       }
     });
   }
@@ -222,7 +376,7 @@ export class StudentSettingsComponent implements OnInit {
     this.isLoadingNotifications = true;
     setTimeout(() => {
       this.isLoadingNotifications = false;
-      Swal.fire({ icon: 'success', title: 'Success!', text: 'Preferences updated', confirmButtonColor: '#F6BD60', timer: 2000 });
+      Swal.fire({ icon: 'success', title: 'Success!', text: 'Preferences updated', confirmButtonColor: '#3b82f6', timer: 2000 });
     }, 1000);
   }
 
@@ -233,7 +387,7 @@ export class StudentSettingsComponent implements OnInit {
       return `http://localhost:8081${this.currentUser.profilePhoto}`;
     }
     const name = `${this.currentUser?.firstName || 'User'}+${this.currentUser?.lastName || 'Name'}`;
-    return `https://ui-avatars.com/api/?name=${name}&background=F6BD60&color=fff&size=256`;
+    return `https://ui-avatars.com/api/?name=${name}&background=3b82f6&color=fff&size=256`;
   }
 
   getFieldError(formGroup: FormGroup, fieldName: string): string {
@@ -273,7 +427,7 @@ export class StudentSettingsComponent implements OnInit {
           icon: 'error',
           title: 'Error!',
           text: error.error?.message || 'Failed to setup 2FA',
-          confirmButtonColor: '#F6BD60'
+          confirmButtonColor: '#3b82f6'
         });
       }
     });
@@ -285,7 +439,7 @@ export class StudentSettingsComponent implements OnInit {
         icon: 'warning',
         title: 'Invalid Code',
         text: 'Please enter a 6-digit code',
-        confirmButtonColor: '#F6BD60'
+        confirmButtonColor: '#3b82f6'
       });
       return;
     }
@@ -304,7 +458,7 @@ export class StudentSettingsComponent implements OnInit {
           icon: 'success',
           title: 'Success!',
           text: '2FA has been enabled successfully',
-          confirmButtonColor: '#F6BD60',
+          confirmButtonColor: '#3b82f6',
           timer: 2000
         });
       },
@@ -314,7 +468,7 @@ export class StudentSettingsComponent implements OnInit {
           icon: 'error',
           title: 'Error!',
           text: error.error?.message || 'Invalid verification code',
-          confirmButtonColor: '#F6BD60'
+          confirmButtonColor: '#3b82f6'
         });
       }
     });
@@ -331,7 +485,7 @@ export class StudentSettingsComponent implements OnInit {
         icon: 'warning',
         title: 'Invalid Code',
         text: 'Please enter a 6-digit code',
-        confirmButtonColor: '#F6BD60'
+        confirmButtonColor: '#3b82f6'
       });
       return;
     }
@@ -348,7 +502,7 @@ export class StudentSettingsComponent implements OnInit {
           icon: 'success',
           title: 'Success!',
           text: '2FA has been disabled',
-          confirmButtonColor: '#F6BD60',
+          confirmButtonColor: '#3b82f6',
           timer: 2000
         });
       },
@@ -358,7 +512,7 @@ export class StudentSettingsComponent implements OnInit {
           icon: 'error',
           title: 'Error!',
           text: error.error?.message || 'Invalid verification code',
-          confirmButtonColor: '#F6BD60'
+          confirmButtonColor: '#3b82f6'
         });
       }
     });
@@ -370,7 +524,7 @@ export class StudentSettingsComponent implements OnInit {
       text: 'This will invalidate all existing backup codes',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#F6BD60',
+      confirmButtonColor: '#3b82f6',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, regenerate'
     }).then((result) => {
@@ -387,7 +541,7 @@ export class StudentSettingsComponent implements OnInit {
               icon: 'success',
               title: 'Success!',
               text: 'New backup codes generated',
-              confirmButtonColor: '#F6BD60',
+              confirmButtonColor: '#3b82f6',
               timer: 2000
             });
           },
@@ -397,7 +551,7 @@ export class StudentSettingsComponent implements OnInit {
               icon: 'error',
               title: 'Error!',
               text: error.error?.message || 'Failed to regenerate codes',
-              confirmButtonColor: '#F6BD60'
+              confirmButtonColor: '#3b82f6'
             });
           }
         });

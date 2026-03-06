@@ -1,0 +1,697 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
+      <p class="text-gray-600 mt-2">Manage your account settings and preferences</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Sidebar Navigation -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-6">
+          <nav class="space-y-2">
+            <button 
+              (click)="setActiveTab('profile')"
+              [class.bg-blue-50]="activeTab === 'profile'"
+              [class.text-blue-700]="activeTab === 'profile'"
+              [class.font-medium]="activeTab === 'profile'"
+              class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors flex items-center">
+              <i class="fas fa-user mr-3 w-5"></i>
+              <span>Profile</span>
+            </button>
+            
+            <button 
+              (click)="setActiveTab('security')"
+              [class.bg-blue-50]="activeTab === 'security'"
+              [class.text-blue-700]="activeTab === 'security'"
+              [class.font-medium]="activeTab === 'security'"
+              class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors flex items-center">
+              <i class="fas fa-lock mr-3 w-5"></i>
+              <span>Security</span>
+            </button>
+            
+            <button 
+              (click)="setActiveTab('notifications')"
+              [class.bg-blue-50]="activeTab === 'notifications'"
+              [class.text-blue-700]="activeTab === 'notifications'"
+              [class.font-medium]="activeTab === 'notifications'"
+              class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors flex items-center">
+              <i class="fas fa-bell mr-3 w-5"></i>
+              <span>Notifications</span>
+            </button>
+            
+            <button 
+              (click)="setActiveTab('appearance')"
+              [class.bg-blue-50]="activeTab === 'appearance'"
+              [class.text-blue-700]="activeTab === 'appearance'"
+              [class.font-medium]="activeTab === 'appearance'"
+              class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors flex items-center">
+              <i class="fas fa-palette mr-3 w-5"></i>
+              <span>Appearance</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="lg:col-span-3">
+        <!-- Profile Tab -->
+        <div *ngIf="activeTab === 'profile'" class="space-y-6">
+          <!-- Profile Photo Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Profile Photo</h2>
+            
+            <div class="flex items-center space-x-6">
+              <img 
+                [src]="getProfilePhotoUrl()"
+                alt="Profile"
+                class="w-24 h-24 rounded-full border-4 border-blue-100 object-cover">
+              
+              <div class="flex-1">
+                <input 
+                  type="file" 
+                  #fileInput
+                  (change)="onFileSelected($event)"
+                  accept="image/*"
+                  class="hidden">
+                
+                <button 
+                  (click)="fileInput.click()"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <i class="fas fa-upload mr-2"></i>
+                  Choose Photo
+                </button>
+                
+                <button 
+                  *ngIf="selectedFile"
+                  (click)="uploadProfilePhoto()"
+                  class="ml-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                  <i class="fas fa-check mr-2"></i>
+                  Upload
+                </button>
+                
+                <p class="text-sm text-gray-500 mt-2">
+                  JPG, PNG or GIF. Max size 5MB.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personal Information Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Personal Information</h2>
+            
+            <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- First Name -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    First Name <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    formControlName="firstName"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    [class.border-red-500]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched">
+                  <p *ngIf="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched" 
+                     class="text-red-500 text-sm mt-1">
+                    {{ getFieldError(profileForm, 'firstName') }}
+                  </p>
+                </div>
+
+                <!-- Last Name -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    formControlName="lastName"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    [class.border-red-500]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched">
+                  <p *ngIf="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched" 
+                     class="text-red-500 text-sm mt-1">
+                    {{ getFieldError(profileForm, 'lastName') }}
+                  </p>
+                </div>
+
+                <!-- Email (disabled) -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input 
+                    type="email"
+                    formControlName="email"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed">
+                  <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                </div>
+
+                <!-- Phone -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input 
+                    type="tel"
+                    formControlName="phone"
+                    placeholder="0612345678"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    [class.border-red-500]="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched">
+                  <p *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" 
+                     class="text-red-500 text-sm mt-1">
+                    {{ getFieldError(profileForm, 'phone') }}
+                  </p>
+                </div>
+
+                <!-- Date of Birth -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Date of Birth
+                  </label>
+                  <input 
+                    type="date"
+                    formControlName="dateOfBirth"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- City -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    City
+                  </label>
+                  <input 
+                    type="text"
+                    formControlName="city"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Address -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Address
+                  </label>
+                  <input 
+                    type="text"
+                    formControlName="address"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Postal Code -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Postal Code
+                  </label>
+                  <input 
+                    type="text"
+                    formControlName="postalCode"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Bio -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Bio
+                  </label>
+                  <textarea 
+                    formControlName="bio"
+                    rows="4"
+                    placeholder="Tell us about yourself..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    [class.border-red-500]="profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched"></textarea>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ profileForm.get('bio')?.value?.length || 0 }}/500 characters
+                  </p>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="mt-6 flex justify-end">
+                <button 
+                  type="submit"
+                  [disabled]="isLoadingProfile"
+                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i *ngIf="!isLoadingProfile" class="fas fa-save mr-2"></i>
+                  <i *ngIf="isLoadingProfile" class="fas fa-spinner fa-spin mr-2"></i>
+                  {{ isLoadingProfile ? 'Saving...' : 'Save Changes' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div *ngIf="activeTab === 'security'" class="space-y-6">
+          <!-- Change Password Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Change Password</h2>
+            
+            <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+              <div class="space-y-4">
+                <!-- Current Password -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Current Password <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="password"
+                    formControlName="currentPassword"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    [class.border-red-500]="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+                  <p *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched" 
+                     class="text-red-500 text-sm mt-1">
+                    {{ getFieldError(passwordForm, 'currentPassword') }}
+                  </p>
+                </div>
+
+                <!-- New Password -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    New Password <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="password"
+                    formControlName="newPassword"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    [class.border-red-500]="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+                  <p *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched" 
+                     class="text-red-500 text-sm mt-1">
+                    {{ getFieldError(passwordForm, 'newPassword') }}
+                  </p>
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Confirm New Password <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="password"
+                    formControlName="confirmPassword"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    [class.border-red-500]="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
+                  <p *ngIf="passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched" 
+                     class="text-red-500 text-sm mt-1">
+                    Passwords do not match
+                  </p>
+                </div>
+              </div>
+
+              <!-- Password Requirements -->
+              <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm font-medium text-blue-900 mb-2">Password requirements:</p>
+                <ul class="text-sm text-blue-700 space-y-1">
+                  <li><i class="fas fa-check-circle mr-2"></i>At least 6 characters long</li>
+                  <li><i class="fas fa-check-circle mr-2"></i>Include uppercase and lowercase letters</li>
+                  <li><i class="fas fa-check-circle mr-2"></i>Include at least one number</li>
+                </ul>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="mt-6 flex justify-end">
+                <button 
+                  type="submit"
+                  [disabled]="isLoadingPassword"
+                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i *ngIf="!isLoadingPassword" class="fas fa-key mr-2"></i>
+                  <i *ngIf="isLoadingPassword" class="fas fa-spinner fa-spin mr-2"></i>
+                  {{ isLoadingPassword ? 'Updating...' : 'Update Password' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Two-Factor Authentication Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+                <p class="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
+              </div>
+              <span 
+                *ngIf="twoFactorStatus?.enabled"
+                class="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full font-medium">
+                <i class="fas fa-check-circle mr-1"></i>Enabled
+              </span>
+              <span 
+                *ngIf="!twoFactorStatus?.enabled"
+                class="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                Disabled
+              </span>
+            </div>
+
+            <div *ngIf="!twoFactorStatus?.enabled" class="mt-4">
+              <p class="text-sm text-gray-600 mb-4">
+                Protect your account with an additional security layer. You'll need to enter a code from your authenticator app when you sign in.
+              </p>
+              <button 
+                (click)="openSetup2FA()"
+                [disabled]="isLoading2FA"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+                <i *ngIf="!isLoading2FA" class="fas fa-shield-alt mr-2"></i>
+                <i *ngIf="isLoading2FA" class="fas fa-spinner fa-spin mr-2"></i>
+                Enable 2FA
+              </button>
+            </div>
+
+            <div *ngIf="twoFactorStatus?.enabled" class="mt-4 space-y-3">
+              <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-green-600"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">2FA is Active</p>
+                    <p class="text-sm text-gray-600">
+                      Enabled {{ twoFactorStatus?.enabledAt | date:'short' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="font-medium text-gray-900">Backup Codes</p>
+                  <p class="text-sm text-gray-600">
+                    {{ twoFactorStatus?.backupCodesRemaining }} codes remaining
+                  </p>
+                </div>
+                <button 
+                  (click)="regenerateBackupCodes()"
+                  [disabled]="isLoading2FA"
+                  class="px-3 py-1.5 text-sm bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <i class="fas fa-sync-alt mr-1"></i>
+                  Regenerate
+                </button>
+              </div>
+
+              <button 
+                (click)="openDisable2FA()"
+                [disabled]="isLoading2FA"
+                class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50">
+                <i class="fas fa-times-circle mr-2"></i>
+                Disable 2FA
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Sessions Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Active Sessions</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-desktop text-blue-600"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">Current Session</p>
+                    <p class="text-sm text-gray-500">Windows • Chrome • Paris, France</p>
+                  </div>
+                </div>
+                <span class="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div *ngIf="activeTab === 'notifications'" class="space-y-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Notification Preferences</h2>
+            
+            <form [formGroup]="notificationForm" (ngSubmit)="onSubmitNotifications()">
+              <div class="space-y-6">
+                <!-- Email Notifications -->
+                <div class="flex items-center justify-between py-4 border-b border-gray-200">
+                  <div>
+                    <h3 class="font-medium text-gray-900">Email Notifications</h3>
+                    <p class="text-sm text-gray-500">Receive notifications via email</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="emailNotifications" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <!-- Push Notifications -->
+                <div class="flex items-center justify-between py-4 border-b border-gray-200">
+                  <div>
+                    <h3 class="font-medium text-gray-900">Push Notifications</h3>
+                    <p class="text-sm text-gray-500">Receive push notifications in browser</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="pushNotifications" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <!-- Complaint Updates -->
+                <div class="flex items-center justify-between py-4 border-b border-gray-200">
+                  <div>
+                    <h3 class="font-medium text-gray-900">Complaint Updates</h3>
+                    <p class="text-sm text-gray-500">Get notified about complaint status changes</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="complaintUpdates" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <!-- Message Notifications -->
+                <div class="flex items-center justify-between py-4 border-b border-gray-200">
+                  <div>
+                    <h3 class="font-medium text-gray-900">Message Notifications</h3>
+                    <p class="text-sm text-gray-500">Get notified about new messages</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="messageNotifications" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <!-- Weekly Digest -->
+                <div class="flex items-center justify-between py-4">
+                  <div>
+                    <h3 class="font-medium text-gray-900">Weekly Digest</h3>
+                    <p class="text-sm text-gray-500">Receive a weekly summary of your activity</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="weeklyDigest" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="mt-6 flex justify-end">
+                <button 
+                  type="submit"
+                  [disabled]="isLoadingNotifications"
+                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i *ngIf="!isLoadingNotifications" class="fas fa-save mr-2"></i>
+                  <i *ngIf="isLoadingNotifications" class="fas fa-spinner fa-spin mr-2"></i>
+                  {{ isLoadingNotifications ? 'Saving...' : 'Save Preferences' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Appearance Tab -->
+        <div *ngIf="activeTab === 'appearance'" class="space-y-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Appearance Settings</h2>
+            
+            <div class="text-center py-12">
+              <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-palette text-blue-600 text-3xl"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">Theme Customization Coming Soon</h3>
+              <p class="text-gray-600 mb-6">
+                We're working on bringing you dark mode and custom themes.
+              </p>
+              <button 
+                routerLink="/tutor-panel"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA Setup Modal -->
+<div *ngIf="showSetupModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-bold text-gray-900">Setup Two-Factor Authentication</h3>
+      <button (click)="closeSetupModal()" class="text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <!-- Step 1: Scan QR Code -->
+      <div class="p-4 bg-blue-50 rounded-lg">
+        <h4 class="font-semibold text-gray-900 mb-2">
+          <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full text-sm mr-2">1</span>
+          Scan QR Code
+        </h4>
+        <p class="text-sm text-gray-600 mb-3">
+          Use Google Authenticator, Microsoft Authenticator, or any TOTP app to scan this QR code:
+        </p>
+        <div class="flex justify-center bg-white p-4 rounded-lg">
+          <img [src]="setupData?.qrCodeUrl" alt="QR Code" class="w-48 h-48">
+        </div>
+        <p class="text-xs text-gray-500 mt-2 text-center">
+          Or enter this secret manually: <code class="bg-gray-100 px-2 py-1 rounded">{{ setupData?.secret }}</code>
+        </p>
+      </div>
+
+      <!-- Step 2: Verify Code -->
+      <div class="p-4 bg-blue-50 rounded-lg">
+        <h4 class="font-semibold text-gray-900 mb-2">
+          <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full text-sm mr-2">2</span>
+          Verify Code
+        </h4>
+        <p class="text-sm text-gray-600 mb-3">
+          Enter the 6-digit code from your authenticator app:
+        </p>
+        <input 
+          type="text"
+          [(ngModel)]="verificationCode"
+          maxlength="6"
+          placeholder="000000"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+
+      <!-- Actions -->
+      <div class="flex space-x-3">
+        <button 
+          (click)="closeSetupModal()"
+          class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          Cancel
+        </button>
+        <button 
+          (click)="enable2FA()"
+          [disabled]="isLoading2FA || verificationCode.length !== 6"
+          class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <i *ngIf="!isLoading2FA" class="fas fa-check mr-2"></i>
+          <i *ngIf="isLoading2FA" class="fas fa-spinner fa-spin mr-2"></i>
+          {{ isLoading2FA ? 'Verifying...' : 'Enable 2FA' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA Disable Modal -->
+<div *ngIf="showDisableModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-bold text-gray-900">Disable Two-Factor Authentication</h3>
+      <button (click)="closeDisableModal()" class="text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div class="p-4 bg-red-50 rounded-lg">
+        <div class="flex items-start space-x-3">
+          <i class="fas fa-exclamation-triangle text-red-600 mt-1"></i>
+          <div>
+            <p class="font-medium text-red-900">Warning</p>
+            <p class="text-sm text-red-700 mt-1">
+              Disabling 2FA will make your account less secure. You can re-enable it at any time.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Enter verification code to confirm:
+        </label>
+        <input 
+          type="text"
+          [(ngModel)]="verificationCode"
+          maxlength="6"
+          placeholder="000000"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-red-500 focus:border-transparent">
+        <p class="text-xs text-gray-500 mt-2">
+          Enter a code from your authenticator app or use a backup code
+        </p>
+      </div>
+
+      <div class="flex space-x-3">
+        <button 
+          (click)="closeDisableModal()"
+          class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          Cancel
+        </button>
+        <button 
+          (click)="disable2FA()"
+          [disabled]="isLoading2FA || verificationCode.length !== 6"
+          class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <i *ngIf="!isLoading2FA" class="fas fa-times-circle mr-2"></i>
+          <i *ngIf="isLoading2FA" class="fas fa-spinner fa-spin mr-2"></i>
+          {{ isLoading2FA ? 'Disabling...' : 'Disable 2FA' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backup Codes Modal -->
+<div *ngIf="showBackupCodesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-bold text-gray-900">Backup Codes</h3>
+      <button (click)="closeBackupCodesModal()" class="text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div class="p-4 bg-blue-50 rounded-lg">
+        <div class="flex items-start space-x-3">
+          <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+          <div>
+            <p class="font-medium text-blue-900">Important!</p>
+            <p class="text-sm text-blue-700 mt-1">
+              Save these backup codes in a safe place. Each code can only be used once.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 rounded-lg p-4">
+        <div class="grid grid-cols-2 gap-2 font-mono text-sm">
+          <div *ngFor="let code of backupCodes" class="bg-white px-3 py-2 rounded border border-gray-200 text-center">
+            {{ code }}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-3">
+        <button 
+          (click)="downloadBackupCodes()"
+          class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          <i class="fas fa-download mr-2"></i>
+          Download
+        </button>
+        <button 
+          (click)="closeBackupCodesModal()"
+          class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <i class="fas fa-check mr-2"></i>
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
