@@ -15,6 +15,7 @@ public class AuthResponse {
 
     private String token;
     private String refreshToken;
+    private String sessionToken; // Session token for tracking user sessions
     @Builder.Default
     private String type = "Bearer";
     private Long id;

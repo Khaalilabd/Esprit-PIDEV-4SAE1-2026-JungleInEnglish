@@ -39,12 +39,12 @@ public class SessionController {
             HttpServletRequest request,
             @RequestParam(required = false) String currentSessionToken) {
         
-        // Extract user ID from JWT token (you'll need to implement this)
         Long userId = extractUserIdFromRequest(request);
         
         List<UserSession> sessions = userSessionService.getActiveUserSessions(userId);
         List<UserSessionResponse> response = sessions.stream()
-                .map(session -> UserSessionResponse.fromEntityWithCurrentFlag(session, currentSessionToken))
+                .map(session -> enrichSessionWithUserInfo(
+                    UserSessionResponse.fromEntityWithCurrentFlag(session, currentSessionToken)))
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(response);
@@ -66,7 +66,8 @@ public class SessionController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<UserSession> sessions = userSessionService.getUserSessions(userId, pageable);
         Page<UserSessionResponse> response = sessions.map(session -> 
-            UserSessionResponse.fromEntityWithCurrentFlag(session, currentSessionToken));
+            enrichSessionWithUserInfo(
+                UserSessionResponse.fromEntityWithCurrentFlag(session, currentSessionToken)));
         
         return ResponseEntity.ok(response);
     }
@@ -172,11 +173,9 @@ public class SessionController {
     /**
      * Enrich session with user information
      */
-    private UserSessionResponse enrichSessionWithUserInfo(UserSession session) {
-        UserSessionResponse response = UserSessionResponse.fromEntity(session);
-        
+    private UserSessionResponse enrichSessionWithUserInfo(UserSessionResponse response) {
         // Get user information
-        userRepository.findById(session.getUserId()).ifPresent(user -> {
+        userRepository.findById(response.getUserId()).ifPresent(user -> {
             response.setUserName(user.getFirstName() + " " + user.getLastName());
             response.setUserEmail(user.getEmail());
         });

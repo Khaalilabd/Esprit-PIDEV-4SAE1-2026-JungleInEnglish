@@ -48,10 +48,16 @@ spring:
         - id: sessions-service
           uri: lb://auth-service
           predicates:
+            - Path=/sessions/**
+          order: 4
+        
+        - id: sessions-service-api
+          uri: lb://auth-service
+          predicates:
             - Path=/api/sessions/**
           filters:
             - StripPrefix=1
-          order: 4
+          order: 5
             
         - id: community-uploads
           uri: lb://community-service

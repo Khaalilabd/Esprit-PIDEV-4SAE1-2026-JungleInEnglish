@@ -180,6 +180,13 @@
             <artifactId>totp</artifactId>
             <version>1.7.1</version>
         </dependency>
+        
+        <!-- GeoIP2 for IP Geolocation -->
+        <dependency>
+            <groupId>com.maxmind.geoip2</groupId>
+            <artifactId>geoip2</artifactId>
+            <version>4.2.0</version>
+        </dependency>
     </dependencies>
     
     <dependencyManagement>

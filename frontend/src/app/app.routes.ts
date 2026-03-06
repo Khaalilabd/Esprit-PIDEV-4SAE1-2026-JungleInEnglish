@@ -260,18 +260,13 @@ export const routes: Routes = [
         title: 'Edit Complaint | Jungle in English'
       },
       {
-        path: 'sessions',
-        loadComponent: () => import('./pages/student-panel/sessions/sessions.component').then(m => m.SessionsComponent),
-        title: 'My Sessions | Jungle in English'
-      },
-      {
         path: 'profile',
         loadComponent: () => import('./pages/student-panel/profile/profile.component').then(m => m.StudentProfileComponent),
         title: 'My Profile | Jungle in English'
       },
       {
         path: 'settings',
-        loadComponent: () => import('./pages/student-panel/settings/settings.component').then(m => m.StudentSettingsComponent),
+        loadComponent: () => import('./pages/student-panel/settings/settings.component').then(m => m.DashboardSettingsComponent),
         title: 'Settings | Jungle in English'
       }
     ]
@@ -390,7 +385,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
-        loadComponent: () => import('./pages/tutor-panel/settings/settings.component').then(m => m.TutorSettingsComponent),
+        loadComponent: () => import('./pages/tutor-panel/settings/settings.component').then(m => m.DashboardSettingsComponent),
         title: 'Settings | Jungle in English'
       },
       {
@@ -556,7 +551,7 @@ export const routes: Routes = [
       },
       {
         path: 'sessions',
-        loadComponent: () => import('./pages/dashboard/admin-sessions/admin-sessions.component').then(m => m.AdminSessionsComponent),
+        loadComponent: () => import('./pages/admin-sessions/admin-sessions.component').then(m => m.AdminSessionsComponent),
         title: 'Session Management | Jungle in English Dashboard'
       },
       {

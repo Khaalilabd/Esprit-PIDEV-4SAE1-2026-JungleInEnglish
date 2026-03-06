@@ -6,16 +6,17 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { AuthResponse } from '../../../core/models/user.model';
 import { TwoFactorAuthService, TwoFactorSetupResponse, TwoFactorStatusResponse } from '../../../services/two-factor-auth.service';
+import { SessionService, UserSession, SessionSummary } from '../../../services/session.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-student-settings',
+  selector: 'app-dashboard-settings',
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
-export class StudentSettingsComponent implements OnInit {
+export class DashboardSettingsComponent implements OnInit {
   currentUser: AuthResponse | null = null;
   activeTab: 'profile' | 'security' | 'notifications' | 'appearance' = 'profile';
   
@@ -40,18 +41,11 @@ export class StudentSettingsComponent implements OnInit {
   // Dark mode
   isDarkMode = false;
   
-  // Active sessions (mock data for now)
-  activeSessions = [
-    {
-      id: 1,
-      device: 'Windows PC',
-      browser: 'Chrome',
-      location: 'Paris, France',
-      ip: '192.168.1.1',
-      lastActive: new Date(),
-      isCurrent: true
-    }
-  ];
+  // Active sessions
+  activeSessions: any[] = [];
+  sessionSummary: any = null;
+  showSessionsModal = false;
+  isLoadingSessions = false;
 
   // 2FA properties
   twoFactorStatus: TwoFactorStatusResponse | null = null;
@@ -67,7 +61,8 @@ export class StudentSettingsComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private http: HttpClient,
-    private twoFactorService: TwoFactorAuthService
+    private twoFactorService: TwoFactorAuthService,
+    private sessionService: SessionService
   ) {}
 
   ngOnInit() {
@@ -77,6 +72,7 @@ export class StudentSettingsComponent implements OnInit {
     if (this.currentUser) {
       this.loadUserProfile();
       this.load2FAStatus();
+      this.loadSessionSummary();
     }
     
     this.authService.currentUser$.subscribe(user => {
@@ -584,5 +580,153 @@ export class StudentSettingsComponent implements OnInit {
   closeBackupCodesModal() {
     this.showBackupCodesModal = false;
     this.backupCodes = [];
+  }
+
+  // ========== Session Management Methods ==========
+
+  loadSessionSummary() {
+    this.isLoadingSessions = true;
+    const currentToken = this.sessionService.getCurrentSessionToken();
+    
+    this.sessionService.getSessionSummary(currentToken || undefined).subscribe({
+      next: (summary: SessionSummary) => {
+        this.sessionSummary = summary;
+        this.isLoadingSessions = false;
+      },
+      error: (error) => {
+        console.error('Failed to load session summary:', error);
+        this.isLoadingSessions = false;
+      }
+    });
+  }
+
+  openSessionsModal() {
+    this.showSessionsModal = true;
+    this.loadAllSessions();
+  }
+
+  closeSessionsModal() {
+    this.showSessionsModal = false;
+  }
+
+  loadAllSessions() {
+    this.isLoadingSessions = true;
+    const currentToken = this.sessionService.getCurrentSessionToken();
+    
+    this.sessionService.getMyActiveSessions(currentToken || undefined).subscribe({
+      next: (sessions: UserSession[]) => {
+        this.activeSessions = sessions;
+        this.isLoadingSessions = false;
+      },
+      error: (error) => {
+        console.error('Failed to load sessions:', error);
+        this.isLoadingSessions = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Failed to load sessions',
+          confirmButtonColor: '#3b82f6'
+        });
+      }
+    });
+  }
+
+  revokeSession(sessionId: number, sessionInfo: string) {
+    Swal.fire({
+      title: 'Revoke Session?',
+      html: `Are you sure you want to revoke this session?<br><small class="text-gray-600">${sessionInfo}</small>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, revoke it',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.sessionService.terminateSession(sessionId).subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Session Revoked!',
+              text: 'The session has been terminated successfully',
+              confirmButtonColor: '#3b82f6',
+              timer: 2000
+            });
+            this.loadSessionSummary();
+            if (this.showSessionsModal) {
+              this.loadAllSessions();
+            }
+          },
+          error: (error) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: error.error?.message || 'Failed to revoke session',
+              confirmButtonColor: '#3b82f6'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  revokeAllOtherSessions() {
+    Swal.fire({
+      title: 'Revoke All Other Sessions?',
+      text: 'This will sign you out from all other devices. Your current session will remain active.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, revoke all',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const currentToken = this.sessionService.getCurrentSessionToken();
+        this.sessionService.terminateOtherSessions(currentToken || undefined).subscribe({
+          next: (response) => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Sessions Revoked!',
+              text: `${response.terminatedCount} session(s) have been terminated`,
+              confirmButtonColor: '#3b82f6',
+              timer: 2000
+            });
+            this.loadSessionSummary();
+            if (this.showSessionsModal) {
+              this.loadAllSessions();
+            }
+          },
+          error: (error) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: error.error?.message || 'Failed to revoke sessions',
+              confirmButtonColor: '#3b82f6'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  getDeviceIcon(deviceType: string): string {
+    return this.sessionService.getDeviceIcon(deviceType);
+  }
+
+  getBrowserIcon(browserName: string): string {
+    return this.sessionService.getBrowserIcon(browserName);
+  }
+
+  getOSIcon(os: string): string {
+    return this.sessionService.getOSIcon(os);
+  }
+
+  formatLocation(session: UserSession): string {
+    return this.sessionService.formatLocation(session);
+  }
+
+  getStatusColor(status: string): string {
+    return this.sessionService.getStatusColor(status);
   }
 }

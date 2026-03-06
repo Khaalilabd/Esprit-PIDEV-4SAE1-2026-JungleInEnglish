@@ -84,10 +84,37 @@ export class AuthService {
 
   logout(): Observable<void> {
     return new Observable(observer => {
+      // Get session token before removing it
+      const sessionToken = localStorage.getItem('sessionToken');
+      
+      // Remove all auth data from localStorage
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('sessionToken');
+      
       this.currentUserSubject.next(null);
+      
+      // Terminate session on backend if session token exists
+      if (sessionToken) {
+        // Find the session ID from the current user's sessions
+        // This is a simplified approach - in production you might want to store the session ID separately
+        this.http.get<any[]>('http://localhost:8080/sessions/my-sessions', {
+          params: { currentSessionToken: sessionToken }
+        }).subscribe({
+          next: (sessions) => {
+            const currentSession = sessions.find(s => s.sessionToken === sessionToken);
+            if (currentSession) {
+              this.http.delete(`http://localhost:8080/sessions/my-sessions/${currentSession.id}`).subscribe({
+                next: () => console.log('Session terminated on backend'),
+                error: (err) => console.error('Failed to terminate session:', err)
+              });
+            }
+          },
+          error: (err) => console.error('Failed to get sessions:', err)
+        });
+      }
+      
       observer.next();
       observer.complete();
     });
@@ -117,6 +144,9 @@ export class AuthService {
     localStorage.setItem('token', user.token);
     if (user.refreshToken) {
       localStorage.setItem('refreshToken', user.refreshToken);
+    }
+    if (user.sessionToken) {
+      localStorage.setItem('sessionToken', user.sessionToken);
     }
     this.currentUserSubject.next(user);
   }

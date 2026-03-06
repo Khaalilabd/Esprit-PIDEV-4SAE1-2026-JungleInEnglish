@@ -1,0 +1,358 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Session Management
+          </h1>
+          <p class="text-gray-600 mt-2">Monitor and manage all active sessions across the platform</p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <!-- View Toggle -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-1 flex">
+            <button 
+              (click)="viewMode = 'list'"
+              [class.bg-blue-600]="viewMode === 'list'"
+              [class.text-white]="viewMode === 'list'"
+              [class.text-gray-600]="viewMode !== 'list'"
+              class="px-3 py-2 rounded-md transition-all">
+              <i class="fas fa-list"></i>
+            </button>
+            <button 
+              (click)="viewMode = 'grid'"
+              [class.bg-blue-600]="viewMode === 'grid'"
+              [class.text-white]="viewMode === 'grid'"
+              [class.text-gray-600]="viewMode !== 'grid'"
+              class="px-3 py-2 rounded-md transition-all">
+              <i class="fas fa-th"></i>
+            </button>
+          </div>
+
+          <!-- Export Button -->
+          <button 
+            (click)="exportSessions()"
+            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+            <i class="fas fa-download mr-2"></i>
+            Export
+          </button>
+
+          <!-- Bulk Actions -->
+          <button 
+            *ngIf="selectedSessions.size > 0"
+            (click)="bulkTerminate()"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-lg">
+            <i class="fas fa-trash mr-2"></i>
+            Terminate ({{ selectedSessions.size }})
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div *ngIf="statistics" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <!-- Total Active -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Active Sessions</p>
+            <p class="text-3xl font-bold text-gray-900">{{ statistics.totalActiveSessions }}</p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-check-circle text-white text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suspicious -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Suspicious</p>
+            <p class="text-3xl font-bold text-red-600">{{ statistics.suspiciousSessions }}</p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-exclamation-triangle text-white text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Desktop</p>
+            <p class="text-3xl font-bold text-gray-900">{{ statistics.deviceStatistics?.DESKTOP || 0 }}</p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-desktop text-white text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Mobile</p>
+            <p class="text-3xl font-bold text-gray-900">{{ statistics.deviceStatistics?.MOBILE || 0 }}</p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-mobile-alt text-white text-2xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900">
+          <i class="fas fa-filter text-blue-600 mr-2"></i>
+          Filters
+        </h3>
+        <button 
+          (click)="clearFilters()"
+          class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <i class="fas fa-times mr-1"></i>
+          Clear All
+        </button>
+      </div>
+
+      <!-- Quick Filters -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button 
+          *ngFor="let qf of quickFilters"
+          (click)="applyQuickFilter(qf.value)"
+          [class.bg-blue-600]="filters.quickFilter === qf.value"
+          [class.text-white]="filters.quickFilter === qf.value"
+          [class.bg-gray-100]="filters.quickFilter !== qf.value"
+          [class.text-gray-700]="filters.quickFilter !== qf.value"
+          class="px-4 py-2 rounded-lg text-sm font-medium hover:shadow-md transition-all">
+          {{ qf.label }}
+        </button>
+      </div>
+
+      <!-- Advanced Filters -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Status Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <select 
+            [(ngModel)]="filters.status"
+            (change)="applyFilters()"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option [ngValue]="undefined">All Statuses</option>
+            <option *ngFor="let status of availableStatuses" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+
+        <!-- Device Type Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Device Type</label>
+          <select 
+            [(ngModel)]="filters.deviceType"
+            (change)="applyFilters()"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option [ngValue]="undefined">All Devices</option>
+            <option *ngFor="let device of availableDeviceTypes" [value]="device">{{ device }}</option>
+          </select>
+        </div>
+
+        <!-- IP Address Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">IP Address</label>
+          <input 
+            type="text"
+            [(ngModel)]="filters.ipAddress"
+            (input)="applyFilters()"
+            placeholder="Search IP..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <!-- Country Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+          <input 
+            type="text"
+            [(ngModel)]="filters.country"
+            (input)="applyFilters()"
+            placeholder="Search country..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+      </div>
+    </div>
+
+    <!-- Sessions List/Grid -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-4">
+          <h3 class="text-lg font-bold text-gray-900">
+            Sessions ({{ filteredSessions.length }})
+          </h3>
+          <button 
+            *ngIf="filteredSessions.length > 0"
+            (click)="selectAll()"
+            class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            <i class="fas" [class.fa-check-square]="selectedSessions.size === filteredSessions.length" [class.fa-square]="selectedSessions.size !== filteredSessions.length" class="mr-1"></i>
+            {{ selectedSessions.size === filteredSessions.length ? 'Deselect All' : 'Select All' }}
+          </button>
+        </div>
+
+        <button 
+          (click)="loadSessions()"
+          [disabled]="isLoading"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50">
+          <i class="fas" [class.fa-sync-alt]="!isLoading" [class.fa-spinner]="isLoading" [class.fa-spin]="isLoading" class="mr-2"></i>
+          Refresh
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="text-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+        <p class="text-gray-600">Loading sessions...</p>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="!isLoading && viewMode === 'list'" class="space-y-3">
+        <div *ngFor="let session of getPaginatedSessions()" 
+             class="p-4 border-2 rounded-xl transition-all hover:shadow-md"
+             [class.border-blue-300]="selectedSessions.has(session.id)"
+             [class.bg-blue-50]="selectedSessions.has(session.id)"
+             [class.border-gray-200]="!selectedSessions.has(session.id)">
+          
+          <div class="flex items-center justify-between">
+            <!-- Checkbox -->
+            <div class="flex items-center space-x-4 flex-1">
+              <input 
+                type="checkbox"
+                [checked]="selectedSessions.has(session.id)"
+                (change)="toggleSessionSelection(session.id)"
+                class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+
+              <!-- Device Icon -->
+              <div class="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <i class="fas" [ngClass]="getDeviceIcon(session.deviceType)" class="text-white text-lg"></i>
+              </div>
+
+              <!-- Session Info -->
+              <div class="flex-1">
+                <div class="flex items-center space-x-2 mb-1">
+                  <i class="fab" [ngClass]="getBrowserIcon(session.browserName)" class="text-gray-600"></i>
+                  <h4 class="font-bold text-gray-900">
+                    {{ session.browserName }} on {{ session.operatingSystem }}
+                  </h4>
+                  <span class="px-2 py-1 rounded-full text-xs font-semibold" [ngClass]="getStatusBadgeClass(session.status)">
+                    {{ session.status }}
+                  </span>
+                  <span *ngIf="session.suspicious" class="px-2 py-1 bg-red-600 text-white rounded-full text-xs font-semibold animate-pulse">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    SUSPICIOUS
+                  </span>
+                </div>
+
+                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                  <span><i class="fas fa-user mr-1"></i>{{ session.userName || session.userEmail || 'Unknown' }}</span>
+                  <span><i class="fas fa-map-marker-alt mr-1"></i>{{ formatLocation(session) }}</span>
+                  <span><i class="fas fa-network-wired mr-1"></i>{{ session.ipAddress }}</span>
+                  <span><i class="fas fa-clock mr-1"></i>{{ session.lastActivity | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <button 
+              (click)="terminateSession(session)"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg font-medium ml-4">
+              <i class="fas fa-times-circle mr-2"></i>
+              Terminate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid View -->
+      <div *ngIf="!isLoading && viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let session of getPaginatedSessions()" 
+             class="p-5 border-2 rounded-xl transition-all hover:shadow-lg cursor-pointer"
+             [class.border-blue-300]="selectedSessions.has(session.id)"
+             [class.bg-blue-50]="selectedSessions.has(session.id)"
+             [class.border-gray-200]="!selectedSessions.has(session.id)"
+             (click)="toggleSessionSelection(session.id)">
+          
+          <div class="flex items-start justify-between mb-4">
+            <div class="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <i class="fas" [ngClass]="getDeviceIcon(session.deviceType)" class="text-white text-xl"></i>
+            </div>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold" [ngClass]="getStatusBadgeClass(session.status)">
+              {{ session.status }}
+            </span>
+          </div>
+
+          <h4 class="font-bold text-gray-900 mb-2">
+            <i class="fab" [ngClass]="getBrowserIcon(session.browserName)" class="mr-2"></i>
+            {{ session.browserName }}
+          </h4>
+
+          <div class="space-y-2 text-sm text-gray-600 mb-4">
+            <p><i class="fas fa-user mr-2"></i>{{ session.userName || 'Unknown' }}</p>
+            <p><i class="fas fa-map-marker-alt mr-2"></i>{{ formatLocation(session) }}</p>
+            <p><i class="fas fa-network-wired mr-2"></i>{{ session.ipAddress }}</p>
+          </div>
+
+          <button 
+            (click)="terminateSession(session); $event.stopPropagation()"
+            class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium">
+            <i class="fas fa-times-circle mr-2"></i>
+            Terminate
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && filteredSessions.length === 0" class="text-center py-12">
+        <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+        <p class="text-gray-600 text-lg">No sessions found</p>
+        <p class="text-gray-500 text-sm mt-2">Try adjusting your filters</p>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!isLoading && filteredSessions.length > 0" class="mt-6 flex items-center justify-between">
+        <p class="text-sm text-gray-600">
+          Showing {{ currentPage * pageSize + 1 }} to {{ Math.min((currentPage + 1) * pageSize, totalElements) }} of {{ totalElements }} sessions
+        </p>
+
+        <div class="flex items-center space-x-2">
+          <button 
+            (click)="previousPage()"
+            [disabled]="currentPage === 0"
+            class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <button 
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            (click)="goToPage(i)"
+            [class.bg-blue-600]="currentPage === i"
+            [class.text-white]="currentPage === i"
+            [class.bg-white]="currentPage !== i"
+            [class.text-gray-700]="currentPage !== i"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+            {{ i + 1 }}
+          </button>
+
+          <button 
+            (click)="nextPage()"
+            [disabled]="currentPage >= totalPages - 1"
+            class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

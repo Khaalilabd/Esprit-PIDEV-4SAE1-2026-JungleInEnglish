@@ -31,6 +31,7 @@ public class UserSessionService {
     private final UserSessionRepository userSessionRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final GeoIpService geoIpService;
     
     // Configuration constants
     private static final int MAX_CONCURRENT_SESSIONS = 5;
@@ -379,12 +380,17 @@ public class UserSessionService {
     }
 
     /**
-     * Extract location information from IP (simplified - in production use GeoIP service)
+     * Extract location information from IP (using GeoIP service)
      */
     private LocationInfo extractLocationInfo(HttpServletRequest request) {
-        // In production, integrate with GeoIP service like MaxMind
-        // For now, return default values
-        return new LocationInfo("Unknown", "Unknown", "Unknown");
+        String ipAddress = extractIpAddress(request);
+        GeoIpService.LocationInfo geoInfo = geoIpService.getLocationInfo(ipAddress);
+        
+        return new LocationInfo(
+            geoInfo.getCountry(),
+            geoInfo.getCity(),
+            geoInfo.getIsp()
+        );
     }
 
     // Helper classes

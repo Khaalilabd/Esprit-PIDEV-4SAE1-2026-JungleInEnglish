@@ -383,11 +383,13 @@ public class AuthService {
         // Create refresh token
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId(), deviceInfo, ipAddress);
         
-        // Create user session
+        // Create user session and get session token
+        String sessionToken = null;
         try {
             log.info("Attempting to create session for user: {} (ID: {})", user.getEmail(), user.getId());
             UserSession session = userSessionService.createSession(user.getId(), request);
-            log.info("Session created successfully for user: {} with token: {}", user.getEmail(), session.getSessionToken());
+            sessionToken = session.getSessionToken();
+            log.info("Session created successfully for user: {} with token: {}", user.getEmail(), sessionToken);
         } catch (Exception e) {
             log.error("Failed to create session for user: {} - Error: {}", user.getEmail(), e.getMessage(), e);
             // Continue anyway - session tracking is not critical for login
@@ -396,6 +398,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(accessToken)
                 .refreshToken(refreshToken.getToken())
+                .sessionToken(sessionToken)
                 .type("Bearer")
                 .id(user.getId())
                 .email(user.getEmail())

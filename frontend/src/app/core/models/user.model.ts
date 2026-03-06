@@ -67,6 +67,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
   token: string;
   refreshToken?: string;
+  sessionToken?: string; // Session token for tracking user sessions
   type: string;
   id: number;
   email: string;
