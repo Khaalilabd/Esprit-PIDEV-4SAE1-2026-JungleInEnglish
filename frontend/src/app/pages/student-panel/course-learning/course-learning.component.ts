@@ -217,12 +217,12 @@ export class CourseLearningComponent implements OnInit {
 
   getLessonTypeColor(lessonType: string): string {
     switch (lessonType) {
-      case 'VIDEO': return '#ef4444';
-      case 'TEXT': return '#3b82f6';
-      case 'QUIZ': return '#f59e0b';
-      case 'ASSIGNMENT': return '#8b5cf6';
-      case 'DOCUMENT': return '#10b981';
-      case 'INTERACTIVE': return '#ec4899';
+      case 'VIDEO': return '#C84630';
+      case 'TEXT': return '#2D5757';
+      case 'QUIZ': return '#F6BD60';
+      case 'ASSIGNMENT': return '#3D3D60';
+      case 'DOCUMENT': return '#F6BD60';
+      case 'INTERACTIVE': return '#C84630';
       default: return '#6b7280';
     }
   }

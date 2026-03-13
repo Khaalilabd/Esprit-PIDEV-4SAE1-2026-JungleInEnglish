@@ -7,7 +7,7 @@
     </div>
     <button 
       (click)="createPack()"
-      class="inline-flex items-center justify-center px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all duration-200 shadow-sm hover:shadow-md">
+      class="inline-flex items-center justify-center px-5 py-2.5 bg-[#2D5757] text-[#F7EDE2] rounded-lg hover:bg-[#244646] transition-all duration-200 shadow-sm hover:shadow-md">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
       </svg>
@@ -63,7 +63,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Enrollments</p>
-          <p class="text-2xl font-bold text-primary">{{ getTotalEnrollments() }}</p>
+          <p class="text-2xl font-bold text-[#2D5757]">{{ getTotalEnrollments() }}</p>
         </div>
         <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
           <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@
           [(ngModel)]="searchTerm"
           (ngModelChange)="applyFilters()"
           placeholder="Search by name, tutor, or description..."
-          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2D5757] focus:border-[#2D5757] dark:bg-gray-700 dark:text-white">
       </div>
 
       <!-- Category -->
@@ -94,7 +94,7 @@
         <select
           [(ngModel)]="selectedCategory"
           (ngModelChange)="applyFilters()"
-          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2D5757] focus:border-[#2D5757] dark:bg-gray-700 dark:text-white">
           <option value="ALL">All Categories</option>
           <option *ngFor="let category of categories" [value]="category.name">{{ category.name }}</option>
         </select>
@@ -106,7 +106,7 @@
         <select
           [(ngModel)]="selectedLevel"
           (ngModelChange)="applyFilters()"
-          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2D5757] focus:border-[#2D5757] dark:bg-gray-700 dark:text-white">
           <option value="ALL">All Levels</option>
           <option *ngFor="let level of allLevels" [value]="level">{{ level }}</option>
         </select>
@@ -118,7 +118,7 @@
         <select
           [(ngModel)]="selectedStatus"
           (ngModelChange)="applyFilters()"
-          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+          class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2D5757] focus:border-[#2D5757] dark:bg-gray-700 dark:text-white">
           <option value="ALL">All Status</option>
           <option *ngFor="let status of allStatuses" [value]="status">{{ status }}</option>
         </select>
@@ -187,7 +187,7 @@
               <div class="flex items-center justify-end gap-2">
                 <button
                   (click)="viewPack(pack)"
-                  class="p-2 text-gray-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                  class="p-2 text-gray-600 hover:text-[#2D5757] hover:bg-[#F7EDE2] rounded-lg transition-all"
                   title="View">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -196,7 +196,7 @@
                 </button>
                 <button
                   (click)="editPack(pack)"
-                  class="p-2 text-gray-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                  class="p-2 text-gray-600 hover:text-[#F6BD60] hover:bg-[#fef9f0] rounded-lg transition-all"
                   title="Edit">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -204,7 +204,7 @@
                 </button>
                 <button
                   (click)="deletePack(pack)"
-                  class="p-2 text-gray-600 hover:text-error-600 hover:bg-error-100 dark:hover:bg-error-900/20 rounded-lg transition-all"
+                  class="p-2 text-gray-600 hover:text-[#C84630] hover:bg-[#fef3f0] dark:hover:bg-[#C84630]/20 rounded-lg transition-all"
                   title="Delete">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -227,7 +227,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Create your first pack to get started.</p>
         <button 
           (click)="createPack()"
-          class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-all">
+          class="inline-flex items-center px-4 py-2 bg-[#2D5757] text-[#F7EDE2] rounded-lg hover:bg-[#244646] transition-all">
           Create Pack
         </button>
       </div>
@@ -257,7 +257,7 @@
             (click)="goToPage(page)"
             class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
             [ngClass]="{
-              'z-10 bg-primary border-primary text-white': currentPage === page,
+              'z-10 bg-[#2D5757] border-[#2D5757] text-[#F7EDE2]': currentPage === page,
               'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700': currentPage !== page
             }">
             {{ page }}
@@ -302,7 +302,7 @@
         <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 sm:px-8 sm:flex sm:flex-row-reverse gap-3">
           <button 
             (click)="confirmDelete()"
-            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-error-600 text-base font-medium text-white hover:bg-error-700 sm:w-auto sm:text-sm">
+            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-5 py-2.5 bg-[#C84630] text-base font-medium text-[#F7EDE2] hover:bg-[#a03826] sm:w-auto sm:text-sm">
             Delete Pack
           </button>
           <button 

@@ -165,7 +165,8 @@ public class SessionController {
         );
         
         // Convert to response DTOs and enrich with user information
-        Page<UserSessionResponse> response = sessions.map(session -> enrichSessionWithUserInfo(session));
+        Page<UserSessionResponse> response = sessions.map(session -> 
+            enrichSessionWithUserInfo(UserSessionResponse.fromEntity(session)));
         
         return ResponseEntity.ok(response);
     }

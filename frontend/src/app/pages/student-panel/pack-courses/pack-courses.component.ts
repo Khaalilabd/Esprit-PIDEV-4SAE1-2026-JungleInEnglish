@@ -172,18 +172,18 @@ export class PackCoursesComponent implements OnInit {
 
   getCategoryColor(categoryName: string): string {
     const colors: { [key: string]: string } = {
-      'General English': '#3b82f6',
-      'Business English': '#8b5cf6',
-      'Academic English': '#10b981',
-      'Pronunciation': '#f59e0b',
-      'Grammar': '#ef4444',
-      'Vocabulary': '#ec4899',
-      'Conversation': '#06b6d4',
-      'Writing': '#6366f1',
-      'Reading': '#14b8a6',
-      'Listening': '#f97316'
+      'General English': '#2D5757',
+      'Business English': '#3D3D60',
+      'Academic English': '#F6BD60',
+      'Pronunciation': '#F6BD60',
+      'Grammar': '#C84630',
+      'Vocabulary': '#3D3D60',
+      'Conversation': '#2D5757',
+      'Writing': '#3D3D60',
+      'Reading': '#F6BD60',
+      'Listening': '#C84630'
     };
-    return colors[categoryName] || '#667eea';
+    return colors[categoryName] || '#2D5757';
   }
 
   getCategoryIcon(categoryName: string): string {

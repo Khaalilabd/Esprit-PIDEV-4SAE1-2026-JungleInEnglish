@@ -268,6 +268,11 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () => import('./pages/student-panel/settings/settings.component').then(m => m.DashboardSettingsComponent),
         title: 'Settings | Jungle in English'
+      },
+      {
+        path: 'sessions',
+        loadComponent: () => import('./pages/admin-sessions/admin-sessions.component').then(m => m.AdminSessionsComponent),
+        title: 'My Sessions | Jungle in English'
       }
     ]
   },
@@ -417,6 +422,11 @@ export const routes: Routes = [
         path: 'support',
         loadComponent: () => import('./pages/student-panel/support/support.component').then(m => m.SupportComponent),
         title: 'Help & Support | Jungle in English'
+      },
+      {
+        path: 'create-exam',
+        loadComponent: () => import('./pages/academic-panel/exam-builder/exam-builder.component').then(m => m.ExamBuilderComponent),
+        title: 'Create Exam | Jungle in English'
       }
     ]
   },
@@ -794,6 +804,11 @@ export const routes: Routes = [
         path: 'videos',
         component: VideosComponent,
         title: 'Videos | Jungle in English Dashboard'
+      },
+      {
+        path: 'gamification',
+        loadComponent: () => import('./pages/blank/blank.component').then(m => m.BlankComponent),
+        title: 'Gamification | Jungle in English Dashboard'
       }
     ]
   },

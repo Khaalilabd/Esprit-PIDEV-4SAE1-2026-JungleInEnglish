@@ -60,8 +60,8 @@
 
   &:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #2D5757;
+    box-shadow: 0 0 0 3px rgba(45, 87, 87, 0.1);
   }
 }
 
@@ -91,30 +91,30 @@
   gap: 0.5rem;
 
   &:hover {
-    background: #e5e7eb;
-    color: #374151;
+    background: #F7EDE2;
+    color: #2D5757;
   }
 
   &.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #2D5757;
+    color: #F7EDE2;
     border-color: transparent;
   }
 }
 
 .clear-filters-btn {
   padding: 0.625rem 1.25rem;
-  background: #ef4444;
+  background: #C84630;
   border: none;
   border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: white;
+  color: #F7EDE2;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: #dc2626;
+    background: #a03826;
   }
 }
 
@@ -129,7 +129,7 @@
     width: 50px;
     height: 50px;
     border: 4px solid #e5e7eb;
-    border-top-color: #667eea;
+    border-top-color: #2D5757;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -195,13 +195,13 @@
 }
 
 .course-level {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #F7EDE2;
+  color: #2D5757;
 }
 
 .course-category {
-  background: #f3e8ff;
-  color: #6b21a8;
+  background: #F6BD60;
+  color: #3D3D60;
 }
 
 .course-title {
@@ -261,7 +261,7 @@
 
 .progress-percentage {
   font-size: 0.875rem;
-  color: #667eea;
+  color: #2D5757;
   font-weight: 700;
 }
 
@@ -274,7 +274,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: #2D5757;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -282,12 +282,12 @@
 .start-btn {
   width: 100%;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2D5757;
   border: none;
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
-  color: white;
+  color: #F7EDE2;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -301,8 +301,9 @@
   }
 
   &:hover {
+    background: #244646;
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 20px rgba(45, 87, 87, 0.3);
   }
 }
 
@@ -335,18 +336,19 @@
 
   .btn-primary {
     padding: 0.875rem 2rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2D5757;
     border: none;
     border-radius: 12px;
     font-size: 1rem;
     font-weight: 600;
-    color: white;
+    color: #F7EDE2;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
+      background: #244646;
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 10px 20px rgba(45, 87, 87, 0.3);
     }
   }
 }
@@ -395,9 +397,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: #fef3f0;
+  color: #C84630;
+  border: 1px solid #fdddd6;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -410,8 +412,8 @@
   }
 
   &:hover {
-    background: #fecaca;
-    border-color: #fca5a5;
+    background: #fdddd6;
+    border-color: #fbc7ba;
     transform: translateY(-1px);
   }
 
