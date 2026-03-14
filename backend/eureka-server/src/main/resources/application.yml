@@ -9,12 +9,36 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+    # Désactiver le cache local pour le serveur
+    registry-fetch-interval-seconds: 5
   server:
+    # Désactiver le mode de préservation en développement (détection rapide des services down)
     enable-self-preservation: false
-    eviction-interval-timer-in-ms: 4000
+    # Intervalle d'éviction des services inactifs (par défaut 60s, réduit à 5s)
+    eviction-interval-timer-in-ms: 5000
+    # Seuil de renouvellement attendu (par défaut 0.85)
+    renewal-percent-threshold: 0.49
+    # Temps d'attente avant de commencer à évincer (par défaut 5min, réduit à 0)
+    wait-time-in-ms-when-sync-empty: 0
+    # Activer le nettoyage des instances expirées
+    response-cache-auto-expiration-in-seconds: 10
+    # Désactiver le cache de réponse pour un rafraîchissement immédiat
+    response-cache-update-interval-ms: 5000
+    # Activer le delta pour les mises à jour incrémentielles
+    disable-delta: false
+    # Nombre de threads pour le nettoyage
+    eviction-interval-num-of-threads: 5
+  instance:
+    # Intervalle de heartbeat (par défaut 30s, réduit à 5s)
+    lease-renewal-interval-in-seconds: 5
+    # Durée avant expiration (par défaut 90s, réduit à 10s)
+    lease-expiration-duration-in-seconds: 10
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

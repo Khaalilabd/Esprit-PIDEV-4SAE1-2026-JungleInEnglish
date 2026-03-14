@@ -5,6 +5,11 @@ import com.englishflow.courses.entity.Course;
 import com.englishflow.courses.enums.CourseStatus;
 import com.englishflow.courses.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +33,14 @@ public class CourseService implements ICourseService {
     
     @Override
     @Transactional(readOnly = true)
+    public Page<CourseDTO> getAllCoursesPaginated(Pageable pageable) {
+        return courseRepository.findAll(pageable)
+                .map(this::mapToDTO);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "courseDetails", key = "#id")
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Course not found with id: " + id));
@@ -36,6 +49,7 @@ public class CourseService implements ICourseService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "courses", key = "'published'")
     public List<CourseDTO> getPublishedCourses() {
         return courseRepository.findByStatus(CourseStatus.PUBLISHED).stream()
                 .map(this::mapToDTO)
@@ -60,6 +74,10 @@ public class CourseService implements ICourseService {
     
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "courses", allEntries = true),
+        @CacheEvict(value = "courseDetails", allEntries = true)
+    })
     public CourseDTO createCourse(CourseDTO courseDTO) {
         // Validate tutor exists and has TUTOR role
         if (courseDTO.getTutorId() != null) {
@@ -73,6 +91,10 @@ public class CourseService implements ICourseService {
     
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "courses", allEntries = true),
+        @CacheEvict(value = "courseDetails", key = "#id")
+    })
     public CourseDTO updateCourse(Long id, CourseDTO courseDTO) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Course not found with id: " + id));
@@ -104,6 +126,10 @@ public class CourseService implements ICourseService {
     
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "courses", allEntries = true),
+        @CacheEvict(value = "courseDetails", key = "#id")
+    })
     public void deleteCourse(Long id) {
         if (!courseRepository.existsById(id)) {
             throw new RuntimeException("Course not found with id: " + id);

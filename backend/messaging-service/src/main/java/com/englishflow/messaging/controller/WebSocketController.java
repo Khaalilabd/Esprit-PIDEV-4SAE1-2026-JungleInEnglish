@@ -8,6 +8,7 @@ import com.englishflow.messaging.dto.SendMessageRequest;
 import com.englishflow.messaging.exception.MessageValidationException;
 import com.englishflow.messaging.exception.UnauthorizedAccessException;
 import com.englishflow.messaging.service.MessagingService;
+import com.englishflow.messaging.service.UserPresenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -29,6 +30,7 @@ public class WebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
     private final MessagingService messagingService;
     private final AuthServiceClient authServiceClient;
+    private final UserPresenceService userPresenceService;
     
     @MessageMapping("/chat/{conversationId}")
     public void sendMessage(@DestinationVariable Long conversationId,
@@ -108,6 +110,48 @@ public class WebSocketController {
             
         } catch (Exception e) {
             log.error("Error sending typing indicator for conversation {}", conversationId, e);
+        }
+    }
+    
+    @MessageMapping("/presence/online")
+    public void markUserOnline(Principal principal) {
+        try {
+            if (principal == null) {
+                log.error("No principal found in presence update");
+                return;
+            }
+            
+            Long userId = Long.parseLong(principal.getName());
+            userPresenceService.markUserOnline(userId);
+            
+            // Broadcast online status to all users
+            Map<String, Object> presenceUpdate = new HashMap<>();
+            presenceUpdate.put("userId", userId);
+            presenceUpdate.put("isOnline", true);
+            
+            messagingTemplate.convertAndSend("/topic/presence", presenceUpdate);
+            
+            log.debug("User {} marked as online", userId);
+            
+        } catch (Exception e) {
+            log.error("Error marking user as online", e);
+        }
+    }
+    
+    @MessageMapping("/presence/heartbeat")
+    public void heartbeat(Principal principal) {
+        try {
+            if (principal == null) {
+                return;
+            }
+            
+            Long userId = Long.parseLong(principal.getName());
+            userPresenceService.refreshUserPresence(userId);
+            
+            log.trace("Heartbeat received from user {}", userId);
+            
+        } catch (Exception e) {
+            log.error("Error processing heartbeat", e);
         }
     }
     

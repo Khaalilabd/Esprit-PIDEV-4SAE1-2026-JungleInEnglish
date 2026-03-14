@@ -4,6 +4,7 @@ import com.englishflow.community.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -36,4 +37,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Find trending posts (created in last 7 days with high score)
     @Query("SELECT p FROM Post p WHERE p.createdAt >= :since ORDER BY p.weightedScore DESC")
     List<Post> findTrendingPosts(@Param("since") LocalDateTime since, Pageable pageable);
+    
+    // ✅ OPTIMIZED: Bulk update trending flags
+    @Modifying
+    @Query("UPDATE Post p SET p.isTrending = false WHERE p.isTrending = true")
+    int resetAllTrendingFlags();
+    
+    @Modifying
+    @Query("UPDATE Post p SET p.isTrending = true WHERE p.id IN :ids")
+    int markAsTrending(@Param("ids") List<Long> ids);
 }

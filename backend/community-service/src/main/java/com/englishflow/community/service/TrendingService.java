@@ -37,29 +37,33 @@ public class TrendingService {
         
         LocalDateTime since = LocalDateTime.now().minusDays(TRENDING_DAYS);
         
-        // Reset all trending flags
-        resetAllTrendingFlags();
+        // ✅ OPTIMIZED: Reset all trending flags with bulk update
+        int resetPostCount = postRepository.resetAllTrendingFlags();
+        int resetTopicCount = topicRepository.resetAllTrendingFlags();
+        log.debug("Reset trending flags: {} posts, {} topics", resetPostCount, resetTopicCount);
         
         // Mark trending posts
         List<Post> trendingPosts = postRepository.findTrendingPosts(since, PageRequest.of(0, TOP_TRENDING_COUNT));
+        List<Long> trendingPostIds = trendingPosts.stream()
+                .filter(post -> post.getWeightedScore() >= MIN_WEIGHTED_SCORE)
+                .map(Post::getId)
+                .collect(java.util.stream.Collectors.toList());
+        
         int trendingPostCount = 0;
-        for (Post post : trendingPosts) {
-            if (post.getWeightedScore() >= MIN_WEIGHTED_SCORE) {
-                post.setIsTrending(true);
-                postRepository.save(post);
-                trendingPostCount++;
-            }
+        if (!trendingPostIds.isEmpty()) {
+            trendingPostCount = postRepository.markAsTrending(trendingPostIds);
         }
         
         // Mark trending topics
         List<Topic> trendingTopics = topicRepository.findTrendingTopics(since, PageRequest.of(0, TOP_TRENDING_COUNT));
+        List<Long> trendingTopicIds = trendingTopics.stream()
+                .filter(topic -> topic.getWeightedScore() >= MIN_WEIGHTED_SCORE)
+                .map(Topic::getId)
+                .collect(java.util.stream.Collectors.toList());
+        
         int trendingTopicCount = 0;
-        for (Topic topic : trendingTopics) {
-            if (topic.getWeightedScore() >= MIN_WEIGHTED_SCORE) {
-                topic.setIsTrending(true);
-                topicRepository.save(topic);
-                trendingTopicCount++;
-            }
+        if (!trendingTopicIds.isEmpty()) {
+            trendingTopicCount = topicRepository.markAsTrending(trendingTopicIds);
         }
         
         log.info("Trending status update completed: {} posts, {} topics marked as trending", 

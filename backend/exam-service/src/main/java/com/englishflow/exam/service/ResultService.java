@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +64,7 @@ public class ResultService implements IResultService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "examResults", key = "#attemptId + '_' + #userId")
     public ResultDTO getResultByAttemptId(String attemptId, Long userId) {
         ExamResult result = resultRepository.findByAttemptId(attemptId)
                 .orElseThrow(() -> new RuntimeException("Result not found for attempt: " + attemptId));
@@ -76,6 +78,7 @@ public class ResultService implements IResultService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "examResults", key = "#attemptId + '_' + #userId + '_review'")
     public ResultWithReviewDTO getResultWithReview(String attemptId, Long userId) {
         ExamResult result = resultRepository.findByAttemptId(attemptId)
                 .orElseThrow(() -> new RuntimeException("Result not found for attempt: " + attemptId));
@@ -114,10 +117,20 @@ public class ResultService implements IResultService {
         ObjectNode breakdown = objectMapper.createObjectNode();
         
         List<StudentAnswer> answers = answerRepository.findByAttemptId(attempt.getId());
+        
+        // ✅ OPTIMIZED: Fetch all questions at once
+        List<Long> questionIds = answers.stream()
+                .map(StudentAnswer::getQuestionId)
+                .collect(Collectors.toList());
+        
+        List<Question> questions = questionRepository.findAllById(questionIds);
+        var questionMap = questions.stream()
+                .collect(Collectors.toMap(Question::getId, q -> q));
+        
         Map<String, List<StudentAnswer>> answersByPart = new HashMap<>();
         
         for (StudentAnswer answer : answers) {
-            Question question = questionRepository.findById(answer.getQuestionId()).orElse(null);
+            Question question = questionMap.get(answer.getQuestionId());
             if (question != null) {
                 String partId = question.getPart().getId();
                 answersByPart.computeIfAbsent(partId, k -> new ArrayList<>()).add(answer);
@@ -129,9 +142,10 @@ public class ResultService implements IResultService {
                     .mapToDouble(a -> a.getScore() != null ? a.getScore() : 0.0)
                     .sum();
             
+            // Use the map instead of querying DB again
             double partMaxScore = partAnswers.stream()
                     .mapToDouble(a -> {
-                        Question q = questionRepository.findById(a.getQuestionId()).orElse(null);
+                        Question q = questionMap.get(a.getQuestionId());
                         return q != null ? q.getPoints() : 0.0;
                     })
                     .sum();

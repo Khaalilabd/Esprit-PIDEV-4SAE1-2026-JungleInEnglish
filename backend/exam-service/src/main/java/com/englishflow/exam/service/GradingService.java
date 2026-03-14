@@ -62,8 +62,18 @@ public class GradingService implements IGradingService {
     public List<GradingQueueItemDTO> getGradingQueue() {
         List<StudentAnswer> ungradedAnswers = answerRepository.findByIsCorrectIsNull();
         
+        // ✅ OPTIMIZED: Fetch all questions at once
+        List<Long> questionIds = ungradedAnswers.stream()
+                .map(StudentAnswer::getQuestionId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        List<Question> questions = questionRepository.findAllById(questionIds);
+        var questionMap = questions.stream()
+                .collect(Collectors.toMap(Question::getId, q -> q));
+        
         return ungradedAnswers.stream()
-                .map(this::mapToGradingQueueItem)
+                .map(answer -> mapToGradingQueueItem(answer, questionMap))
                 .collect(Collectors.toList());
     }
     
@@ -102,15 +112,26 @@ public class GradingService implements IGradingService {
         
         List<StudentAnswer> answers = answerRepository.findByAttemptId(attemptId);
         
+        // ✅ OPTIMIZED: Fetch all questions at once instead of one by one
+        List<Long> questionIds = answers.stream()
+                .map(StudentAnswer::getQuestionId)
+                .collect(Collectors.toList());
+        
+        List<Question> questions = questionRepository.findAllById(questionIds);
+        
+        // Create a map for quick lookup
+        var questionMap = questions.stream()
+                .collect(Collectors.toMap(Question::getId, q -> q));
+        
         // Calculate total score
         double totalScore = answers.stream()
                 .mapToDouble(a -> a.getScore() != null ? a.getScore() : 0.0)
                 .sum();
         
-        // Calculate max possible score
+        // Calculate max possible score using the map
         double maxScore = answers.stream()
                 .mapToDouble(a -> {
-                    Question q = questionRepository.findById(a.getQuestionId()).orElse(null);
+                    Question q = questionMap.get(a.getQuestionId());
                     return q != null ? q.getPoints() : 0.0;
                 })
                 .sum();
@@ -214,8 +235,8 @@ public class GradingService implements IGradingService {
         return totalPairs > 0 ? (correctPairs / (double) totalPairs) * maxPoints : 0.0;
     }
     
-    private GradingQueueItemDTO mapToGradingQueueItem(StudentAnswer answer) {
-        Question question = questionRepository.findById(answer.getQuestionId()).orElse(null);
+    private GradingQueueItemDTO mapToGradingQueueItem(StudentAnswer answer, java.util.Map<Long, Question> questionMap) {
+        Question question = questionMap.get(answer.getQuestionId());
         
         return GradingQueueItemDTO.builder()
                 .answerId(answer.getId())

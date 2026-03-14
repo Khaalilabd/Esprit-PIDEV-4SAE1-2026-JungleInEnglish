@@ -593,6 +593,11 @@ export class MessagingContainerComponent implements OnInit, OnDestroy {
   getTitle(conv: Conversation): string {
     if (conv.title) return conv.title;
     
+    // Vérifier si participants existe et n'est pas vide
+    if (!conv.participants || conv.participants.length === 0) {
+      return 'Chargement...';
+    }
+    
     const other = conv.participants.find(p => p.userId !== this.currentUserId);
     
     // Si on ne trouve pas l'autre participant, c'est que les données ne sont pas encore chargées
@@ -622,6 +627,11 @@ export class MessagingContainerComponent implements OnInit, OnDestroy {
     // Pour les groupes sans photo, utiliser une icône de groupe
     if (conv.type === 'GROUP') {
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.title || 'Groupe')}&background=667eea&color=fff&bold=true&size=128`;
+    }
+    
+    // Vérifier si participants existe et n'est pas vide
+    if (!conv.participants || conv.participants.length === 0) {
+      return 'https://ui-avatars.com/api/?name=...&background=667eea&color=fff&bold=true&size=128';
     }
     
     // Pour les conversations directes

@@ -35,6 +35,7 @@ public class MessagingService {
     private final AuthServiceClient authServiceClient;
     private final MessageReactionService reactionService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserPresenceService userPresenceService;
     
     @Transactional(readOnly = true)
     public List<ConversationDTO> getUserConversations(Long userId) {
@@ -49,7 +50,14 @@ public class MessagingService {
     @Transactional(readOnly = true)
     public ConversationDTO getConversation(Long conversationId, Long userId) {
         log.debug("Getting conversation {} for user {}", conversationId, userId);
-        Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId)
+        
+        // Vérifier que l'utilisateur est participant (SÉCURITÉ)
+        if (!participantRepository.existsByConversationIdAndUserId(conversationId, userId)) {
+            throw new UnauthorizedAccessException(conversationId, userId);
+        }
+        
+        // Charger la conversation avec TOUS les participants (pas seulement l'utilisateur actuel)
+        Conversation conversation = conversationRepository.findByIdWithParticipants(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
         
         return convertToDTO(conversation, userId);
@@ -345,23 +353,17 @@ public class MessagingService {
         ParticipantDTO dto = new ParticipantDTO();
         dto.setUserId(participant.getUserId());
         
-        // Récupérer les infos à jour depuis auth-service
-        try {
-            AuthServiceClient.UserInfo userInfo = authServiceClient.getUserInfo(participant.getUserId());
-            dto.setUserName(userInfo.getFullName());
-            dto.setUserEmail(userInfo.getEmail());
-            dto.setUserRole(userInfo.getRole());
-            dto.setUserAvatar(userInfo.getProfilePhotoUrl());
-        } catch (Exception e) {
-            log.warn("Failed to fetch user info for participant {}, using cached data", participant.getUserId());
-            // Fallback sur les données en cache
-            dto.setUserName(participant.getUserName());
-            dto.setUserEmail(participant.getUserEmail());
-            dto.setUserRole(participant.getUserRole());
-            dto.setUserAvatar(participant.getUserAvatar());
-        }
+        // OPTIMISATION: Utiliser d'abord les données en cache (rapide)
+        // Les données sont déjà stockées dans conversation_participants
+        dto.setUserName(participant.getUserName());
+        dto.setUserEmail(participant.getUserEmail());
+        dto.setUserRole(participant.getUserRole());
+        dto.setUserAvatar(participant.getUserAvatar());
         
-        dto.setIsOnline(false); // TODO: Implémenter le statut en ligne
+        // Note: Pour rafraîchir les données utilisateur, utiliser un job asynchrone
+        // ou un endpoint dédié plutôt que de bloquer chaque requête
+        
+        dto.setIsOnline(userPresenceService.isUserOnline(participant.getUserId()));
         dto.setLastReadAt(participant.getLastReadAt());
         dto.setRole(participant.getParticipantRole().name());
         return dto;

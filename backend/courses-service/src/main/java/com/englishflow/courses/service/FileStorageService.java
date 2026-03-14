@@ -1,5 +1,6 @@
 package com.englishflow.courses.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,12 +11,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class FileStorageService {
+
+    private final ImageOptimizationService imageOptimizationService;
 
     @Value("${file.upload-dir:uploads/courses}")
     private String uploadDir;
@@ -27,6 +30,13 @@ public class FileStorageService {
      * Store a file and return its URL
      */
     public String storeFile(MultipartFile file, String subDirectory) {
+        return storeFile(file, subDirectory, false);
+    }
+
+    /**
+     * Store a file with optional optimization
+     */
+    public String storeFile(MultipartFile file, String subDirectory, boolean optimize) {
         try {
             // Create directory if it doesn't exist
             Path uploadPath = Paths.get(uploadDir, subDirectory);
@@ -36,17 +46,32 @@ public class FileStorageService {
 
             // Generate unique filename
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-            String fileExtension = getFileExtension(originalFilename);
+            String fileExtension = optimize && isValidImageFile(file) ? ".jpg" : getFileExtension(originalFilename);
             String newFilename = UUID.randomUUID().toString() + fileExtension;
 
             // Copy file to target location
             Path targetLocation = uploadPath.resolve(newFilename);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            
+            if (optimize && isValidImageFile(file)) {
+                // Optimize image before saving
+                log.info("Optimizing image: {}", originalFilename);
+                byte[] optimizedImage = imageOptimizationService.optimizeThumbnail(file);
+                Files.write(targetLocation, optimizedImage);
+                
+                // Generate small thumbnail for lists
+                String smallThumbFilename = "small_" + newFilename;
+                Path smallThumbPath = uploadPath.resolve(smallThumbFilename);
+                byte[] smallThumb = imageOptimizationService.generateSmallThumbnailFromBytes(optimizedImage);
+                Files.write(smallThumbPath, smallThumb);
+                log.info("Small thumbnail generated: {}", smallThumbFilename);
+            } else {
+                // Save without optimization
+                Files.write(targetLocation, file.getBytes());
+            }
 
             log.info("File stored successfully: {}", targetLocation);
 
             // Return URL accessible via API Gateway
-            // Format: http://localhost:8080/api/courses-service/uploads/courses/{subDirectory}/{filename}
             return "/uploads/courses/" + subDirectory + "/" + newFilename;
 
         } catch (IOException ex) {
@@ -56,21 +81,21 @@ public class FileStorageService {
     }
 
     /**
-     * Store thumbnail image
+     * Store thumbnail image with optimization
      */
     public String storeThumbnail(MultipartFile file) {
-        return storeFile(file, "thumbnails");
+        return storeFile(file, "thumbnails", true);
     }
 
     /**
      * Store course material file
      */
     public String storeCourseMaterial(MultipartFile file) {
-        return storeFile(file, "materials");
+        return storeFile(file, "materials", false);
     }
 
     /**
-     * Delete a file
+     * Delete a file and its thumbnails
      */
     public void deleteFile(String fileUrl) {
         try {
@@ -79,7 +104,13 @@ public class FileStorageService {
                 String filePath = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
                 Path path = Paths.get(filePath);
                 Files.deleteIfExists(path);
-                log.info("Deleted file: {}", filePath);
+                
+                // Delete small thumbnail if exists
+                String fileName = path.getFileName().toString();
+                Path smallThumbPath = path.getParent().resolve("small_" + fileName);
+                Files.deleteIfExists(smallThumbPath);
+                
+                log.info("Deleted file and thumbnails: {}", filePath);
             }
         } catch (IOException ex) {
             log.error("Could not delete file: {}. Error: {}", fileUrl, ex.getMessage());
@@ -87,17 +118,21 @@ public class FileStorageService {
     }
 
     /**
+     * Get small thumbnail URL
+     */
+    public String getSmallThumbnailUrl(String imageUrl) {
+        if (imageUrl == null || !imageUrl.contains("/")) {
+            return imageUrl;
+        }
+        int lastSlash = imageUrl.lastIndexOf("/");
+        return imageUrl.substring(0, lastSlash + 1) + "small_" + imageUrl.substring(lastSlash + 1);
+    }
+
+    /**
      * Validate if file is an image
      */
     public boolean isValidImageFile(MultipartFile file) {
-        String contentType = file.getContentType();
-        return contentType != null && (
-                contentType.equals("image/jpeg") ||
-                contentType.equals("image/jpg") ||
-                contentType.equals("image/png") ||
-                contentType.equals("image/gif") ||
-                contentType.equals("image/webp")
-        );
+        return imageOptimizationService.isValidImage(file);
     }
 
     /**

@@ -7,12 +7,11 @@ import com.englishflow.auth.dto.InvitationResponse;
 import com.englishflow.auth.entity.User;
 import com.englishflow.auth.security.JwtUtil;
 import com.englishflow.auth.service.InvitationService;
+import com.englishflow.auth.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,12 +24,12 @@ public class InvitationController {
 
     private final InvitationService invitationService;
     private final JwtUtil jwtUtil;
+    private final SecurityUtil securityUtil;
 
     @PostMapping("/send")
     public ResponseEntity<InvitationResponse> sendInvitation(@Valid @RequestBody InvitationRequest request) {
-        // Get current user ID from security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long invitedBy = 1L; // TODO: Extract from JWT token
+        // Extract current user ID from JWT token
+        Long invitedBy = securityUtil.getCurrentUserId();
         
         InvitationResponse response = invitationService.sendInvitation(request, invitedBy);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

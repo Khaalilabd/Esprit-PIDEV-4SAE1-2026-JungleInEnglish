@@ -4,6 +4,8 @@ import com.englishflow.courses.dto.CourseCategoryDTO;
 import com.englishflow.courses.entity.CourseCategory;
 import com.englishflow.courses.repository.CourseCategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ public class CourseCategoryService implements ICourseCategoryService {
     
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CourseCategoryDTO createCategory(CourseCategoryDTO categoryDTO) {
         if (categoryRepository.existsByName(categoryDTO.getName())) {
             throw new RuntimeException("Category with name '" + categoryDTO.getName() + "' already exists");
@@ -38,6 +41,7 @@ public class CourseCategoryService implements ICourseCategoryService {
     
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CourseCategoryDTO updateCategory(Long id, CourseCategoryDTO categoryDTO) {
         CourseCategory category = categoryRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
@@ -60,6 +64,7 @@ public class CourseCategoryService implements ICourseCategoryService {
     }
     
     @Override
+    @Cacheable(value = "categories", key = "#id")
     public CourseCategoryDTO getById(Long id) {
         return categoryRepository.findById(id)
             .map(this::toDTO)
@@ -67,6 +72,7 @@ public class CourseCategoryService implements ICourseCategoryService {
     }
     
     @Override
+    @Cacheable(value = "categories", key = "'all'")
     public List<CourseCategoryDTO> getAllCategories() {
         return categoryRepository.findAllByOrderByDisplayOrderAsc().stream()
             .map(this::toDTO)
@@ -74,6 +80,7 @@ public class CourseCategoryService implements ICourseCategoryService {
     }
     
     @Override
+    @Cacheable(value = "categories", key = "'active'")
     public List<CourseCategoryDTO> getActiveCategories() {
         return categoryRepository.findByActiveOrderByDisplayOrderAsc(true).stream()
             .map(this::toDTO)
@@ -82,12 +89,14 @@ public class CourseCategoryService implements ICourseCategoryService {
     
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(Long id) {
         categoryRepository.deleteById(id);
     }
     
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void toggleActive(Long id) {
         CourseCategory category = categoryRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
@@ -97,6 +106,7 @@ public class CourseCategoryService implements ICourseCategoryService {
     
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void updateDisplayOrder(Long id, Integer newOrder) {
         CourseCategory category = categoryRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));

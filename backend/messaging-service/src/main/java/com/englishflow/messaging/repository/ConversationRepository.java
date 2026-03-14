@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
     
     @Query("SELECT DISTINCT c FROM Conversation c " +
+           "LEFT JOIN FETCH c.participants " +
            "JOIN c.participants p " +
            "WHERE p.userId = :userId AND p.isActive = true " +
            "ORDER BY c.lastMessageAt DESC NULLS LAST, c.createdAt DESC")

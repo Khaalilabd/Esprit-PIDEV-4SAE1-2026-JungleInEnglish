@@ -5,6 +5,10 @@ import com.englishflow.courses.enums.CourseStatus;
 import com.englishflow.courses.service.ICourseService;
 import com.englishflow.courses.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +39,18 @@ public class CourseController {
     }
     
     @GetMapping
-    public ResponseEntity<List<CourseDTO>> getAllCourses() {
+    public ResponseEntity<Page<CourseDTO>> getAllCourses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
+        Page<CourseDTO> courses = courseService.getAllCoursesPaginated(pageable);
+        return ResponseEntity.ok(courses);
+    }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<CourseDTO>> getAllCoursesNoPagination() {
         List<CourseDTO> courses = courseService.getAllCourses();
         return ResponseEntity.ok(courses);
     }

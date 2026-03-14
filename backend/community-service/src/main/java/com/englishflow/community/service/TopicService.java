@@ -1,9 +1,11 @@
 package com.englishflow.community.service;
 
+import com.englishflow.community.client.AuthServiceClient;
 import com.englishflow.community.client.ClubServiceClient;
 import com.englishflow.community.dto.CreateTopicRequest;
 import com.englishflow.community.dto.MemberDTO;
 import com.englishflow.community.dto.TopicDTO;
+import com.englishflow.community.dto.UserDTO;
 import com.englishflow.community.entity.SubCategory;
 import com.englishflow.community.entity.Topic;
 import com.englishflow.community.exception.ResourceNotFoundException;
@@ -31,6 +33,7 @@ public class TopicService {
     private final TopicRepository topicRepository;
     private final SubCategoryRepository subCategoryRepository;
     private final ClubServiceClient clubServiceClient;
+    private final AuthServiceClient authServiceClient;
     
     private static final List<String> ALLOWED_CLUB_ROLES = Arrays.asList(
         "PRESIDENT", "VICE_PRESIDENT", "SECRETARY", "TREASURER",
@@ -75,26 +78,56 @@ public class TopicService {
     private void validateNotLocked(SubCategory subCategory, Long userId) {
         // Check if subcategory is locked
         if (Boolean.TRUE.equals(subCategory.getIsLocked())) {
-            // Only ACADEMIC_OFFICE_AFFAIRS can post in locked subcategories
-            // TODO: Check user role via auth service
-            log.warn("Attempt to post in locked subcategory {} by user {}", subCategory.getId(), userId);
-            throw new UnauthorizedException("This subcategory is locked. Only Academic Office Affairs can post here.");
+            // Only ACADEMIC_OFFICE_AFFAIRS and ADMIN can post in locked subcategories
+            if (!isAdminOrAcademicAffairs(userId)) {
+                log.warn("Attempt to post in locked subcategory {} by user {} without proper role", subCategory.getId(), userId);
+                throw new UnauthorizedException("This subcategory is locked. Only Academic Office Affairs can post here.");
+            }
+            log.info("User {} with admin/academic role allowed to post in locked subcategory {}", userId, subCategory.getId());
         }
         
         // Check if parent category is locked
         if (Boolean.TRUE.equals(subCategory.getCategory().getIsLocked())) {
-            // Only ACADEMIC_OFFICE_AFFAIRS can post in locked categories
-            log.warn("Attempt to post in locked category {} by user {}", subCategory.getCategory().getId(), userId);
-            throw new UnauthorizedException("This category is locked. Only Academic Office Affairs can post here.");
+            // Only ACADEMIC_OFFICE_AFFAIRS and ADMIN can post in locked categories
+            if (!isAdminOrAcademicAffairs(userId)) {
+                log.warn("Attempt to post in locked category {} by user {} without proper role", subCategory.getCategory().getId(), userId);
+                throw new UnauthorizedException("This category is locked. Only Academic Office Affairs can post here.");
+            }
+            log.info("User {} with admin/academic role allowed to post in locked category {}", userId, subCategory.getCategory().getId());
         }
     }
     
     private void validateAdminRole(Long userId) {
-        // This would typically call an auth service to check user role
-        // For now, we'll throw an exception that the frontend can catch
-        // In production, integrate with your auth service
-        log.info("Validating admin role for user {}", userId);
-        // TODO: Implement actual role check via auth service
+        if (!isAdminOrAcademicAffairs(userId)) {
+            log.warn("User {} attempted to post in admin-only subcategory without proper role", userId);
+            throw new UnauthorizedException("You must be an Academic Office Affairs member to post in this subcategory.");
+        }
+        log.info("User {} validated as admin/academic affairs", userId);
+    }
+    
+    /**
+     * Check if user has ADMIN or ACADEMIC_OFFICE_AFFAIR role
+     */
+    private boolean isAdminOrAcademicAffairs(Long userId) {
+        try {
+            UserDTO user = authServiceClient.getUserById(userId);
+            
+            if (user == null) {
+                log.error("Unable to fetch user {} from auth service", userId);
+                return false;
+            }
+            
+            String role = user.getRole();
+            boolean isAuthorized = "ADMIN".equals(role) || "ACADEMIC_OFFICE_AFFAIR".equals(role);
+            
+            log.debug("User {} has role {} - authorized: {}", userId, role, isAuthorized);
+            return isAuthorized;
+            
+        } catch (Exception e) {
+            log.error("Error checking user role for user {}: {}", userId, e.getMessage());
+            // Fail closed: if we can't verify the role, deny access
+            return false;
+        }
     }
     
     private void validateClubMembership(Long userId) {

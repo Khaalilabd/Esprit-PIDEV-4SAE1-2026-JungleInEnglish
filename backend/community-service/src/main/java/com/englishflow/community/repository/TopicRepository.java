@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -54,4 +55,13 @@ public interface TopicRepository extends JpaRepository<Topic, Long>, JpaSpecific
     // Find trending topics (created in last 7 days with high score)
     @Query("SELECT t FROM Topic t WHERE t.createdAt >= :since ORDER BY t.weightedScore DESC")
     List<Topic> findTrendingTopics(@Param("since") LocalDateTime since, Pageable pageable);
+    
+    // ✅ OPTIMIZED: Bulk update trending flags
+    @Modifying
+    @Query("UPDATE Topic t SET t.isTrending = false WHERE t.isTrending = true")
+    int resetAllTrendingFlags();
+    
+    @Modifying
+    @Query("UPDATE Topic t SET t.isTrending = true WHERE t.id IN :ids")
+    int markAsTrending(@Param("ids") List<Long> ids);
 }
